@@ -1,0 +1,126 @@
+{
+  "project_info": {
+    "project_number": "781711991063",
+    "project_id": "transshipment-e988f",
+    "storage_bucket": "transshipment-e988f.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:781711991063:android:87a213a70de5aa8ab59752",
+        "android_client_info": {
+          "package_name": "takecare.hn.trungchuyen"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "781711991063-gk4h3qtg2rachi8muaadb1i4po54gfsh.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBXNcp_-OBQX-lmOmeE6aX7SsvhIKqbivY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "781711991063-gk4h3qtg2rachi8muaadb1i4po54gfsh.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "781711991063-4va88vlicpnub3ntks35amnr4sjs92ag.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "takecare.vn.transshipment"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:781711991063:android:88410f956e62afc1b59752",
+        "android_client_info": {
+          "package_name": "takecare.hn.trungchuyen"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "781711991063-gk4h3qtg2rachi8muaadb1i4po54gfsh.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBXNcp_-OBQX-lmOmeE6aX7SsvhIKqbivY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "781711991063-gk4h3qtg2rachi8muaadb1i4po54gfsh.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "781711991063-4va88vlicpnub3ntks35amnr4sjs92ag.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "takecare.vn.transshipment"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:781711991063:android:97a868f00d04c03bb59752",
+        "android_client_info": {
+          "package_name": "takecare.vn.transshipment"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "781711991063-vvs9pa3nbvfbedn5o9873tvd7cpaj3s8.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "takecare.vn.transshipment",
+            "certificate_hash": "eb3746282d8b44172d9038798882ef6e461cbd88"
+          }
+        },
+        {
+          "client_id": "781711991063-gk4h3qtg2rachi8muaadb1i4po54gfsh.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBXNcp_-OBQX-lmOmeE6aX7SsvhIKqbivY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "781711991063-gk4h3qtg2rachi8muaadb1i4po54gfsh.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "781711991063-4va88vlicpnub3ntks35amnr4sjs92ag.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "takecare.vn.transshipment"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
