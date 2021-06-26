@@ -7,7 +7,7 @@ abstract class  MapLimoState extends Equatable {
 }
 class GetListCustomerLimoSuccess extends MapLimoState {
 
-  final List<DetailTripsReponseBody> listOfCustomerTrips;
+  final List<DetailTripsResponseBody> listOfCustomerTrips;
 
   GetListCustomerLimoSuccess(this.listOfCustomerTrips);
 
@@ -38,4 +38,8 @@ class UpdateStatusDriverLimoState extends MapLimoState {
 
   @override
   String toString() => 'UpdateStatusDriverLimoState {}';
+}class GetEventStateSuccess extends MapLimoState {
+
+  @override
+  String toString() => 'GetEventStateSuccess {}';
 }

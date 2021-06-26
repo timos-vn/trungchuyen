@@ -49,6 +49,7 @@ class Const {
   static const String Name_LANGUAGE = 'Name Lang';
   static const String DEVICE_TOKEN = "Device Token";
   static const String TOPIC = "TOPIC";
+  static const String FULL_NAME = "Full Name";
 
   static const int MAX_COUNT_ITEM = 20;
 

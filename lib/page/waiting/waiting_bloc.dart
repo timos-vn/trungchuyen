@@ -22,7 +22,7 @@ class WaitingBloc extends Bloc<WaitingEvent,WaitingState> {
   SharedPreferences _prefs;
   SharedPreferences get prefs => _prefs;
   List<ListOfGroupAwaitingCustomerBody> listOfGroupAwaitingCustomer;
-  List<DetailTripsReponseBody> listOfDetailTrips = new List<DetailTripsReponseBody>();
+  List<DetailTripsResponseBody> listOfDetailTrips = new List<DetailTripsResponseBody>();
 
   WaitingBloc(this.context) : super(null){
     _networkFactory = NetWorkFactory(context);
@@ -56,7 +56,7 @@ class WaitingBloc extends Bloc<WaitingEvent,WaitingState> {
   WaitingState _handleGetListOfDetailTrips(Object data) {
     if (data is String) return WaitingFailure(data);
     try {
-      DetailTripsReponse response = DetailTripsReponse.fromJson(data);
+      DetailTripsResponse response = DetailTripsResponse.fromJson(data);
       listOfDetailTrips = response.data;
       return GetListOfDetailTripsOfWaitingPageSuccess();
     } catch (e) {

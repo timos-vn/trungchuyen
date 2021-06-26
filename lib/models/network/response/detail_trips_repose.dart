@@ -1,15 +1,17 @@
-class DetailTripsReponse {
-  List<DetailTripsReponseBody> data;
+
+
+class DetailTripsResponse {
+  List<DetailTripsResponseBody> data;
   int statusCode;
   String message;
 
-  DetailTripsReponse({this.data, this.statusCode, this.message});
+  DetailTripsResponse({this.data, this.statusCode, this.message});
 
-  DetailTripsReponse.fromJson(Map<String, dynamic> json) {
+  DetailTripsResponse.fromJson(Map<String, dynamic> json) {
     if (json['data'] != null) {
-      data = new List<DetailTripsReponseBody>();
+      data = new List<DetailTripsResponseBody>();
       json['data'].forEach((v) {
-        data.add(new DetailTripsReponseBody.fromJson(v));
+        data.add(new DetailTripsResponseBody.fromJson(v));
       });
     }
     statusCode = json['statusCode'];
@@ -27,8 +29,9 @@ class DetailTripsReponse {
   }
 }
 
-class DetailTripsReponseBody {
+class DetailTripsResponseBody {
   String idTrungChuyen;
+  String idTaiXeLimousine;
   String hoTenTaiXeLimousine;
   String dienThoaiTaiXeLimousine;
   String tenXeLimousine;
@@ -44,10 +47,12 @@ class DetailTripsReponseBody {
   String diaChiLimoDen;
   String toaDoLimoDen;
   int loaiKhach;
+  String trangThaiTC;
   int soKhach;
 
-  DetailTripsReponseBody(
+  DetailTripsResponseBody(
       {this.idTrungChuyen,
+        this.idTaiXeLimousine,
         this.hoTenTaiXeLimousine,
         this.dienThoaiTaiXeLimousine,
         this.tenXeLimousine,
@@ -63,10 +68,12 @@ class DetailTripsReponseBody {
         this.diaChiLimoDen,
         this.toaDoLimoDen,
         this.loaiKhach,
+        this.trangThaiTC,
         this.soKhach});
 
-  DetailTripsReponseBody.fromJson(Map<String, dynamic> json) {
+  DetailTripsResponseBody.fromJson(Map<String, dynamic> json) {
     idTrungChuyen = json['idTrungChuyen'];
+    idTaiXeLimousine = json['idTaiXeLimousine'];
     hoTenTaiXeLimousine = json['hoTenTaiXeLimousine'];
     dienThoaiTaiXeLimousine = json['dienThoaiTaiXeLimousine'];
     tenXeLimousine = json['tenXeLimousine'];
@@ -82,11 +89,13 @@ class DetailTripsReponseBody {
     diaChiLimoDen = json['diaChiLimoDen'];
     toaDoLimoDen = json['toaDoLimoDen'];
     loaiKhach = json['loaiKhach'];
+    trangThaiTC = json['trangThaiTC'];
   }
 
   Map<String, dynamic> toJson() {
     final Map<String, dynamic> data = new Map<String, dynamic>();
     data['idTrungChuyen'] = this.idTrungChuyen;
+    data['idTaiXeLimousine'] = this.idTaiXeLimousine;
     data['hoTenTaiXeLimousine'] = this.hoTenTaiXeLimousine;
     data['dienThoaiTaiXeLimousine'] = this.dienThoaiTaiXeLimousine;
     data['tenXeLimousine'] = this.tenXeLimousine;
@@ -102,6 +111,7 @@ class DetailTripsReponseBody {
     data['diaChiLimoDen'] = this.diaChiLimoDen;
     data['toaDoLimoDen'] = this.toaDoLimoDen;
     data['loaiKhach'] = this.loaiKhach;
+    data['trangThaiTC'] = this.trangThaiTC;
     return data;
   }
 }

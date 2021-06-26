@@ -7,21 +7,19 @@ import 'package:flutter_animarker/lat_lng_interpolation.dart';
 import 'package:flutter_animarker/models/lat_lng_delta.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:get/get.dart';
 import 'package:google_maps_controller/google_maps_controller.dart';
-import 'package:location/location.dart';
-import 'package:trungchuyen/models/network/response/detail_trips_repose.dart';
+
 import 'package:trungchuyen/page/main/main_bloc.dart';
-import 'package:trungchuyen/page/main/main_event.dart';
 import 'package:trungchuyen/page/map_limo/map_limo_bloc.dart';
-import 'package:trungchuyen/service/location_service.dart';
-import 'package:trungchuyen/themes/colors.dart';
-import 'package:trungchuyen/themes/images.dart';
+import 'package:trungchuyen/service/soket_io_service.dart';
 import 'package:trungchuyen/utils/marker_icon.dart';
-import 'package:trungchuyen/utils/utils.dart';
-import 'package:trungchuyen/widget/marquee_widget.dart';
+
 
 import 'map_limo_event.dart';
 import 'map_limo_state.dart';
+
+
 
 class MapLimoPage extends StatefulWidget {
 
@@ -30,7 +28,7 @@ class MapLimoPage extends StatefulWidget {
   @override
   MapLimoPageState createState() => MapLimoPageState();
 }
-
+/// đây là map limo
 class MapLimoPageState extends State<MapLimoPage> {
   final scrollController = ScrollController();
   bool isOnline = false;
@@ -50,11 +48,12 @@ class MapLimoPageState extends State<MapLimoPage> {
     //rotateGesturesEnabled: true,
   );
 
-  StreamGroup<LatLngDelta> subscriptions = StreamGroup<LatLngDelta>();
-  LatLngInterpolationStream _latLngStream = LatLngInterpolationStream();
-  Location location = new Location();
-  var scaffoldKey = new GlobalKey<ScaffoldState>();
 
+  // cái này này để samg bloc
+  // lấy cái
+  StreamGroup<LatLngDelta> subscriptions = StreamGroup<LatLngDelta>();
+  var scaffoldKey = new GlobalKey<ScaffoldState>();
+  SocketIOService socketIOService;
   GlobalKey keyMap;
 
   @override
@@ -62,23 +61,14 @@ class MapLimoPageState extends State<MapLimoPage> {
     // TODO: implement initState
     super.initState();
     _mapLimoBloc = MapLimoBloc(context);
+    // _mapLimoBloc.add(GetEvent());
     _mainBloc = BlocProvider.of<MainBloc>(context);
-    //_mapBloc.add(GetListCustomer(_mainBloc.listOfDetailTrips));
-    subscriptions.add(_latLngStream.getAnimatedPosition("DriverMarker"));
-    subscriptions.stream.listen((LatLngDelta delta) {
-      drawMyLocation(LatLng(delta.from.latitude, delta.from.longitude), delta.rotation);
-    });
+    socketIOService = Get.find<SocketIOService>();
+    socketIOService.socket.on('event', (data) => print(data));
+
     print('LengthABCCC123');
   }
 
-  drawMyLocation(LatLng position, double alpha) async {
-    var iconCar = await getBitmapDescriptorFromAssetBytes('assets/images/carMarker.png', 50);
-    var checkMarkerDriver = mapController.markers.where((element) => element.markerId.value == "DriverMarker").toList();
-    if (checkMarkerDriver.length > 0) {
-      mapController.removeMarker(checkMarkerDriver[0]);
-    }
-    mapController.addMarker(Marker(markerId: MarkerId("DriverMarker"), position: position, icon: iconCar, anchor: Offset(0.5, 0.5), rotation: alpha));
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -87,6 +77,12 @@ class MapLimoPageState extends State<MapLimoPage> {
       listener:  (context, state){
         if(state is GetListCustomerLimoSuccess){
 
+        }else if(state is GetEventStateSuccess){
+          print('RELOAD AGAIN1');
+          subscriptions.add(_mapLimoBloc.latLngStream.getAnimatedPosition(_mapLimoBloc.markerID));
+          subscriptions.stream.listen((LatLngDelta delta) {
+            drawMyLocation(LatLng(delta.from.latitude, delta.from.longitude), delta.rotation,delta.markerId);
+          });
         }
       },
       child: BlocBuilder<MapLimoBloc,MapLimoState>(
@@ -101,13 +97,16 @@ class MapLimoPageState extends State<MapLimoPage> {
   }
 
   Widget buildPage(BuildContext context,MapLimoState state){
+    print('RELOAD AGAIN2');
     return Stack(
       children: [
         Container(
           color: Theme.of(context).scaffoldBackgroundColor,
           child: Scaffold(
               key: scaffoldKey,
-              body: googleMap()
+              body: Container(
+                child: Center(child: Text(_mapLimoBloc.markerID??'' + " - " + _mapLimoBloc.lsMarkerId.length.toString()??'' + " _ " + _mapLimoBloc.location.toString()??''),),
+              )
           ),
         ),
         Visibility(
@@ -124,5 +123,13 @@ class MapLimoPageState extends State<MapLimoPage> {
     return GoogleMaps(controller: mapController);
   }
 
+  drawMyLocation(LatLng position, double alpha, String markerId) async {
+    var iconCar = await getBitmapDescriptorFromAssetBytes('assets/images/carMarker.png', 50);
+    var checkMarkerDriver = mapController.markers.where((element) => element.markerId.value == markerId).toList();
+    if (checkMarkerDriver.length > 0) {
+      mapController.removeMarker(checkMarkerDriver[0]);
+    }
+    mapController.addMarker(Marker(markerId: MarkerId(markerId), position: position, icon: iconCar, anchor: Offset(0.5, 0.5), rotation: alpha));
+  }
 }
 

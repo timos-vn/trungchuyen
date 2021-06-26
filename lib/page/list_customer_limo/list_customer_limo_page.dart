@@ -67,6 +67,7 @@ class ListCustomerLimoPageState extends State<ListCustomerLimoPage> {
             _mainBloc.listOfDetailTripLimo.clear();
             _mainBloc.listOfDetailTripLimo = _bloc.listOfDetailTripsLimo;
             int _countExitsCustomer = 0;
+
             _bloc.listOfDetailTripsLimo.forEach((element) {
               if(Utils.isEmpty(_mainBloc.listTaiXeTC)){
                 _countExitsCustomer++;
@@ -85,7 +86,8 @@ class ListCustomerLimoPageState extends State<ListCustomerLimoPage> {
               }
             });
             /// bắn notification
-            _bloc.add(TranferCustomerLimo('Thông báo','Bạn nhận được khách từ Limo, vui lòng xác nhận.',_mainBloc.listTaiXeTC));
+
+            //_bloc.add(CustomerTransferToTC('Thông báo','Bạn nhận được khách từ Limo, vui lòng xác nhận.',_mainBloc.listTaiXeTC,));
           }else if(state is TransferLimoSuccess){
             Utils.showDialogTransferCustomerLimo(context: context,listOfDetailTripsSuccessful: _mainBloc.listTaiXeTC);
           }
@@ -165,26 +167,25 @@ class ListCustomerLimoPageState extends State<ListCustomerLimoPage> {
   Widget buildListItem(ListOfGroupAwaitingCustomerBody item,int index) {
     return GestureDetector(
         onTap: () {
-          if(_mainBloc.listOfDetailTrips.length == 0){
-            Utils.showDialogAssign(context: context,titleHintText: 'Bạn có muốn giao khách cho Trung Chuyển?').then((value){
-              if(!Utils.isEmpty(value)){
-                _mainBloc.trips = item.tenTuyenDuong + "  /  " + item.thoiGianDi + ' - ' + item.ngayChay;
-                DateFormat format = DateFormat("dd/MM/yyyy");
-                _bloc.add(GetListDetailTripLimo(format.parse(item.ngayChay),item.idTuyenDuong,item.idKhungGio));
-                _mainBloc.blocked = true;
-                _mainBloc.indexAwaitingList = index;
-                Utils.showToast( 'Bắt đầu giao khách !!!');
-                print(_mainBloc.timeStart);
-              }
-              else{
-                print('Click huỷ');
-              }
-            });
-          } else{
-            print('giao nốt người đi thằng ngu');
-            Utils.showToast( 'Bạn chưa giao xong khách, vui lòng chờ đợi');
-          }
-
+          // if(_mainBloc.listOfDetailTrips.length == 0){
+          //   Utils.showDialogAssign(context: context,titleHintText: 'Bạn có muốn giao khách cho Trung Chuyển?').then((value){
+          //     if(!Utils.isEmpty(value)){
+          //       _mainBloc.trips = item.tenTuyenDuong + "  /  " + item.thoiGianDi + ' - ' + item.ngayChay;
+          //       DateFormat format = DateFormat("dd/MM/yyyy");
+          //       _bloc.add(GetListDetailTripLimo(format.parse(item.ngayChay),item.idTuyenDuong,item.idKhungGio));
+          //       _mainBloc.blocked = true;
+          //       _mainBloc.indexAwaitingList = index;
+          //       Utils.showToast( 'Bắt đầu giao khách !!!');
+          //       print(_mainBloc.timeStart);
+          //     }
+          //     else{
+          //       print('Click huỷ');
+          //     }
+          //   });
+          // } else{
+          //   print('giao nốt người đi thằng ngu');
+          //   Utils.showToast( 'Bạn chưa giao xong khách, vui lòng chờ đợi');
+          // }
         },
         child: Padding(
           padding: const EdgeInsets.only(left: 10, right: 16, top: 8, bottom: 8),

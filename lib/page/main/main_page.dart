@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_animarker/flutter_map_marker_animation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
@@ -12,6 +13,7 @@ import 'package:trungchuyen/page/map/map_bloc.dart';
 import 'package:trungchuyen/page/map/map_event.dart';
 import 'package:trungchuyen/page/map/map_page.dart';
 import 'package:trungchuyen/page/map_limo/map_limo_bloc.dart';
+import 'package:trungchuyen/page/map_limo/map_limo_event.dart';
 import 'package:trungchuyen/page/map_limo/map_limo_page.dart';
 import 'package:trungchuyen/page/report/report_bloc.dart';
 import 'package:trungchuyen/page/report/report_page.dart';
@@ -20,6 +22,8 @@ import 'package:trungchuyen/page/report_limo/report_limo_page.dart';
 import 'package:trungchuyen/page/waiting/waiting_bloc.dart';
 import 'package:trungchuyen/page/waiting/waiting_event.dart';
 import 'package:trungchuyen/page/waiting/waiting_page.dart';
+import 'package:trungchuyen/service/lifecycle_event_handler.dart';
+import 'package:trungchuyen/service/soket_io_service.dart';
 import 'package:trungchuyen/themes/colors.dart';
 import 'package:trungchuyen/utils/const.dart';
 import 'package:trungchuyen/utils/utils.dart';
@@ -40,7 +44,7 @@ class MainPage extends StatefulWidget {
   State<StatefulWidget> createState() => _MainPageState();
 }
 
-class _MainPageState extends State<MainPage> {
+class _MainPageState extends State<MainPage> with WidgetsBindingObserver{
   MainBloc _mainBloc;
   MapBloc _mapBloc;
   WaitingBloc _waitingBloc;
@@ -64,11 +68,13 @@ class _MainPageState extends State<MainPage> {
   final GlobalKey<NavigatorState> fourthTabNavKey = GlobalKey<NavigatorState>();
 
   final GlobalKey<MapPageState> _mapPageKey = GlobalKey();
+  final GlobalKey<MapLimoPageState> _mapLimoPageKey = GlobalKey();
   final GlobalKey<WaitingPageState> _waitingPageKey = GlobalKey();
   final GlobalKey<ListCustomerLimoPageState> _listCustomerLimoKey = GlobalKey();
 
   @override
   void initState() {
+    WidgetsBinding.instance.addObserver(this);
     _mainBloc = MainBloc();
     _mapBloc = MapBloc(context);
     _waitingBloc = WaitingBloc(context);
@@ -78,10 +84,30 @@ class _MainPageState extends State<MainPage> {
     _mapLimoBloc = MapLimoBloc(context);
     _reportLimoBloc = ReportLimoBloc(context);
     _currentTabKey = firstTabNavKey;
-    // _mainBloc.add(GetCountApprovalEvent());
-    // DateTime parseDate = new DateFormat("yyyy-MM-dd").parse(DateTime.now().toString());
-    // _mainBloc.add(GetListGroupCustomer(parseDate));
+    Get.put(SocketIOService());
+    WidgetsBinding.instance.addObserver(
+        LifecycleEventHandler(
+            resumeCallBack: () async => setState(() {})),
+    );
     super.initState();
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    super.didChangeAppLifecycleState(state);
+    if(state == AppLifecycleState.resumed){
+      print('Current state = $state');
+      _mapBloc.add(UpdateStatusDriverEvent(1));
+    }else if(state == AppLifecycleState.inactive || state == AppLifecycleState.paused){
+      print('Current state = $state');
+      _mapBloc.add(UpdateStatusDriverEvent(0));
+    }
   }
 
   @override
@@ -154,8 +180,7 @@ class _MainPageState extends State<MainPage> {
                   DateTime parseDate = new DateFormat("yyyy-MM-dd").parse(DateTime.now().toString());
                   _waitingBloc.add(GetListGroupAwaitingCustomer(parseDate));
                 }
-
-                if (state is LogoutSuccess) {
+                else if (state is LogoutSuccess) {
                   _lastIndexToShop = Const.WAITING;
                   _currentIndex = _lastIndexToShop;
                   _currentTabKey = firstTabNavKey;
@@ -163,7 +188,20 @@ class _MainPageState extends State<MainPage> {
                   //_mainBloc.countSMS = null;
 
                 }
-                if (state is NavigateToNotificationState) {
+                else if (state is NavigateToNotificationState) {}
+                else if(state is GetLocationSuccess){
+
+                  _mapLimoPageKey?.currentState?.setState(() {
+                    if(_mapLimoBloc.lsMarkerId.where((id) => id==state.makerID).length==0)
+                    {
+                      print('ALALALA');
+                      _mapLimoBloc.lsMarkerId.add(state.makerID);
+                      _mapLimoBloc.add(GetEvent(state.makerID));
+                    }
+                    _mapLimoBloc.latLngStream.addLatLng(new LatLngInfo(state.lat,state.lng,state.makerID));
+                  });
+                  print('ALALALA');
+                  print(state.makerID +' - '+ state.lat.toString() +' - '+ state.lng.toString());
                 }
               },
               child: BlocBuilder<MainBloc, MainState>(

@@ -16,16 +16,16 @@ class GetListCustomerLimo extends ListCustomerLimoEvent {
   String toString() => 'GetListCustomerLimo {date: $date }';
 }
 
-class TranferCustomerLimo extends ListCustomerLimoEvent {
+class CustomerTransferToTC extends ListCustomerLimoEvent {
 
   final String title;
   final String body;
   final  List<DetailTripsLimoReponseBody> listTaiXeTC;
 
-  TranferCustomerLimo(this.title, this.body, this.listTaiXeTC);
+  CustomerTransferToTC(this.title, this.body, this.listTaiXeTC);
 
   @override
-  String toString() => 'GetListCustomerLimo {title: $title,body:$body, idsTaiKhoan:$listTaiXeTC }';
+  String toString() => 'GetListCustomerLimo {title: $title,body:$body, idsTaiKhoan:$listTaiXeTC}';
 }
 
 class GetListDetailTripLimo extends ListCustomerLimoEvent {

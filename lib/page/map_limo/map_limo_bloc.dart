@@ -1,13 +1,22 @@
+import 'package:async/async.dart';
 import 'package:flutter/cupertino.dart';
+import 'package:flutter_animarker/lat_lng_interpolation.dart';
+import 'package:flutter_animarker/models/lat_lng_delta.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:get/get.dart';
+import 'package:google_maps_controller/google_maps_controller.dart';
+import 'package:location/location.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:trungchuyen/models/network/response/detail_trips_repose.dart';
 import 'package:trungchuyen/models/network/service/network_factory.dart';
+import 'package:trungchuyen/service/soket_io_service.dart';
 import 'package:trungchuyen/utils/const.dart';
+import 'package:trungchuyen/utils/marker_icon.dart';
 import 'map_limo_event.dart';
 import 'map_limo_state.dart';
 
 class MapLimoBloc extends Bloc<MapLimoEvent,MapLimoState> {
+
 
   BuildContext context;
   NetWorkFactory _networkFactory;
@@ -17,12 +26,15 @@ class MapLimoBloc extends Bloc<MapLimoEvent,MapLimoState> {
   String get refreshToken => _refreshToken;
   SharedPreferences _prefs;
   SharedPreferences get prefs => _prefs;
-
-  List<DetailTripsReponseBody> listOfCustomerTrips = new List<DetailTripsReponseBody>();
-
+  List<String> lsMarkerId = [];
+  List<DetailTripsResponseBody> listOfCustomerTrips = new List<DetailTripsResponseBody>();
+  LatLngInterpolationStream latLngStream = LatLngInterpolationStream();
+  Location location = new Location();
+  String markerID;
 
   MapLimoBloc(this.context) : super(null){
     _networkFactory = NetWorkFactory(context);
+
   }
 
   // TODO: implement initialState
@@ -49,7 +61,15 @@ class MapLimoBloc extends Bloc<MapLimoEvent,MapLimoState> {
       MapLimoState state = _handleUpdateStatusDriver(await _networkFactory.updateStatusDriver(_accessToken, event.statusDriver));
       yield state;
     }
+    if(event is GetEvent){
+      yield MapLimoInitial();
+      // subscriptions.add(_latLngStream.getAnimatedPosition("DriverMarker"));
+      markerID = event.markerId;
+      yield GetEventStateSuccess();
+    }
   }
+
+
 
   MapLimoState _handleUpdateStatusDriver(Object data) {
     if (data is String) return MapLimoFailure(data);

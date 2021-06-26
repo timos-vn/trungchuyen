@@ -21,7 +21,7 @@ class DetailTripsBloc extends Bloc<DetailTripsEvent,DetailTripsState> {
   String get refreshToken => _refreshToken;
   SharedPreferences _prefs;
   SharedPreferences get prefs => _prefs;
-  List<DetailTripsReponseBody> listOfDetailTrips = new List<DetailTripsReponseBody>();
+  List<DetailTripsResponseBody> listOfDetailTrips = new List<DetailTripsResponseBody>();
 
   DetailTripsBloc(this.context) : super(null){
     _networkFactory = NetWorkFactory(context);
@@ -47,7 +47,7 @@ class DetailTripsBloc extends Bloc<DetailTripsEvent,DetailTripsState> {
   DetailTripsState _handleGetListOfDetailTrips(Object data) {
     if (data is String) return DetailTripsFailure(data);
     try {
-      DetailTripsReponse response = DetailTripsReponse.fromJson(data);
+      DetailTripsResponse response = DetailTripsResponse.fromJson(data);
       listOfDetailTrips = response.data;
       return GetListOfDetailTripsSuccess();
     } catch (e) {

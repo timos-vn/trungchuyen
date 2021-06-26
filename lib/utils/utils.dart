@@ -228,8 +228,8 @@ class Utils {
     _prefs.setString(Const.ACCESS_TOKEN, accessToken);
     _prefs.setString(Const.REFRESH_TOKEN, refreshToken);
     _prefs.setString(Const.CHUC_VU, data.taiKhoan.chucVu?.toString());
-
-    _prefs.setString(Const.PHONE_NUMBER, username?.trim());
+    _prefs.setString(Const.FULL_NAME, data.taiKhoan.hoTen?.toString());
+    _prefs.setString(Const.PHONE_NUMBER, data.taiKhoan.dienThoai?.trim());
     _prefs.setString(Const.NHA_XE, data.taiKhoan.nhaXe?.toString());
 
     _prefs.setString(Const.USER_NAME, data.taiKhoan.tenDangNhap?.trim());
@@ -581,7 +581,163 @@ class Utils {
         );
       });
 
-  static Future<bool> showDialogTransferCustomer({@required BuildContext context, @required List<DetailTripsReponseBody> listOfDetailTripsSuccessful, @required String content, Function accept, Function cancel, bool dismissible: false}) => showDialog(
+  static Future<bool> showDialogReceiveCustomerFormTC({@required BuildContext context, @required String laiXeTC,String sdtLaiXeTC,String soKhach, @required String date}) => showDialog(
+      barrierDismissible: false,
+      context: context,
+      builder: (context) {
+        return WillPopScope(
+          onWillPop: () async {
+            return false;
+          },
+          child: Center(
+            child: Padding(
+              padding: EdgeInsets.only(left: 30, right: 30),
+              child: Container(
+                decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.all(Radius.circular(16))),
+                height: 300,
+                width: double.infinity,
+                child: Material(
+                    animationDuration: Duration(seconds: 3),
+                    borderRadius: BorderRadius.all(Radius.circular(16)),
+                    child: Padding(
+                      padding: const EdgeInsets.all(20),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Center(
+                            child: SpinKitPouringHourglass(
+                              color: Colors.orange,
+                              size: 40,
+                            ),
+                          ),
+                          SizedBox(height: 5,),
+                          Center(child: Text('Bạn nhận được khách từ LX Trung Chuyển',style: TextStyle(color: Colors.grey,fontSize: 11),)),
+                          SizedBox(height: 5,),
+                          Table(
+                            border: TableBorder.all(color: Colors.orange),
+                            columnWidths: const <int, TableColumnWidth>{
+                              0: FixedColumnWidth(120),
+                              1: FlexColumnWidth(),
+                            },
+                            defaultVerticalAlignment: TableCellVerticalAlignment.middle,
+                            children: [
+                              TableRow(
+                                children: [
+                                  TableCell(
+                                    child: Padding(
+                                      padding: const EdgeInsets.all(8.0),
+                                      child: Text(
+                                        'LXTC:',
+                                        style: TextStyle(fontWeight: FontWeight.bold),
+                                      ),
+                                    ),
+                                  ),
+                                  TableCell(
+                                    child: Padding(
+                                      padding: const EdgeInsets.all(8.0),
+                                      child: Text('$laiXeTC'),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              TableRow(
+                                children: [
+                                  TableCell(
+                                    child: Padding(
+                                      padding: const EdgeInsets.all(8.0),
+                                      child: Text(
+                                        'SĐT LX TC:',
+                                        style: TextStyle(fontWeight: FontWeight.bold),
+                                      ),
+                                    ),
+                                  ),
+                                  TableCell(
+                                    child: Padding(
+                                      padding: const EdgeInsets.all(8.0),
+                                      child: Text(sdtLaiXeTC),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              TableRow(children: [
+                                TableCell(
+                                  child: Padding(
+                                    padding: const EdgeInsets.all(8.0),
+                                    child: Text(
+                                      'Số khách:',
+                                      style: TextStyle(fontWeight: FontWeight.bold),
+                                    ),
+                                  ),
+                                ),
+                                TableCell(
+                                  child: Padding(
+                                    padding: const EdgeInsets.all(8.0),
+                                    child: Text('${soKhach.toString()}'),
+                                  ),
+                                ),
+                              ]),
+                              TableRow(children: [
+                                TableCell(
+                                  child: Padding(
+                                    padding: const EdgeInsets.all(8.0),
+                                    child: Text(
+                                      'Thời gian:',
+                                      style: TextStyle(fontWeight: FontWeight.bold),
+                                    ),
+                                  ),
+                                ),
+                                TableCell(
+                                  child: Padding(
+                                    padding: const EdgeInsets.all(8.0),
+                                    child: Text(date),
+                                  ),
+                                ),
+                              ]),
+                            ],
+                          ),
+                          Container(
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Expanded(
+                                  child: SizedBox(
+                                      width: double.infinity,
+                                      ),
+                                ),
+                                SizedBox(
+                                  width: 15,
+                                ),
+                                Expanded(
+                                  child: SizedBox(
+                                    width: double.infinity,
+                                    child: ElevatedButton(
+                                      onPressed: () {
+                                        Navigator.pop(context, true);
+                                      },
+                                      child: Text(
+                                        'Xác nhận',
+                                        style: TextStyle(color: white),
+                                      ),
+                                      style: ButtonStyle(
+                                        backgroundColor: MaterialStateProperty.all(Colors.orange),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    )),
+              ),
+            ),
+          ),
+        );
+      });
+
+  static Future<bool> showDialogTransferCustomer({@required BuildContext context, @required List<DetailTripsResponseBody> listOfDetailTripsSuccessful, @required String content, Function accept, Function cancel, bool dismissible: false}) => showDialog(
       barrierDismissible: dismissible,
       context: context,
       builder: (context) {
@@ -728,6 +884,8 @@ class Utils {
           ),
         );
       });
+
+
 
   static Future<bool> showDialogTransferCustomerLimo({@required BuildContext context, @required List<DetailTripsLimoReponseBody> listOfDetailTripsSuccessful, @required String content, Function accept, Function cancel, bool dismissible: false}) => showDialog(
       barrierDismissible: dismissible,

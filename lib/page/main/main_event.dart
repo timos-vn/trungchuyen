@@ -171,21 +171,26 @@ class UpdateStatusCustomerEvent extends MainEvent{
     return 'UpdateStatusCustomerEvent{status: $status, idTrungChuyen:$idTrungChuyen}';
   }
 }
-// class UpdateStatusDriverEvent extends MainEvent {
-//
-//   final int statusDriver;
-//
-//   UpdateStatusDriverEvent(this.statusDriver);
-//
-//   @override
-//   String toString() => 'UpdateStatusDriverEvent {statusDriver: $statusDriver}';
-// }
-// class UpdateStatusSwitchEvent extends MainEvent {
-//
-//   final bool statusSwitch;
-//
-//   UpdateStatusSwitchEvent(this.statusSwitch);
-//
-//   @override
-//   String toString() => 'UpdateStatusSwitchEvent {statusSwitch: $statusSwitch}';
-// }
+class ConfirmWithTXTC extends MainEvent {
+
+  final String title;
+  final String body;
+  final List<String> listId;
+
+  ConfirmWithTXTC(this.title, this.body, this.listId);
+
+  @override
+  String toString() => 'ConfirmWithTXTC {title: $title,body:$body, listId:$listId}';
+}
+
+class GetLocationEvent extends MainEvent {
+
+  final String makerID;
+  final double lat;
+  final double lng;
+
+  GetLocationEvent(this.makerID, this.lat, this.lng);
+
+  @override
+  String toString() => 'GetLocationEvent {makerID:$makerID,lat:$lat,lng:$lng}';
+}

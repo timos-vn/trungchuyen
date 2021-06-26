@@ -4,6 +4,8 @@
 <dict>
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
+	<key>CFBundleDisplayName</key>
+	<string>Trung Chuyển HN</string>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIdentifier</key>
@@ -11,17 +13,47 @@
 	<key>CFBundleInfoDictionaryVersion</key>
 	<string>6.0</string>
 	<key>CFBundleName</key>
-	<string>trungchuyen</string>
+	<string>Trung Chuyển HN</string>
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
 	<key>CFBundleShortVersionString</key>
-	<string>$(FLUTTER_BUILD_NAME)</string>
+	<string>$(MARKETING_VERSION)</string>
 	<key>CFBundleSignature</key>
 	<string>????</string>
 	<key>CFBundleVersion</key>
-	<string>$(FLUTTER_BUILD_NUMBER)</string>
+	<string>$(CURRENT_PROJECT_VERSION)</string>
+	<key>FirebaseAppDelegateProxyEnabled</key>
+	<string>NO</string>
+	<key>ITSAppUsesNonExemptEncryption</key>
+	<false/>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
+	<key>NSAppTransportSecurity</key>
+	<dict>
+		<key>NSAllowsArbitraryLoads</key>
+		<true/>
+	</dict>
+	<key>NSAppleMusicUsageDescription</key>
+	<string>Trung chuyển cần mở âm thanh cho thông báo.</string>
+	<key>NSCalendarsUsageDescription</key>
+	<string>Trung chuyển cần hiển thị lịch để chọn ngày tháng năm và thời gian.</string>
+	<key>NSCameraUsageDescription</key>
+	<string>Trung chuyển cần truy cập camera để chụp ảnh và scanbarcode</string>
+	<key>NSContactsUsageDescription</key>
+	<string>Trung chuyển cần contact tới người dùng.</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>Trung chuyển cần truy cập Vị trí của bạn để hỗ trợ cho việc chấm công hiệu quả hơn</string>
+	<key>NSMotionUsageDescription</key>
+	<string>Trung chuyển motion cho người sử dụng.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Trung chuyển cần truy cập Ảnh để thay đổi Avatar.</string>
+	<key>NSSpeechRecognitionUsageDescription</key>
+	<string>Trung chuyển cần nhận dạng giọng nói.</string>
+	<key>UIBackgroundModes</key>
+	<array>
+		<string>fetch</string>
+		<string>remote-notification</string>
+	</array>
 	<key>UILaunchStoryboardName</key>
 	<string>LaunchScreen</string>
 	<key>UIMainStoryboardFile</key>

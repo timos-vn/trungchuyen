@@ -4,6 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:get/get.dart';
 import 'package:get/get.dart' as libGetX;
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
+import 'package:new_version/new_version.dart';
 import 'package:trungchuyen/page/main/main_page.dart';
 import 'package:trungchuyen/themes/colors.dart';
 import 'package:trungchuyen/themes/font.dart';
@@ -35,6 +36,20 @@ class _LoginPageState extends State<LoginPage> {
   String _selectedLang;
 
 
+  void _checkVersion() async {
+    final newVersion = NewVersion(
+        context: context,
+        androidId: 'Trung chuyển.net.vn.vinaoptic',
+        iOSId: 'Trung chuyển.net.vn.vinaoptic',
+        dialogTitle: 'Thông báo cập nhật',
+        dialogText: 'Đã có phiên bản mới xin vui lòng cập nhật để có thể sử dụng những tính năng mới nhất.',
+        dismissText: 'Để sau',
+        updateText:'Cập nhật'
+    );
+    final status = await newVersion.getVersionStatus();
+    newVersion.showUpdateDialog(status);
+  }
+
   @override
   void initState() {
     // TODO: implement initState
@@ -62,7 +77,11 @@ class _LoginPageState extends State<LoginPage> {
               if (state is LoginSuccess) {
                 ///0 : Offline
                 ///1 : Online
-                _loginBloc.add(UpdateStatusDriverEvent(0));
+                if(_loginBloc.roleAccount == 3){
+                  _loginBloc.add(UpdateStatusDriverEvent(0));
+                }else{
+                  _loginBloc.add(UpdateStatusDriverEvent(1));
+                }
                Navigator.push(context, (MaterialPageRoute(builder: (context)=>MainPage(roleAccount: _loginBloc.roleAccount,))));
               }
               if (state is LoginFailure) {

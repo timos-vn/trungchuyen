@@ -23,7 +23,7 @@ class DetailTripsPage extends StatefulWidget {
 class _DetailTripsPageState extends State<DetailTripsPage> {
 
   DetailTripsBloc _bloc;
-  List<DetailTripsReponseBody> _listOfDetailTrips = new List<DetailTripsReponseBody>();
+  List<DetailTripsResponseBody> _listOfDetailTrips = new List<DetailTripsResponseBody>();
 
   @override
   void initState() {
@@ -96,7 +96,7 @@ class _DetailTripsPageState extends State<DetailTripsPage> {
     );
   }
 
-  Widget buildListItem(DetailTripsReponseBody item) {
+  Widget buildListItem(DetailTripsResponseBody item) {
     return GestureDetector(
         onTap: () {
 

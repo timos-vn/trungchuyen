@@ -9,10 +9,12 @@ import 'package:get/get_navigation/src/routes/get_route.dart';
 import 'package:overlay_support/overlay_support.dart';
 import 'package:trungchuyen/page/login/login_page.dart';
 import 'package:trungchuyen/page/splash/splash_page.dart';
+import 'package:trungchuyen/service/app_binding.dart';
 import 'package:trungchuyen/themes/colors.dart';
 import 'package:trungchuyen/utils/const.dart';
 import 'package:trungchuyen/utils/translations.dart';
 import 'package:trungchuyen/utils/utils.dart';
+import 'package:wakelock/wakelock.dart';
 
 
 
@@ -34,8 +36,8 @@ class _MyAppState extends State<MyApp> {
   void initState() {
     // TODO: implement initState
     super.initState();
+    Wakelock.enable();
     if(!Utils.isEmpty(MyTranslations().getCurrentLang())){
-      print('calllllllllllllllllllalalalalallalaa');
       MyTranslations().changeLocale(MyTranslations.newLocale);
       print('${MyTranslations.newLocale}');
     }
@@ -48,7 +50,7 @@ class _MyAppState extends State<MyApp> {
 
     return OverlaySupport(
       child: GetMaterialApp(
-        title: 'SSE Cloud ERP',
+        title: 'Trung Chuyển',
         debugShowCheckedModeBanner: false,
         theme: ThemeData(
           primaryColor: white,
@@ -59,6 +61,7 @@ class _MyAppState extends State<MyApp> {
         fallbackLocale: MyTranslations.fallbackLocale,
         translations: MyTranslations(),
         initialRoute: '/SplashPageRouter',
+        initialBinding: AppBinding(),
         getPages: [
           GetPage(
             name: '/SplashPageRouter',

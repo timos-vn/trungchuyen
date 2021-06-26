@@ -42,7 +42,7 @@ class ReportLimoBloc extends Bloc<ReportLimoEvent,ReportLimoState> {
     }
     if(event is GetReportLimoEvent){
       yield ReportLimoLoading();
-      //ReportLimoState state = _handleGetReportLimo(await _networkFactory.getReport(_accessToken, event.dateFrom,event.dateTo));
+      ReportLimoState state = _handleGetReportLimo(await _networkFactory.getReportLimo(_accessToken, event.dateFrom,event.dateTo));
       yield state;
     }
   }

@@ -1,7 +1,8 @@
 class TranferCustomerRequestBody {
 
   String title;
-  String body; String data;
+  String body;
+  Map<String,String> data;
   List<String> idTaiKhoans;
 
 

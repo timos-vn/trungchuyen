@@ -8,7 +8,7 @@ abstract class MapLimoEvent extends Equatable {
 
 class GetListCustomerLimo extends MapLimoEvent {
 
-  final List<DetailTripsReponseBody> listOfDetailTrips;
+  final List<DetailTripsResponseBody> listOfDetailTrips;
 
   GetListCustomerLimo(this.listOfDetailTrips);
 
@@ -24,4 +24,13 @@ class UpdateStatusDriverLimoEvent extends MapLimoEvent {
 
   @override
   String toString() => 'UpdateStatusDriverLimoEvent {statusDriver: $statusDriver}';
+}
+class GetEvent extends MapLimoEvent {
+
+  final String markerId;
+
+  GetEvent(this.markerId);
+
+  @override
+  String toString() => 'GetEvent {}';
 }

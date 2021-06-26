@@ -149,8 +149,20 @@ class UpdateStatusCustomerSuccess extends MainState {
   String toString() => 'UpdateStatusCustomerSuccess }';
 }
 
-// class UpdateStatusDriverState extends MainState {
-//
-//   @override
-//   String toString() => 'UpdateStatusDriverState {}';
-// }
+class TXLimoConfirmWithTXTCSuccess extends MainState {
+
+  @override
+  String toString() => 'TXLimoConfirmWithTXTCSuccess {}';
+}
+class GetLocationSuccess extends MainState {
+
+
+  final String makerID;
+  final double lat;
+  final double lng;
+
+  GetLocationSuccess(this.makerID, this.lat, this.lng);
+
+  @override
+  String toString() => 'GetLocationSuccess {}';
+}

@@ -28,7 +28,8 @@ class ListCustomerLimoBloc extends Bloc<ListCustomerLimoEvent,ListCustomerLimoSt
   SharedPreferences get prefs => _prefs;
   List<ListOfGroupAwaitingCustomerBody> listCustomerLimo;
   List<DetailTripsLimoReponseBody> listOfDetailTripsLimo = new List<DetailTripsLimoReponseBody>();
-
+  String _nameLXLimo;
+  String _sdtLXLimo;
 
   ListCustomerLimoBloc(this.context) : super(null){
     _networkFactory = NetWorkFactory(context);
@@ -45,6 +46,9 @@ class ListCustomerLimoBloc extends Bloc<ListCustomerLimoEvent,ListCustomerLimoSt
       _prefs = await SharedPreferences.getInstance();
       _accessToken = _prefs.getString(Const.ACCESS_TOKEN) ?? "";
       _refreshToken = _prefs.getString(Const.REFRESH_TOKEN) ?? "";
+      _nameLXLimo = _prefs.getString(Const.FULL_NAME) ?? "";
+      _sdtLXLimo = _prefs.getString(Const.PHONE_NUMBER) ?? "";
+
     }
     if(event is GetListCustomerLimo){
       yield ListCustomerLimoLoading();
@@ -58,22 +62,30 @@ class ListCustomerLimoBloc extends Bloc<ListCustomerLimoEvent,ListCustomerLimoSt
       yield state;
     }
 
-    if(event is TranferCustomerLimo){
-      yield ListCustomerLimoLoading();
-      List<String> listIdTXTC = new List<String>();
-      List<DetailTripsLimoReponseBody> listTaiXeTC = event.listTaiXeTC;
-      listTaiXeTC.forEach((element) { 
-        listIdTXTC.add(element.idTaiXeTC);
-      });
-      print(listIdTXTC);
-      TranferCustomerRequestBody request = TranferCustomerRequestBody(
-        title: event.title,
-        body: event.body,
-        data: null,
-        idTaiKhoans: listIdTXTC
-      );
-     ListCustomerLimoState state =  _handleTransferCustomerLimo(await _networkFactory.transferCustomer(request,_accessToken));
-      yield state;
+    if(event is CustomerTransferToTC){
+    //   yield ListCustomerLimoLoading();
+    //   String taixeLM;
+    //   List<String> listIdTXTC = new List<String>();
+    //   List<DetailTripsLimoReponseBody> listTaiXeTC = event.listTaiXeTC;
+    //   listTaiXeTC.forEach((element) {
+    //     listIdTXTC.add(element.idTaiXeTC);
+    //
+    //     //numberCustomer += element.soKhach;
+    //   });
+    //   print(listIdTXTC);
+    //   var objData = {
+    //     'EVENT':'TAIXE_LIMO_GIAOKHACH_TRUNGCHUYEN',
+    //     // 'Sokhach':numberCustomer, nghiên cứu thêm
+    //     'TaiXeLimo': _nameLXLimo
+    //   };
+    //   TranferCustomerRequestBody request = TranferCustomerRequestBody(
+    //     title: event.title,
+    //     body: event.body,
+    //     data: null,
+    //     idTaiKhoans: listIdTXTC
+    //   );
+    //  ListCustomerLimoState state =  _handleTransferCustomerLimo(await _networkFactory.sendNotification(request,_accessToken));
+    //   yield state;
     }
   }
 

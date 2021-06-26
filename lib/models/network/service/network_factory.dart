@@ -3,6 +3,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:get/get.dart' as libGetX;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:trungchuyen/models/network/request/login_request.dart';
+import 'package:trungchuyen/models/network/request/push_location_request.dart';
 import 'package:trungchuyen/models/network/request/tranfer_customer_request.dart';
 import 'package:trungchuyen/models/network/request/update_status_customer_request.dart';
 import 'package:trungchuyen/models/network/request/update_token_request.dart';
@@ -30,9 +31,9 @@ class NetWorkFactory {
     print('test connection');
     print("$host:$port");
     _dio = Dio(BaseOptions(
-      baseUrl: "$host:$port",
-      receiveTimeout: 10000,
-      connectTimeout: 10000,
+      baseUrl: "$host${port!=0?":$port":""}",
+      receiveTimeout: 60000,
+      connectTimeout: 60000,
     ));
     _setupLoggingInterceptor();
   }
@@ -228,16 +229,31 @@ class NetWorkFactory {
   Future<Object> getReport(String token,DateTime dateTimeFrom, DateTime dateTimeTo) async {
     return await requestApi(_dio.get('/api/v1/thongke/taixe-trungchuyen/khach-trung-chuyen/' + dateTimeFrom.toString() + '/' + dateTimeTo.toString(), options: Options(headers: {"Authorization": "Bearer $token"}))); //["Authorization"] = "Bearer " + token
   }
+  Future<Object> getReportLimo(String token,DateTime dateTimeFrom, DateTime dateTimeTo) async {
+    return await requestApi(_dio.get('/api/v1/thongke/taixe-limo/thongkekhach/' + dateTimeFrom.toString() + '/' + dateTimeTo.toString(), options: Options(headers: {"Authorization": "Bearer $token"}))); //["Authorization"] = "Bearer " + token
+  }
 
   Future<Object> getListCustomerLimo(String token,DateTime dateTime) async {
-    return await requestApi(_dio.get('/api/v1/limo/' + '2021-06-20', options: Options(headers: {"Authorization": "Bearer $token"}))); //["Authorization"] = "Bearer " + token
+    return await requestApi(_dio.get('/api/v1/limo/' + dateTime.toString(), options: Options(headers: {"Authorization": "Bearer $token"}))); //["Authorization"] = "Bearer " + token
   }
 
   Future<Object> getDetailTripsLimo(String token, String date, String idTrips, String idTime) async {
     return await requestApi(_dio.get('/api/v1/limo/' + date.toString() +'/'+ idTrips + '/' + idTime, options: Options(headers: {"Authorization": "Bearer $token"}))); //["Authorization"] = "Bearer " + token
   }
 
-  Future<Object> transferCustomer(TranferCustomerRequestBody request,String token) async {
+  Future<Object> sendNotification(TranferCustomerRequestBody request,String token) async {
     return await requestApi(_dio.post('/api/v1/thongbao/send-notification', options: Options(headers: {"Authorization": "Bearer $token"}), data: request.toJson()));
   }
+
+  Future<Object> pushLocationToLimo(PushLocationRequestBody request,String token) async {
+    return await requestApi(_dio.post('/api/v1/trungchuyen/cap-nhat-toa-do', options: Options(headers: {"Authorization": "Bearer $token"}), data: request.toJson()));
+  }
+
+  Future<Object> getListLocationPolyline(String token,String currentLocation, String customerlocation) async {
+    return await requestApi(_dio.get('/api/v1/google-map/direction', options: Options(headers: {"Authorization": "Bearer $token"}), queryParameters: {
+      "origin": currentLocation,
+      "destination": customerlocation,
+    })); //["Authorization"] = "Bearer " + token
+  }
+
 }

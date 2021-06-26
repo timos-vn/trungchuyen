@@ -144,7 +144,28 @@ class WaitingPageState extends State<WaitingPage> {
         )
             : Container(
           child: Center(
-            child: Text(_mainBloc.testing),
+            child: Padding(
+              padding: const EdgeInsets.only(left: 40,right: 40),
+              child: InkWell(
+                onTap: ()=>_bloc.add(GetListGroupAwaitingCustomer(DateFormat("yyyy-MM-dd").parse(DateTime.now().toString()))),
+                child: Container(
+                    height: 35,
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(10),
+                      color: Colors.blueAccent,
+                    ),
+                  child: Center(
+                    child: Text(
+                      'Làm mới danh sách',
+                      style: Theme.of(context).textTheme.button.copyWith(
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
           ),
         ),
         Visibility(
@@ -168,6 +189,7 @@ class WaitingPageState extends State<WaitingPage> {
                 _bloc.add(GetListDetailTripsOfPageWaiting(format.parse(item.ngayChay),item.idTuyenDuong,item.idKhungGio));
                 _mainBloc.blocked = true;
                 _mainBloc.indexAwaitingList = index;
+                _mainBloc.currentNumberCustomerOfList = item.soKhach;
                 Utils.showToast( 'Chạy thôi nào bạn ơi !!!');
                 print(_mainBloc.timeStart);
               }
