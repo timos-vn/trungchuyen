@@ -231,8 +231,8 @@ class ListCustomerLimoPageState extends State<ListCustomerLimoPage> {
                             child: SizedBox(),
                           ),
                           Container(
-                            height: 40,
-                            width: 40,
+                            height: 45,
+                            width: 45,
                             padding: EdgeInsets.all(8),
                             decoration: BoxDecoration(
                                 color:  (  index == _mainBloc.indexAwaitingList && _mainBloc.blocked == true) ? (item.loaiKhach == 1 ? Colors.orange.withOpacity(0.5) : Colors.blue.withOpacity(0.5)) : (item.loaiKhach == 1 ? Colors.orange : Colors.blue),

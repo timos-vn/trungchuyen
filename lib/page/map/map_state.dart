@@ -73,3 +73,8 @@ class TransferCustomerToLimoSuccess extends MapState {
   @override
   String toString() => 'TransferCustomerToLimoSuccess {}';
 }
+class PushLocationToLimoSuccess extends MapState {
+
+  @override
+  String toString() => 'PushLocationToLimoSuccess {}';
+}

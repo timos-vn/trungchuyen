@@ -16,6 +16,7 @@ import 'map_limo_event.dart';
 import 'map_limo_state.dart';
 
 class MapLimoBloc extends Bloc<MapLimoEvent,MapLimoState> {
+  //SocketIOService socketIOService;
 
 
   BuildContext context;
@@ -26,15 +27,14 @@ class MapLimoBloc extends Bloc<MapLimoEvent,MapLimoState> {
   String get refreshToken => _refreshToken;
   SharedPreferences _prefs;
   SharedPreferences get prefs => _prefs;
-  List<String> lsMarkerId = [];
+
   List<DetailTripsResponseBody> listOfCustomerTrips = new List<DetailTripsResponseBody>();
-  LatLngInterpolationStream latLngStream = LatLngInterpolationStream();
+
   Location location = new Location();
   String markerID;
 
   MapLimoBloc(this.context) : super(null){
     _networkFactory = NetWorkFactory(context);
-
   }
 
   // TODO: implement initialState

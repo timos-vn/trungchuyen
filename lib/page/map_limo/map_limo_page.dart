@@ -5,6 +5,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animarker/lat_lng_interpolation.dart';
 import 'package:flutter_animarker/models/lat_lng_delta.dart';
+import 'package:flutter_animarker/models/lat_lng_info.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:get/get.dart';
@@ -48,7 +49,8 @@ class MapLimoPageState extends State<MapLimoPage> {
     //rotateGesturesEnabled: true,
   );
 
-
+  LatLngInterpolationStream latLngStream = LatLngInterpolationStream();
+  List<String> lsMarkerId = [];
   // cái này này để samg bloc
   // lấy cái
   StreamGroup<LatLngDelta> subscriptions = StreamGroup<LatLngDelta>();
@@ -61,10 +63,24 @@ class MapLimoPageState extends State<MapLimoPage> {
     // TODO: implement initState
     super.initState();
     _mapLimoBloc = MapLimoBloc(context);
-    // _mapLimoBloc.add(GetEvent());
     _mainBloc = BlocProvider.of<MainBloc>(context);
     socketIOService = Get.find<SocketIOService>();
-    socketIOService.socket.on('event', (data) => print(data));
+    socketIOService.socket.on("TAIXE_TRUNGCHUYEN_CAPNHAT_TOADO", (data){
+      String item = data['LOCATION'];
+      String _location = item.replaceAll('{', '').replaceAll('}', '').replaceAll("\"","").replaceAll('lat', '').replaceAll('lng', '').replaceAll(':', '');
+      String makerId = data['PHONE'];
+      setState(() {
+        if(lsMarkerId.where((id) => id==makerId).length==0){
+          lsMarkerId.add(makerId);
+          subscriptions.add(latLngStream.getAnimatedPosition(makerId));
+          subscriptions.stream.listen((LatLngDelta delta) {
+            drawMyLocation(LatLng(delta.from.latitude, delta.from.longitude), delta.rotation,delta.markerId);
+          });
+        }
+        latLngStream.addLatLng(new LatLngInfo(double.parse( _location.split(',')[0]), double.parse( _location.split(',')[1]),makerId));
+      });
+      print('TAIXE_TRUNGCHUYEN_CAPNHAT_TOADO => ${data.toString()}');
+    });
 
     print('LengthABCCC123');
   }
@@ -79,10 +95,7 @@ class MapLimoPageState extends State<MapLimoPage> {
 
         }else if(state is GetEventStateSuccess){
           print('RELOAD AGAIN1');
-          subscriptions.add(_mapLimoBloc.latLngStream.getAnimatedPosition(_mapLimoBloc.markerID));
-          subscriptions.stream.listen((LatLngDelta delta) {
-            drawMyLocation(LatLng(delta.from.latitude, delta.from.longitude), delta.rotation,delta.markerId);
-          });
+
         }
       },
       child: BlocBuilder<MapLimoBloc,MapLimoState>(
@@ -104,9 +117,7 @@ class MapLimoPageState extends State<MapLimoPage> {
           color: Theme.of(context).scaffoldBackgroundColor,
           child: Scaffold(
               key: scaffoldKey,
-              body: Container(
-                child: Center(child: Text(_mapLimoBloc.markerID??'' + " - " + _mapLimoBloc.lsMarkerId.length.toString()??'' + " _ " + _mapLimoBloc.location.toString()??''),),
-              )
+              body: googleMap()
           ),
         ),
         Visibility(

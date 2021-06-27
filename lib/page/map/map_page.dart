@@ -8,6 +8,7 @@ import 'package:flutter_animarker/models/lat_lng_delta.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_polyline_points/flutter_polyline_points.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:get/get.dart';
 import 'package:google_maps_controller/google_maps_controller.dart';
 import 'package:location/location.dart';
 import 'package:snapping_sheet/snapping_sheet.dart';
@@ -20,6 +21,7 @@ import 'package:trungchuyen/page/map/map_bloc.dart';
 import 'package:trungchuyen/page/map/map_state.dart';
 import 'package:trungchuyen/page/reason_cancel/reason_cancel_page.dart';
 import 'package:trungchuyen/service/location_service.dart';
+import 'package:trungchuyen/service/soket_io_service.dart';
 import 'package:trungchuyen/themes/colors.dart';
 import 'package:trungchuyen/themes/font.dart';
 import 'package:trungchuyen/themes/images.dart';
@@ -68,10 +70,12 @@ class MapPageState extends State<MapPage>{
 
   int statusDon=2;
   int statusTra=5;
+  SocketIOService socketIOService;
 
   @override
   void initState() {
     // TODO: implement initState
+    socketIOService = Get.find<SocketIOService>();
     _mapBloc = MapBloc(context);
     _mainBloc = BlocProvider.of<MainBloc>(context);
     _mapBloc.add(CheckPermissionEvent());
@@ -139,13 +143,23 @@ class MapPageState extends State<MapPage>{
                   textAlign: TextAlign.center,
                 )
                     :
-                Text(
-                  'Online',
-                  style: Theme.of(context).textTheme.title.copyWith(
-                    fontWeight: FontWeight.bold,
-                    color: Theme.of(context).textTheme.title.color,
+                InkWell(
+                  // onTap: ()=> Utils.showDialogAssignReceiveCustomer(context,'','','', "title", 'body',
+                  //     onTapCancelNotification: () {
+                  //       print('onTapCancelNotification');
+                  //     },
+                  //     onTapAcceptNotification: (){
+                  //       print('onTapAcceptNotification');
+                  //     }
+                  // ),
+                  child: Text(
+                    'Online',
+                    style: Theme.of(context).textTheme.title.copyWith(
+                      fontWeight: FontWeight.bold,
+                      color: Theme.of(context).textTheme.title.color,
+                    ),
+                    textAlign: TextAlign.center,
                   ),
-                  textAlign: TextAlign.center,
                 ),
                 centerTitle: true,
                 actions: [
@@ -160,10 +174,17 @@ class MapPageState extends State<MapPage>{
                         changeOnline();
                         setState(() {
                           if(value == true){
-                            _mapBloc.add(UpdateStatusDriverEvent(1));
-
+                            // _mapBloc.add(UpdateStatusDriverEvent(1));
+                            if(_mainBloc.socketIOService.socket.disconnected)
+                            {
+                              _mainBloc.socketIOService.socket.connect();
+                            }
                           }else{
-                            _mapBloc.add(UpdateStatusDriverEvent(0));
+                            if(_mainBloc.socketIOService.socket.connected)
+                            {
+                              _mainBloc.socketIOService.socket.disconnect();
+                            }
+                            // _mapBloc.add(UpdateStatusDriverEvent(0));
                           }
                           isOnline = value;
                           isInProcessPickup = true;
@@ -461,8 +482,12 @@ class MapPageState extends State<MapPage>{
                                                       );
                                                     }).then((value){
                                                   if(!Utils.isEmpty(value)){
-                                                    //_mapBloc.add(UpdateStatusCustomerEvent());
+
                                                     _countCustomerSuccessfulOrCancel++;
+                                                    if(socketIOService.socket.connected)
+                                                    {
+                                                      socketIOService.socket.emit("TAIXE_TRUNGCHUYEN_CAPNHAT_TRANGTHAI_KHACH");
+                                                    }
                                                     _mainBloc.add(UpdateStatusCustomerEvent(status: 9,idTrungChuyen: [_mainBloc.listOfDetailTrips[0].idTrungChuyen],note: value[0]));
                                                     Utils.showToast('Huỷ khách thành công');
                                                   }
@@ -501,10 +526,18 @@ class MapPageState extends State<MapPage>{
                                                       statusDon = 3;
                                                       print('123123');
                                                       _mapBloc.add(GetListLocationPolylineEvent(_mainBloc.listOfDetailTrips[0].toaDoDiaChiKhachDi));
+                                                      if(socketIOService.socket.connected)
+                                                      {
+                                                        socketIOService.socket.emit("TAIXE_TRUNGCHUYEN_CAPNHAT_TRANGTHAI_KHACH");
+                                                      }
                                                       _mainBloc.add(UpdateStatusCustomerEvent(status: 3,idTrungChuyen: [_mainBloc.listOfDetailTrips[0].idTrungChuyen]));
                                                       Utils.showToast('Đang đi đón khách');
                                                     }else if(statusDon == 3){
                                                       /// nex Đã đón
+                                                      if(socketIOService.socket.connected)
+                                                      {
+                                                        socketIOService.socket.emit("TAIXE_TRUNGCHUYEN_CAPNHAT_TRANGTHAI_KHACH");
+                                                      }
                                                       _mainBloc.add(UpdateStatusCustomerEvent(status: 4,idTrungChuyen: [_mainBloc.listOfDetailTrips[0].idTrungChuyen]));
                                                       _countCustomerSuccessfulOrCancel++;
                                                       statusDon = 2;
@@ -521,10 +554,18 @@ class MapPageState extends State<MapPage>{
                                                     /// bắn notification xác nhận - nhận được khách từ tài xế Limo
                                                     if(statusTra == 6){
                                                       statusTra = 7;/// nex Đang trả
+                                                      if(socketIOService.socket.connected)
+                                                      {
+                                                        socketIOService.socket.emit("TAIXE_TRUNGCHUYEN_CAPNHAT_TRANGTHAI_KHACH");
+                                                      }
                                                       _mainBloc.add(UpdateStatusCustomerEvent(status: 7,idTrungChuyen: [_mainBloc.listOfDetailTrips[0].idTrungChuyen]));
                                                       Utils.showToast('Đang đi trả khách');
                                                     }else if(statusTra == 8){
                                                       /// Đã trả
+                                                      if(socketIOService.socket.connected)
+                                                      {
+                                                        socketIOService.socket.emit("TAIXE_TRUNGCHUYEN_CAPNHAT_TRANGTHAI_KHACH");
+                                                      }
                                                       _mainBloc.add(UpdateStatusCustomerEvent(status: 8,idTrungChuyen: [_mainBloc.listOfDetailTrips[0].idTrungChuyen]));
                                                       _countCustomerSuccessfulOrCancel++;
                                                       statusTra = 6;
@@ -819,7 +860,10 @@ class MapPageState extends State<MapPage>{
                                                                   );
                                                                 }).then((value){
                                                               if(!Utils.isEmpty(value)){
-                                                                //_mapBloc.add(UpdateStatusCustomerEvent());
+                                                                if(socketIOService.socket.connected)
+                                                                {
+                                                                  socketIOService.socket.emit("TAIXE_TRUNGCHUYEN_CAPNHAT_TRANGTHAI_KHACH");
+                                                                }
                                                                 _countCustomerSuccessfulOrCancel++;
                                                                 _mainBloc.add(UpdateStatusCustomerEvent(status: 9,idTrungChuyen: [_mainBloc.listOfDetailTrips[0].idTrungChuyen],note: value[0]));
                                                                 Utils.showToast('Huỷ khách thành công');
@@ -1358,7 +1402,10 @@ class MapPageState extends State<MapPage>{
                                       );
                                     }).then((value){
                                   if(!Utils.isEmpty(value)){
-                                    //_mapBloc.add(UpdateStatusCustomerEvent());
+                                    if(socketIOService.socket.connected)
+                                    {
+                                      socketIOService.socket.emit("TAIXE_TRUNGCHUYEN_CAPNHAT_TRANGTHAI_KHACH");
+                                    }
                                     _countCustomerSuccessfulOrCancel++;
                                     _mainBloc.add(UpdateStatusCustomerEvent(status: 9,idTrungChuyen: [_mainBloc.listOfDetailTrips[0].idTrungChuyen],note: value[0]));
                                     Utils.showToast('Huỷ khách thành công');

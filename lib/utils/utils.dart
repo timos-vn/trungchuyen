@@ -306,6 +306,160 @@ class Utils {
     }, duration: Duration(milliseconds: 4000));
   }
 
+
+  static void showDialogAssignReceiveCustomer(BuildContext context, String tripName,String date, String typeCustomer,  String title, String body, {VoidCallback onTapAcceptNotification,VoidCallback onTapCancelNotification}) =>
+      showOverlayNotification((context){
+        return Center(
+          child: Padding(
+            padding: EdgeInsets.only(left: 30, right: 30, top: 200),
+            child: Container(
+              decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.all(Radius.circular(16))),
+              height: 300,
+              width: double.infinity,
+              child: Material(
+                  animationDuration: Duration(seconds: 3),
+                  borderRadius: BorderRadius.all(Radius.circular(16)),
+                  child: Padding(
+                    padding: const EdgeInsets.all(20),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        CircularCountDownTimer(
+                          autoStart: true,
+                          duration: 180,
+                          initialDuration: 0,
+                          width: 80,
+                          height: 80,
+                          ringColor: Colors.grey[300],
+                          ringGradient: null,
+                          fillColor: Colors.purpleAccent[100],
+                          fillGradient: null,
+                          backgroundColor: Colors.white,
+                          backgroundGradient: null,
+                          strokeWidth: 5,
+                          strokeCap: StrokeCap.round,
+                          textStyle: TextStyle(fontSize: 24.0, color: Colors.amberAccent, fontWeight: FontWeight.bold),
+                          isReverse: true,
+                          isReverseAnimation: true,
+                          isTimerTextShown: true,
+                          onComplete: () {
+                            OverlaySupportEntry.of(context).dismiss();
+                            onTapCancelNotification();
+                          },
+                        ),
+                        Table(
+                          border: TableBorder.all(color: Colors.orange),
+                          columnWidths: const <int, TableColumnWidth>{
+                            0: FixedColumnWidth(120),
+                            1: FlexColumnWidth(),
+                          },
+                          defaultVerticalAlignment: TableCellVerticalAlignment.middle,
+                          children: [
+                            TableRow(
+                              children: [
+                                TableCell(
+                                  child: Padding(
+                                    padding: const EdgeInsets.all(8.0),
+                                    child: Text(
+                                      'Chuyến:',
+                                      style: TextStyle(fontWeight: FontWeight.bold),
+                                    ),
+                                  ),
+                                ),
+                                TableCell(
+                                  child: Padding(
+                                    padding: const EdgeInsets.all(8.0),
+                                    child: Text('$tripName'),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            TableRow(
+                              children: [
+                                TableCell(
+                                  child: Padding(
+                                    padding: const EdgeInsets.all(8.0),
+                                    child: Text(
+                                      'Ngày',
+                                      style: TextStyle(fontWeight: FontWeight.bold),
+                                    ),
+                                  ),
+                                ),
+                                TableCell(
+                                  child: Padding(
+                                    padding: const EdgeInsets.all(8.0),
+                                    child: Text(date),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            TableRow(children: [
+                              TableCell(
+                                child: Padding(
+                                  padding: const EdgeInsets.all(8.0),
+                                  child: Text(
+                                    'Thời gian:',
+                                    style: TextStyle(fontWeight: FontWeight.bold),
+                                  ),
+                                ),
+                              ),
+                              TableCell(
+                                child: Padding(
+                                  padding: const EdgeInsets.all(8.0),
+                                  child: Text(typeCustomer == '1' ? 'Khách đón' : 'Khách trả'),
+                                ),
+                              ),
+                            ]),
+                          ],
+                        ),
+                        Container(
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Expanded(
+                                child: SizedBox(
+                                    width: double.infinity,
+                                    child: ElevatedButton(
+                                      onPressed: () {
+                                        OverlaySupportEntry.of(context).dismiss();
+                                        onTapCancelNotification();
+                                      },
+                                      child: Text('Từ chối'),
+                                    )),
+                              ),
+                              SizedBox(
+                                width: 15,
+                              ),
+                              Expanded(
+                                child: SizedBox(
+                                  width: double.infinity,
+                                  child: ElevatedButton(
+                                    onPressed: () {
+                                      OverlaySupportEntry.of(context).dismiss();
+                                      onTapAcceptNotification();
+                                    },
+                                    child: Text(
+                                      'Nhận ${typeCustomer == '1' ? 'đón' : 'trả'}',
+                                      style: TextStyle(color: white),
+                                    ),
+                                    style: ButtonStyle(
+                                      backgroundColor: MaterialStateProperty.all(Colors.orange),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  )),
+            ),
+          ),
+        );
+      },duration: Duration(seconds: 180));
+
   static void onWidgetDidBuild(Function callback) {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       callback();

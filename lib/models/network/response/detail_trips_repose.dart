@@ -49,6 +49,7 @@ class DetailTripsResponseBody {
   int loaiKhach;
   String trangThaiTC;
   int soKhach;
+  int status;
 
   DetailTripsResponseBody(
       {this.idTrungChuyen,
@@ -69,7 +70,9 @@ class DetailTripsResponseBody {
         this.toaDoLimoDen,
         this.loaiKhach,
         this.trangThaiTC,
-        this.soKhach});
+        this.soKhach,
+        this.status,
+      });
 
   DetailTripsResponseBody.fromJson(Map<String, dynamic> json) {
     idTrungChuyen = json['idTrungChuyen'];

@@ -75,6 +75,7 @@ class _MainPageState extends State<MainPage> with WidgetsBindingObserver{
   @override
   void initState() {
     WidgetsBinding.instance.addObserver(this);
+    Get.put(SocketIOService());
     _mainBloc = MainBloc();
     _mapBloc = MapBloc(context);
     _waitingBloc = WaitingBloc(context);
@@ -84,11 +85,19 @@ class _MainPageState extends State<MainPage> with WidgetsBindingObserver{
     _mapLimoBloc = MapLimoBloc(context);
     _reportLimoBloc = ReportLimoBloc(context);
     _currentTabKey = firstTabNavKey;
-    Get.put(SocketIOService());
+
     WidgetsBinding.instance.addObserver(
         LifecycleEventHandler(
             resumeCallBack: () async => setState(() {})),
     );
+    if(widget.roleAccount == 3){
+
+    }else{
+      if(_mainBloc.socketIOService.socket.disconnected)
+      {
+        _mainBloc.socketIOService.socket.connect();
+      }
+    }
     super.initState();
   }
 
@@ -102,11 +111,19 @@ class _MainPageState extends State<MainPage> with WidgetsBindingObserver{
   void didChangeAppLifecycleState(AppLifecycleState state) {
     super.didChangeAppLifecycleState(state);
     if(state == AppLifecycleState.resumed){
-      print('Current state = $state');
-      _mapBloc.add(UpdateStatusDriverEvent(1));
+      Utils.showToast('Bạn đã Online');
+      if(_mainBloc.socketIOService.socket.disconnected)
+      {
+        _mainBloc.socketIOService.socket.connect();
+      }
+      // _mapBloc.add(UpdateStatusDriverEvent(1));
     }else if(state == AppLifecycleState.inactive || state == AppLifecycleState.paused){
-      print('Current state = $state');
-      _mapBloc.add(UpdateStatusDriverEvent(0));
+      Utils.showToast('Bạn đã offline. Vui lòng quay lại app.');
+      if(_mainBloc.socketIOService.socket.connected)
+      {
+        _mainBloc.socketIOService.socket.disconnect();
+      }
+      // _mapBloc.add(UpdateStatusDriverEvent(0));///viet ntn dung k :))))
     }
   }
 
@@ -191,17 +208,17 @@ class _MainPageState extends State<MainPage> with WidgetsBindingObserver{
                 else if (state is NavigateToNotificationState) {}
                 else if(state is GetLocationSuccess){
 
-                  _mapLimoPageKey?.currentState?.setState(() {
-                    if(_mapLimoBloc.lsMarkerId.where((id) => id==state.makerID).length==0)
-                    {
-                      print('ALALALA');
-                      _mapLimoBloc.lsMarkerId.add(state.makerID);
-                      _mapLimoBloc.add(GetEvent(state.makerID));
-                    }
-                    _mapLimoBloc.latLngStream.addLatLng(new LatLngInfo(state.lat,state.lng,state.makerID));
-                  });
-                  print('ALALALA');
-                  print(state.makerID +' - '+ state.lat.toString() +' - '+ state.lng.toString());
+                  // _mapLimoPageKey?.currentState?.setState(() {
+                  //   if(_mapLimoBloc.lsMarkerId.where((id) => id==state.makerID).length==0)
+                  //   {
+                  //     print('ALALALA');
+                  //     _mapLimoBloc.lsMarkerId.add(state.makerID);
+                  //     _mapLimoBloc.add(GetEvent(state.makerID));
+                  //   }
+                  //   _mapLimoBloc.latLngStream.addLatLng(new LatLngInfo(state.lat,state.lng,state.makerID));
+                  // });
+                  // print('ALALALA');
+                  // print(state.makerID +' - '+ state.lat.toString() +' - '+ state.lng.toString());
                 }
               },
               child: BlocBuilder<MainBloc, MainState>(

@@ -63,15 +63,15 @@ class LoginBloc extends Bloc<LoginEvent,LoginState> with Validators{
 
     if(event is UpdateStatusDriverEvent){
       yield LoginInitial();
-      LoginState state = _handleUpdateStatusDriver(await _networkFactory.updateStatusDriver(_accessToken, event.statusDriver));//
+      LoginState state = _handleUpdateStatusDriver(await _networkFactory.updateStatusDriver(_accessToken, 1));//event.statusDriver
       yield state;
     }
 
     if (event is Login) {
       yield LoginLoading();
       LoginRequestBody request = LoginRequestBody(
-        username: event.username, /// 0989888668
-        password: event.password, /// 0974629615
+        username:"0974629615",// event.username, /// 0989888668
+        password:"0974629615" ,//event.password, /// 0974629615
       );
       LoginState state = _handleLogin(await _networkFactory.login(request),event.savePassword,event.username,event.password);
     yield state;

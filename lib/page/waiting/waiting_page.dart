@@ -2,6 +2,8 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:liquid_pull_to_refresh/liquid_pull_to_refresh.dart';
+import 'package:trungchuyen/models/database/dbhelper.dart';
+import 'package:trungchuyen/models/entity/customer.dart';
 import 'package:trungchuyen/models/network/response/list_of_group_awaiting_customer_response.dart';
 import 'package:trungchuyen/page/detail_trips/detail_trips_page.dart';
 import 'package:trungchuyen/page/main/main_bloc.dart';
@@ -27,7 +29,8 @@ class WaitingPageState extends State<WaitingPage> {
   WaitingBloc _bloc;
   MainBloc _mainBloc;
   //List<ListOfGroupAwaitingCustomerBody> _listOfGroupAwaitingCustomer = new List();
-
+  DatabaseHelper db = DatabaseHelper();
+  List<Customer> langSt = new List<Customer>();
 
   @override
   void initState() {
@@ -63,8 +66,37 @@ class WaitingPageState extends State<WaitingPage> {
           else if(state is GetListOfDetailTripsOfWaitingPageSuccess){
             _mainBloc.listOfDetailTrips.clear();
             _mainBloc.listOfDetailTrips = _bloc.listOfDetailTrips;
+            /// add sqfliet
+            ///
+
             int _countExitsCustomer = 0;
             _bloc.listOfDetailTrips.forEach((element) {
+              db.deleteAll();
+              Customer customer = new Customer(
+                idTrungChuyen: element.idTrungChuyen,
+                  idTaiXeLimousine : element.idTaiXeLimousine,
+                  hoTenTaiXeLimousine : element.hoTenTaiXeLimousine,
+                  dienThoaiTaiXeLimousine : element.dienThoaiTaiXeLimousine,
+                  tenXeLimousine : element.tenXeLimousine,
+                  bienSoXeLimousine : element.bienSoXeLimousine,
+                  tenKhachHang : element.tenKhachHang,
+                  soDienThoaiKhach :element.soDienThoaiKhach,
+                  diaChiKhachDi :element.diaChiKhachDi,
+                  toaDoDiaChiKhachDi:element.toaDoDiaChiKhachDi,
+                  diaChiKhachDen:element.diaChiKhachDen,
+                  toaDoDiaChiKhachDen:element.toaDoDiaChiKhachDen,
+                  diaChiLimoDi:element.diaChiLimoDi,
+                  toaDoLimoDi:element.toaDoLimoDi,
+                  diaChiLimoDen:element.diaChiLimoDen,
+                  toaDoLimoDen:element.toaDoLimoDen,
+                  loaiKhach:element.loaiKhach,
+                  trangThaiTC:element.trangThaiTC,
+                  soKhach:element.soKhach,
+                  statusCustomer: element.loaiKhach == 1 ? 2 : 5
+              );
+
+              db.addNew(customer);
+
               if(Utils.isEmpty(_mainBloc.listTaiXeLimo)){
                 _countExitsCustomer++;
                 element.soKhach = _countExitsCustomer;
@@ -81,6 +113,7 @@ class WaitingPageState extends State<WaitingPage> {
                 }
               }
             });
+            getListCustomer();
           }
         },
         child: BlocBuilder<WaitingBloc,WaitingState>(
@@ -92,6 +125,21 @@ class WaitingPageState extends State<WaitingPage> {
       //),
     )
     );
+  }
+
+  Future<List<Customer>> getListCustomer() async {
+    langSt = await getListFromDb();
+    if (!Utils.isEmpty(langSt)) {
+      print(langSt);
+      return langSt;
+    }else{
+      print('nullll');
+      return null;
+    }
+  }
+
+  Future<List<Customer>> getListFromDb() {
+    return db.fetchAll();
   }
 
   Stack buildPage(BuildContext context,WaitingState state){
@@ -191,7 +239,6 @@ class WaitingPageState extends State<WaitingPage> {
                 _mainBloc.indexAwaitingList = index;
                 _mainBloc.currentNumberCustomerOfList = item.soKhach;
                 Utils.showToast( 'Chạy thôi nào bạn ơi !!!');
-                print(_mainBloc.timeStart);
               }
               else{
                 print('Click huỷ');
@@ -247,8 +294,8 @@ class WaitingPageState extends State<WaitingPage> {
                             child: SizedBox(),
                           ),
                           Container(
-                            height: 40,
-                            width: 40,
+                            height: 45,
+                            width: 45,
                             padding: EdgeInsets.all(8),
                             decoration: BoxDecoration(
                                 color:  (  index == _mainBloc.indexAwaitingList && _mainBloc.blocked == true) ? (item.loaiKhach == 1 ? Colors.orange.withOpacity(0.5) : Colors.blue.withOpacity(0.5)) : (item.loaiKhach == 1 ? Colors.orange : Colors.blue),

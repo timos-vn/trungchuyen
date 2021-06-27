@@ -3,7 +3,7 @@ import 'dart:io';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 import 'package:sqflite/sqflite.dart';
-import 'package:trungchuyen/models/entity/lang.dart';
+import 'package:trungchuyen/models/entity/customer.dart';
 import 'package:trungchuyen/utils/log.dart';
 
 class DatabaseHelper {
@@ -27,12 +27,29 @@ class DatabaseHelper {
 
   void _onCreate(Database db, int version) {
     db.execute('''
-    CREATE TABLE language(
-      code TEXT,
-      name TEXT,
-      hot TEXT,
-      id TEXT,
-      pass TEXT)
+    CREATE TABLE CustomerPending(
+       idTrungChuyen TEXT,
+       idTaiXeLimousine TEXT,
+       hoTenTaiXeLimousine TEXT,
+       dienThoaiTaiXeLimousine TEXT,
+       tenXeLimousine TEXT,
+       bienSoXeLimousine TEXT,
+       tenKhachHang TEXT,
+       soDienThoaiKhach TEXT,
+       diaChiKhachDi TEXT,
+       toaDoDiaChiKhachDi TEXT,
+       diaChiKhachDen TEXT,
+       toaDoDiaChiKhachDen TEXT,
+       diaChiLimoDi TEXT,
+       toaDoLimoDi TEXT,
+       diaChiLimoDen TEXT,
+       toaDoLimoDen TEXT,
+       loaiKhach INTEGER,
+       trangThaiTC TEXT,
+       soKhach INTEGER,
+       soKhach INTEGER,
+       statusCustomer INTEGER,
+      )
   ''');
     print("Database was created!");
   }
@@ -43,12 +60,11 @@ class DatabaseHelper {
       "Migration: $oldVersion, $newVersion",
     );
     if (oldVersion == 1 && newVersion == 2) {
-      db.execute('ALTER TABLE language ADD COLUMN attributes TEXT');
-      db.delete("product");
-//        db.execute('ALTER TABLE product ADD COLUMN unit TEXT');
+      db.execute('ALTER TABLE CustomerPending ADD COLUMN attributes TEXT');
+      db.delete("CustomerPending");
     }
-    db.execute('DROP TABLE IF EXISTS language');
-    db.delete("language");
+    db.execute('DROP TABLE IF EXISTS CustomerPending');
+    db.delete("CustomerPending");
   }
 
   Future<Database> init() async {
@@ -59,84 +75,63 @@ class DatabaseHelper {
     return database;
   }
 
-  Future<void> addProduct(Lang lang) async {
+  Future<void> addNew(Customer customer) async {
     var client = await db;
-    Lang oldLang = await fetchProduct(lang.code);
-    if (oldLang == null)
-      await client.insert('language', lang.toMapForDb(),
+    Customer oldCustomer = await fetchCustomer(customer.idTrungChuyen);
+    if (oldCustomer == null)
+      await client.insert('CustomerPending', customer.toMapForDb(),
           conflictAlgorithm: ConflictAlgorithm.replace);
     else {
-      await updateProduct(oldLang);
+      await update(oldCustomer);
     }
   }
 
-  // Future<void> decreaseProduct(Product product) async {
-  //   if (product.count > 1) {
-  //     product.count = product.count - 1;
-  //     updateProduct(product);
-  //   }
-  // }
 
-  // Future<void> increaseProduct(Product product) async {
-  //   product.count = product.count + 1;
-  //   updateProduct(product);
-  // }
-
-  Future<Lang> fetchProduct(String code) async {
+  Future<Customer> fetchCustomer(String idTrungChuyen,) async {
     var client = await db;
     final Future<List<Map<String, dynamic>>> futureMaps =
-        client.query('language', where: 'code = ?', whereArgs: [code]);
+        client.query('CustomerPending', where: 'idTrungChuyen = ?', whereArgs: [idTrungChuyen]);
     var maps = await futureMaps;
     if (maps.length != 0) {
-      return Lang.fromDb(maps.first);
+      return Customer.fromDb(maps.first);
     }
     return null;
   }
 
-  // Future<void> deleteAllProduct() async {
-  //   var client = await db;
-  //   await client.delete('product');
-  // }
-
-  Future<List<Lang>> fetchAllProduct() async {
+  Future<void> deleteAll() async {
     var client = await db;
-    var res = await client.query('language');
+    await client.delete('CustomerPending');
+  }
+
+  Future<List<Customer>> fetchAll() async {
+    var client = await db;
+    var res = await client.query('CustomerPending');
 
     if (res.isNotEmpty) {
       var products =
-          res.map((productMap) => Lang.fromDb(productMap)).toList();
+          res.map((productMap) => Customer.fromDb(productMap)).toList();
       return products;
     }
     return [];
   }
 
-  Future<List<Lang>> getLang() async {
+
+  Future<void> delete(Customer customer) async {
     var client = await db;
-    var res = await client.query('language',);//where: 'code = ?', whereArgs: [1]
-    if (res.isNotEmpty) {
-      var products =
-          res.map((productMap) => Lang.fromDb(productMap)).toList();
-      return products;
-    }
-    return [];
+    await client.delete('CustomerPending', where: 'idTrungChuyen = ?', whereArgs: [customer.idTrungChuyen]);
   }
 
-  Future<void> deleteLang(Lang lang) async {
+  Future<int> update(Customer customer) async {
     var client = await db;
-    await client.delete('language', where: 'code = ?', whereArgs: [lang.code]);
-  }
-
-  Future<int> updateProduct(Lang lang) async {
-    var client = await db;
-    return client.update('language', lang.toMapForDb(),
-        // where: 'code = ?',
-        // whereArgs: [lang.code],
+    return client.update('CustomerPending', customer.toMapForDb(),
+        where: 'idTrungChuyen = ?',
+        whereArgs: [customer.idTrungChuyen],
         conflictAlgorithm: ConflictAlgorithm.replace);
   }
 
-  Future<void> removeProduct(int id) async {
+  Future<void> remove(String idTC) async {
     var client = await db;
-    return client.delete('language', where: 'id = ?', whereArgs: [id]);
+    return client.delete('CustomerPending', where: 'idTrungChuyen = ?', whereArgs: [idTC]);
   }
 
   // Future<List<Map<String, dynamic>>> countProduct({Database database}) async {

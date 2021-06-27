@@ -4,6 +4,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter_animarker/lat_lng_interpolation.dart';
 import 'package:flutter_animarker/models/lat_lng_info.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:get/get.dart';
 import 'package:google_maps_controller/google_maps_controller.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:trungchuyen/models/network/request/push_location_request.dart';
@@ -11,6 +12,7 @@ import 'package:trungchuyen/models/network/request/tranfer_customer_request.dart
 import 'package:trungchuyen/models/network/response/detail_trips_repose.dart';
 import 'package:trungchuyen/models/network/response/polyline_result_response.dart';
 import 'package:trungchuyen/models/network/service/network_factory.dart';
+import 'package:trungchuyen/service/soket_io_service.dart';
 import 'package:trungchuyen/utils/const.dart';
 import 'map_event.dart';
 import 'package:location/location.dart';
@@ -32,6 +34,7 @@ class MapBloc extends Bloc<MapEvent,MapState> {
   List<DetailTripsResponseBody> listOfCustomerTrips = new List<DetailTripsResponseBody>();
 
   ///
+
   Location location = new Location();
   bool serviceEnabled;
   String currentLocationTC;
@@ -91,12 +94,17 @@ class MapBloc extends Bloc<MapEvent,MapState> {
     }
     if(event is PushLocationToLimoEvent){
       yield MapInitial();
-
-      PushLocationRequestBody request = PushLocationRequestBody(
-        location: event.location
-      );
-      MapState state = _handlePushLocationToLimo(await _networkFactory.pushLocationToLimo(request,_accessToken));
-      yield state;
+      SocketIOService socketIOService = Get.find();
+      if(socketIOService.socket.connected)
+        {
+          socketIOService.socket.emit("TAIXE_TRUNGCHUYEN_CAPNHAT_TOADO",event.location);
+          print('TAIXE_TRUNGCHUYEN_CAPNHAT_TOADO => ${event.location.toString()}');
+        }
+      // PushLocationRequestBody request = PushLocationRequestBody(
+      //   location: event.location
+      // );
+      // MapState state = _handlePushLocationToLimo(await _networkFactory.pushLocationToLimo(request,_accessToken));
+      yield PushLocationToLimoSuccess();
     }
     if(event is GetListLocationPolylineEvent){
       ///{\"lat\":20.9902775,\"lng\":105.8014063}
@@ -173,7 +181,7 @@ class MapBloc extends Bloc<MapEvent,MapState> {
   MapState _handlePushLocationToLimo(Object data) {
     if (data is String) return MapFailure(data);
     try {
-      return UpdateStatusDriverState();
+      return PushLocationToLimoSuccess();
     } catch (e) {
       print(e.toString());
       return MapFailure(e.toString());
@@ -194,16 +202,16 @@ class MapBloc extends Bloc<MapEvent,MapState> {
     int countPush = 0;
     if (await checkPermission()) {
       locationSubscription = location.onLocationChanged.listen((LocationData currentLocation) {
-        print(currentLocation.toString());
+        // print(currentLocation.toString());
         currentLocationTC = currentLocation.latitude.toString() + "," + currentLocation.longitude.toString() ;//{'lat': , 'lng': currentLocation.longitude};
         countPush++;
         latLngStream.addLatLng(LatLngInfo(currentLocation.latitude, currentLocation.longitude, "DriverMarker"));
         //add(GetCurrentLocationEvent(currentLocationTC));
         currentLocations(currentLocationTC);
-        print('---Tream--- ${currentLocationTC.toString()}');
+        // print('---Tream--- ${currentLocationTC.toString()}');
         ///{\"lat\":20.9763858,\"lng\":105.8175841}
-        print(countPush);
-        if(countPush == 3){
+        // print(countPush);
+        if(countPush == 2){
           countPush=0;
           var obj = {
             'lat':currentLocation.latitude,

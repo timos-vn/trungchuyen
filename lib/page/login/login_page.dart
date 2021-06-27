@@ -6,6 +6,7 @@ import 'package:get/get.dart' as libGetX;
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:new_version/new_version.dart';
 import 'package:trungchuyen/page/main/main_page.dart';
+import 'package:trungchuyen/service/soket_io_service.dart';
 import 'package:trungchuyen/themes/colors.dart';
 import 'package:trungchuyen/themes/font.dart';
 import 'package:trungchuyen/themes/images.dart';
@@ -35,7 +36,6 @@ class _LoginPageState extends State<LoginPage> {
   String errorPass, errorUsername, errorHotId;
   String _selectedLang;
 
-
   void _checkVersion() async {
     final newVersion = NewVersion(
         context: context,
@@ -55,6 +55,7 @@ class _LoginPageState extends State<LoginPage> {
     // TODO: implement initState
     super.initState();
     // _checkVersion();
+
     _loginBloc = LoginBloc(context);
 
     hostIdFocus = FocusNode();
@@ -77,11 +78,12 @@ class _LoginPageState extends State<LoginPage> {
               if (state is LoginSuccess) {
                 ///0 : Offline
                 ///1 : Online
-                if(_loginBloc.roleAccount == 3){
-                  _loginBloc.add(UpdateStatusDriverEvent(0));
-                }else{
-                  _loginBloc.add(UpdateStatusDriverEvent(1));
-                }
+                // if(_loginBloc.roleAccount == 3){
+                //   // _loginBloc.add(UpdateStatusDriverEvent(0));
+                // }else{
+                //   // _loginBloc.add(UpdateStatusDriverEvent(1));
+                //
+                // }
                Navigator.push(context, (MaterialPageRoute(builder: (context)=>MainPage(roleAccount: _loginBloc.roleAccount,))));
               }
               if (state is LoginFailure) {

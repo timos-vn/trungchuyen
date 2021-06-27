@@ -2,13 +2,13 @@ import 'dart:ui';
 
 import 'package:get/get.dart';
 import 'package:trungchuyen/models/database/dbhelper.dart';
-import 'package:trungchuyen/models/entity/lang.dart';
+import 'package:trungchuyen/models/entity/customer.dart';
 import 'package:trungchuyen/utils/utils.dart';
 
 class MyTranslations extends Translations {
 
   DatabaseHelper db = DatabaseHelper();
-  List<Lang> langSt = new List<Lang>();
+  // List<Lang> langSt = new List<Lang>();
 
    static String newLocale;
    static String newCodeLocale;
@@ -16,24 +16,24 @@ class MyTranslations extends Translations {
    static String username;
    static String pass;
 
-  Future<List<Lang>> getCurrentLang() async {
-    langSt = await getListFromDb();
-    if (!Utils.isEmpty(langSt)) {
-      newLocale = langSt[0].name ;
-      newCodeLocale = langSt[0].code;
-      hostUrl = langSt[0].hotURL;
-      username = langSt[0].id;
-      pass = langSt[0].pass;
-      changeLocale(newLocale);
-      print(newLocale);
-      print(newCodeLocale);
-      print(hostUrl);
-      return langSt;
-    }else{
-      hostUrl = null;
-      return null;
-    }
-  }
+  // Future<List<Lang>> getCurrentLang() async {
+  //   langSt = await getListFromDb();
+  //   if (!Utils.isEmpty(langSt)) {
+  //     newLocale = langSt[0].name ;
+  //     newCodeLocale = langSt[0].code;
+  //     hostUrl = langSt[0].hotURL;
+  //     username = langSt[0].id;
+  //     pass = langSt[0].pass;
+  //     changeLocale(newLocale);
+  //     print(newLocale);
+  //     print(newCodeLocale);
+  //     print(hostUrl);
+  //     return langSt;
+  //   }else{
+  //     hostUrl = null;
+  //     return null;
+  //   }
+  // }
   // Default locale
   static final locale = Locale('vi', 'VN');
 
@@ -468,7 +468,7 @@ class MyTranslations extends Translations {
     return Get.locale;
   }
 
-  Future<List<Lang>> getListFromDb() {
-    return db.fetchAllProduct();
-  }
+  // Future<List<Lang>> getListFromDb() {
+  //   return db.fetchAllProduct();
+  // }
 }

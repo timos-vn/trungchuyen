@@ -37,10 +37,10 @@ class _MyAppState extends State<MyApp> {
     // TODO: implement initState
     super.initState();
     Wakelock.enable();
-    if(!Utils.isEmpty(MyTranslations().getCurrentLang())){
-      MyTranslations().changeLocale(MyTranslations.newLocale);
-      print('${MyTranslations.newLocale}');
-    }
+    // if(!Utils.isEmpty(MyTranslations().getCurrentLang())){
+    //   //MyTranslations().changeLocale(MyTranslations.newLocale);
+    //   print('${MyTranslations.newLocale}');
+    // }
   }
 
   @override

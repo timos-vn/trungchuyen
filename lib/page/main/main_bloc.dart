@@ -10,6 +10,7 @@ import 'package:bloc/bloc.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:get/get.dart';
 import 'package:google_maps_controller/google_maps_controller.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:trungchuyen/models/network/request/tranfer_customer_request.dart';
@@ -23,6 +24,7 @@ import 'package:trungchuyen/models/network/service/network_factory.dart';
 import 'package:flutter_animarker/lat_lng_interpolation.dart';
 import 'package:trungchuyen/page/map_limo/map_limo_bloc.dart';
 import 'package:trungchuyen/page/map_limo/map_limo_event.dart';
+import 'package:trungchuyen/service/soket_io_service.dart';
 import 'package:trungchuyen/utils/const.dart';
 import 'package:trungchuyen/utils/log.dart';
 import 'package:trungchuyen/utils/utils.dart';
@@ -37,7 +39,7 @@ class MainBloc extends Bloc<MainEvent, MainState> {
   SharedPreferences _pref;
   int _prePosition = 0;
   SharedPreferences get pref => _pref;
-
+  SocketIOService socketIOService;
   String get token => _pref?.getString(Const.ACCESS_TOKEN) ?? "";
 
   List<ListOfGroupAwaitingCustomerBody> listOfGroupAwaitingCustomer = new List<ListOfGroupAwaitingCustomerBody>();
@@ -84,6 +86,7 @@ class MainBloc extends Bloc<MainEvent, MainState> {
   }
 
   MainBloc() : super(null) {
+    socketIOService = Get.find<SocketIOService>();
     _firebaseMessaging = FirebaseMessaging();
     _firebaseMessaging.getToken().then((token) {
       print("token");
@@ -118,22 +121,6 @@ class MainBloc extends Bloc<MainEvent, MainState> {
       // ignore: missing_return
       onMessage: (Map<String, dynamic> message) {
         try {
-          if(Platform.isAndroid){
-            String title = message['notification']['title'];
-            String body = message['notification']['body'];
-            Utils.showForegroundNotification(context, title, body, onTapNotification: () {
-              add(NavigateToNotification());
-            });
-          }
-          else if(Platform.isIOS){
-            String title = message['notification']['title'];
-            String body = message['notification']['body'];
-            // print(title);
-            // print(body);
-            Utils.showForegroundNotification(context, title, body, onTapNotification: () {
-              add(NavigateToNotification());
-            });
-          }
           FlutterRingtonePlayer.play(
             android: AndroidSounds.notification,
             ios: IosSounds.triTone,
@@ -145,61 +132,74 @@ class MainBloc extends Bloc<MainEvent, MainState> {
           if(message['data']['EVENT'] == 'TRUNGCHUYEN_THONGBAO_TAIXE' && _role == '3'){
             String item = message['data']['IdChuyenTruyens'];
             List<String> listId = item.replaceAll('[', '').replaceAll(']', '').replaceAll('"', '').split(',');
-            // Utils.showDialogAssign2(context: context, tripName: message['data']['Chuyen'], date: message['data']['ThoiGian'], typeCustomer: message['data']['LoaiKhach']).then((value){
-            //   if(value == true){
-            //     /// 1. don
-            //     if( message['data']['LoaiKhach'] == '1'){
-            //       add(UpdateStatusCustomerEvent(status: 2,idTrungChuyen:listId));
-            //       print('Update Nhan don');
-            //     }else{
-            //       add(UpdateStatusCustomerEvent(status: 5,idTrungChuyen: listId));
-            //       print('Update Nhan tra');
-            //     }
-            //   }else{
-            //     add(UpdateStatusCustomerEvent(status: 1,idTrungChuyen: listId));
-            //     print('Update Huy');
-            //   }
-            // });
+
+            Utils.showDialogAssignReceiveCustomer(context,message['data']['Chuyen'],message['data']['ThoiGian'],message['data']['LoaiKhach'], "title", 'body',
+                onTapCancelNotification: () {
+                  print('onTapCancelNotification');
+                  if(socketIOService.socket.connected)
+                  {
+                    socketIOService.socket.emit("TAIXE_TRUNGCHUYEN_CAPNHAT_TRANGTHAI_KHACH");
+                  }
+                  add(UpdateStatusCustomerEvent(status: 1,idTrungChuyen: listId));
+                  print('Update Huy');
+                },
+                onTapAcceptNotification: (){
+                  print('onTapAcceptNotification');
+                  /// 1. don
+                  if(socketIOService.socket.connected)
+                  {
+                    socketIOService.socket.emit("TAIXE_TRUNGCHUYEN_CAPNHAT_TRANGTHAI_KHACH");
+                  }
+                  if( message['data']['LoaiKhach'] == '1'){
+                    add(UpdateStatusCustomerEvent(status: 2,idTrungChuyen:listId));
+                    print('Update Nhan don');
+                  }else{
+                    add(UpdateStatusCustomerEvent(status: 5,idTrungChuyen: listId));
+                    print('Update Nhan tra');
+                  }
+
+
+                }
+            );
           }
-          /// đây là chỗ nhận data
-          else if(message['data']['EVENT'] == 'TAIXE_TRUNGCHUYEN_CAPNHAT_TOADO' && _role != '3'){
-            String item = message['data']['LOCATION'];
-            String _location = item.replaceAll('{', '').replaceAll('}', '').replaceAll("\"","").replaceAll('lat', '').replaceAll('lng', '').replaceAll(':', '');
-
-            var obj = {
-              {"title": message['data']['FULLNAME'], "id": message['data']['PHONE'], "lat": _location.split(',')[0], "lon": _location.split(',')[1]},
-            };
-
-            try   {
-              //0974629615
-              //  subscriptions.add(_mapBloc.latLngStream.getAnimatedPosition("DriverMarker"));
-           //   if(_mapLimoBloc.latLngStream.)
-              String makerId = message['data']['PHONE'];
-              add(GetLocationEvent(
-                  makerId,double.parse( _location.split(',')[0]), double.parse( _location.split(',')[1])
-              ));
-             //  if(_mapLimoBloc.lsMarkerId.where((id) => id==makerId).length==0)
-             //    {
-             //      _mapLimoBloc.lsMarkerId.add(makerId);
-             //      _mapLimoBloc.subscriptions.add(_mapLimoBloc.latLngStream.getAnimatedPosition(makerId));
-             //    }
-             // _mapLimoBloc.latLngStream.addLatLng(new LatLngInfo(double.parse( _location.split(',')[0]), double.parse( _location.split(',')[1]),makerId));
-            }
-            catch(e){}
-
-            // lại như hôm trước. làm thế nào để lấy cái add ở đây
-            // listLocation.addAll(obj);
-            //  markers = Iterable.generate(AppConstant.list.length, (index) {
-            //   return Marker(
-            //       markerId: MarkerId(AppConstant.list[index]['id']),
-            //       position: LatLng(
-            //         AppConstant.list[index]['lat'],
-            //         AppConstant.list[index]['lon'],
-            //       ),
-            //       infoWindow: InfoWindow(title: AppConstant.list[index]["title"])
-            //   );
-            // });
-          }
+          // else if(message['data']['EVENT'] == 'TAIXE_TRUNGCHUYEN_CAPNHAT_TOADO' && _role != '3'){
+          //   String item = message['data']['LOCATION'];
+          //   String _location = item.replaceAll('{', '').replaceAll('}', '').replaceAll("\"","").replaceAll('lat', '').replaceAll('lng', '').replaceAll(':', '');
+          //
+          //   var obj = {
+          //     {"title": message['data']['FULLNAME'], "id": message['data']['PHONE'], "lat": _location.split(',')[0], "lon": _location.split(',')[1]},
+          //   };
+          //
+          //   try   {
+          //     //0974629615
+          //     //  subscriptions.add(_mapBloc.latLngStream.getAnimatedPosition("DriverMarker"));
+          //  //   if(_mapLimoBloc.latLngStream.)
+          //     String makerId = message['data']['PHONE'];
+          //     add(GetLocationEvent(
+          //         makerId,double.parse( _location.split(',')[0]), double.parse( _location.split(',')[1])
+          //     ));
+          //    //  if(_mapLimoBloc.lsMarkerId.where((id) => id==makerId).length==0)
+          //    //    {
+          //    //      _mapLimoBloc.lsMarkerId.add(makerId);
+          //    //      _mapLimoBloc.subscriptions.add(_mapLimoBloc.latLngStream.getAnimatedPosition(makerId));
+          //    //    }
+          //    //
+          //   }
+          //   catch(e){}
+          //
+          //   // lại như hôm trước. làm thế nào để lấy cái add ở đây
+          //   // listLocation.addAll(obj);
+          //   //  markers = Iterable.generate(AppConstant.list.length, (index) {
+          //   //   return Marker(
+          //   //       markerId: MarkerId(AppConstant.list[index]['id']),
+          //   //       position: LatLng(
+          //   //         AppConstant.list[index]['lat'],
+          //   //         AppConstant.list[index]['lon'],
+          //   //       ),
+          //   //       infoWindow: InfoWindow(title: AppConstant.list[index]["title"])
+          //   //   );
+          //   // });
+          // }
           else if(message['data']['EVENT'] == 'TAIXE_TRUNGCHUYEN_GIAOKHACH_LIMO' && _role == '3'){
             String soKhach = message['data']['numberCustomer'];
             List<String> listSoKhach = soKhach.split('|');
@@ -232,8 +232,25 @@ class MainBloc extends Bloc<MainEvent, MainState> {
           else if(message['data']['EVENT'] =='TAIXE_LIMO_XACNHAN' && _role == '3'){
             ///close popup
           }
-          //add(GetCountNoti());
-          // add(GetCountNotiSMS());
+          else{
+            if(Platform.isAndroid){
+              String title = message['notification']['title'];
+              String body = message['notification']['body'];
+              Utils.showForegroundNotification(context, title, body, onTapNotification: () {
+                add(NavigateToNotification());
+
+              },);
+            }
+            else if(Platform.isIOS){
+              String title = message['notification']['title'];
+              String body = message['notification']['body'];
+              // print(title);
+              // print(body);
+              Utils.showForegroundNotification(context, title, body, onTapNotification: () {
+                add(NavigateToNotification());
+              });
+            }
+          }
         } catch (e) {
           logger.e(e.toString());
         }
