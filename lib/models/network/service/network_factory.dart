@@ -209,8 +209,8 @@ class NetWorkFactory {
     return await requestApi(_dio.get('/api/v1/trungchuyen/' + date.toString(), options: Options(headers: {"Authorization": "Bearer $token"}))); //["Authorization"] = "Bearer " + token
   }
 
-  Future<Object> getDetailTrips(String token, DateTime date, String idTrips, String idTime) async {
-    return await requestApi(_dio.get('/api/v1/trungchuyen/' + date.toString() +'/'+ idTrips + '/' + idTime, options: Options(headers: {"Authorization": "Bearer $token"}))); //["Authorization"] = "Bearer " + token
+  Future<Object> getDetailTrips(String token, DateTime date, String idRoom, String idTime, String typeCustomer) async {
+    return await requestApi(_dio.get('/api/v1/trungchuyen/' + date.toString() +'/'+ idRoom + '/' + idTime+ '/' + typeCustomer , options: Options(headers: {"Authorization": "Bearer $token"}))); //["Authorization"] = "Bearer " + token
   }
   ///0 : Offline
   ///1 : Online

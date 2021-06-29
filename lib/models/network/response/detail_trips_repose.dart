@@ -47,12 +47,13 @@ class DetailTripsResponseBody {
   String diaChiLimoDen;
   String toaDoLimoDen;
   int loaiKhach;
-  String trangThaiTC;
+  int trangThaiTC;
   int soKhach;
   int status;
 
   DetailTripsResponseBody(
-      {this.idTrungChuyen,
+      {
+        this.idTrungChuyen,
         this.idTaiXeLimousine,
         this.hoTenTaiXeLimousine,
         this.dienThoaiTaiXeLimousine,

@@ -34,3 +34,8 @@ class GetEvent extends MapLimoEvent {
   @override
   String toString() => 'GetEvent {}';
 }
+class CheckPermissionLimoEvent extends MapLimoEvent {
+
+  @override
+  String toString() => 'CheckPermissionLimoEvent {}';
+}

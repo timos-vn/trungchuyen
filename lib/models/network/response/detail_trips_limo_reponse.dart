@@ -1,7 +1,7 @@
 class DetailTripsLimo {
   List<DetailTripsLimoReponseBody> data;
   int statusCode;
-  Null message;
+  String message;
 
   DetailTripsLimo({this.data, this.statusCode, this.message});
 
@@ -40,8 +40,8 @@ class DetailTripsLimoReponseBody {
   String toaDoDiaChiKhachDi;
   String diaChiKhachDen;
   String toaDoDiaChiKhachDen;
-  Null diaChiLimoDi;
-  Null toaDoLimoDi;
+  String diaChiLimoDi;
+  String toaDoLimoDi;
   String diaChiLimoDen;
   String toaDoLimoDen;
   int loaiKhach;

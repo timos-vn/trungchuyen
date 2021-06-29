@@ -11,10 +11,11 @@ import 'package:intl/intl.dart';
 class DetailTripsPage extends StatefulWidget {
 
   final DateTime dateTime;
-  final String idTrips;
-  final String idTime;
+  final int idRoom;
+  final int idTime;
+  final int typeCustomer;
 
-  const DetailTripsPage({Key key,this.dateTime, this.idTrips, this.idTime}) : super(key: key);
+  const DetailTripsPage({Key key,this.dateTime, this.idRoom, this.idTime,this.typeCustomer}) : super(key: key);
 
   @override
   _DetailTripsPageState createState() => _DetailTripsPageState();
@@ -31,7 +32,7 @@ class _DetailTripsPageState extends State<DetailTripsPage> {
     super.initState();
     _bloc = DetailTripsBloc(context);
    // DateTime parseDate = new DateFormat("yyyy-MM-dd").parse(DateTime.now().toString());
-    _bloc.add(GetListDetailTrips(widget.dateTime,widget.idTrips,widget.idTime));
+    _bloc.add(GetListDetailTrips(widget.dateTime,widget.idRoom,widget.idTime,widget.typeCustomer));
   }
 
   @override

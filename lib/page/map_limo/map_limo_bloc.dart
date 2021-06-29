@@ -27,7 +27,8 @@ class MapLimoBloc extends Bloc<MapLimoEvent,MapLimoState> {
   String get refreshToken => _refreshToken;
   SharedPreferences _prefs;
   SharedPreferences get prefs => _prefs;
-
+  PermissionStatus permissionGranted;
+  bool serviceEnabled;
   List<DetailTripsResponseBody> listOfCustomerTrips = new List<DetailTripsResponseBody>();
 
   Location location = new Location();
@@ -48,6 +49,12 @@ class MapLimoBloc extends Bloc<MapLimoEvent,MapLimoState> {
       _prefs = await SharedPreferences.getInstance();
       _accessToken = _prefs.getString(Const.ACCESS_TOKEN) ?? "";
       _refreshToken = _prefs.getString(Const.REFRESH_TOKEN) ?? "";
+    }
+
+    if(event is CheckPermissionLimoEvent){
+      yield MapLimoInitial();
+      checkPermission();
+      yield CheckPermissionLimoSuccess();
     }
 
     if(event is GetListCustomerLimo){
@@ -79,5 +86,34 @@ class MapLimoBloc extends Bloc<MapLimoEvent,MapLimoState> {
       print(e.toString());
       return MapLimoFailure(e.toString());
     }
+  }
+
+  Future<bool> checkPermission() async {
+    permissionGranted = await location.hasPermission();
+    if (permissionGranted == PermissionStatus.denied) {
+      permissionGranted = await location.requestPermission();
+      if (permissionGranted == PermissionStatus.granted) {
+        serviceEnabled = await location.serviceEnabled();
+        if (!serviceEnabled) {
+          serviceEnabled = await location.requestService();
+          if (serviceEnabled) {
+            return true;
+          }
+        } else {
+          return true;
+        }
+      }
+    } else {
+      serviceEnabled = await location.serviceEnabled();
+      if (!serviceEnabled) {
+        serviceEnabled = await location.requestService();
+        if (serviceEnabled) {
+          return true;
+        }
+      } else {
+        return true;
+      }
+    }
+    return false;
   }
 }

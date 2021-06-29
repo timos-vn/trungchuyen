@@ -23,7 +23,7 @@ class WaitingBloc extends Bloc<WaitingEvent,WaitingState> {
   SharedPreferences get prefs => _prefs;
   List<ListOfGroupAwaitingCustomerBody> listOfGroupAwaitingCustomer;
   List<DetailTripsResponseBody> listOfDetailTrips = new List<DetailTripsResponseBody>();
-
+  String test ='K';
   WaitingBloc(this.context) : super(null){
     _networkFactory = NetWorkFactory(context);
     // _mainBloc = BlocProvider.of<MainBloc>(context);
@@ -48,7 +48,7 @@ class WaitingBloc extends Bloc<WaitingEvent,WaitingState> {
 
     if(event is GetListDetailTripsOfPageWaiting){
       yield WaitingLoading();
-      WaitingState state = _handleGetListOfDetailTrips(await _networkFactory.getDetailTrips(_accessToken,event.date,event.idTrips.toString(),event.idTime.toString()));
+      WaitingState state = _handleGetListOfDetailTrips(await _networkFactory.getDetailTrips(_accessToken,event.date,event.idRoom.toString(),event.idTime.toString(),event.typeCustomer.toString()));
       yield state;
     }
   }

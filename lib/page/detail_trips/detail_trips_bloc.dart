@@ -40,7 +40,7 @@ class DetailTripsBloc extends Bloc<DetailTripsEvent,DetailTripsState> {
     }
     if(event is GetListDetailTrips){
       yield DetailTripsLoading();
-      DetailTripsState state = _handleGetListOfDetailTrips(await _networkFactory.getDetailTrips(_accessToken,event.date,event.idTrips,event.idTime));
+      DetailTripsState state = _handleGetListOfDetailTrips(await _networkFactory.getDetailTrips(_accessToken,event.date,event.idRoom.toString(),event.idTime.toString(),event.typeCustomer.toString()));
       yield state;
     }
   }

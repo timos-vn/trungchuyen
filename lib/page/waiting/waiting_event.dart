@@ -17,10 +17,11 @@ class GetListGroupAwaitingCustomer extends WaitingEvent {
 class GetListDetailTripsOfPageWaiting extends WaitingEvent {
 
   final DateTime date;
-  final int idTrips;
+  final int idRoom;
   final int idTime;
+  final int typeCustomer;
 
-  GetListDetailTripsOfPageWaiting(this.date,this.idTrips,this.idTime);
+  GetListDetailTripsOfPageWaiting(this.date,this.idRoom,this.idTime,this.typeCustomer);
 
   @override
   String toString() => 'GetListDetailTripsOfPageWaiting {date: $date }';

@@ -13,6 +13,7 @@ import 'package:google_maps_controller/google_maps_controller.dart';
 import 'package:location/location.dart';
 import 'package:snapping_sheet/snapping_sheet.dart';
 import 'package:trungchuyen/extension/default_grabbing.dart';
+import 'package:trungchuyen/models/entity/customer.dart';
 import 'package:trungchuyen/models/network/response/detail_trips_repose.dart';
 import 'package:trungchuyen/models/network/response/polyline_result_response.dart' as pp;
 import 'package:trungchuyen/page/main/main_bloc.dart';
@@ -66,10 +67,8 @@ class MapPageState extends State<MapPage>{
   var scaffoldKey = new GlobalKey<ScaffoldState>();
 
   GlobalKey keyMap;
-  int _countCustomerSuccessfulOrCancel=0;
 
-  int statusDon=2;
-  int statusTra=5;
+  bool flat = false;
   SocketIOService socketIOService;
 
   @override
@@ -79,7 +78,8 @@ class MapPageState extends State<MapPage>{
     _mapBloc = MapBloc(context);
     _mainBloc = BlocProvider.of<MainBloc>(context);
     _mapBloc.add(CheckPermissionEvent());
-    _mapBloc.add(GetListCustomer(_mainBloc.listOfDetailTrips));
+   // _mainBloc.add(GetListCustomer(_mainBloc.listCustomer));
+    _mapBloc.add(GetCustomerList());
     super.initState();
   }
 
@@ -98,7 +98,6 @@ class MapPageState extends State<MapPage>{
       cubit: _mapBloc,
       listener:  (context, state){
         if(state is GetListCustomerSuccess){
-          _listOfCustomerTrips =  state.listOfCustomerTrips;
 
         }else if(state is CheckPermissionSuccess){
           subscriptions.add(_mapBloc.latLngStream.getAnimatedPosition("DriverMarker"));
@@ -109,18 +108,20 @@ class MapPageState extends State<MapPage>{
         else if(state is GetListLocationPolylineSuccess){
           drawPolyline(state.lsPoints,);
         }else if(state is TransferCustomerToLimoSuccess){
-          Utils.showDialogTransferCustomer(context: context,listOfDetailTripsSuccessful: _mainBloc.listTaiXeLimo);
+          //  List<Customer> listOfDetailTripsSuccessful = new List<Customer>();
+          //_mainBloc.listOfDetailTripsSuccessful.clear();
+          // _mainBloc.listOfDetailTripsSuccessful = _mainBloc.listTaiXeLimo;
+          _mainBloc.showDialogTransferCustomer(context: context);
         }
       },
       child: BlocBuilder<MapBloc,MapState>(
         cubit: _mapBloc,
         builder: (BuildContext context, MapState state) {
           return Scaffold(
-            body: buildPage(context, state)
+            body: buildPage(context,state)
           );
         },
       ),
-      //),
     );
   }
 
@@ -134,24 +135,28 @@ class MapPageState extends State<MapPage>{
               appBar: AppBar(
                 backgroundColor: Theme.of(context).scaffoldBackgroundColor,
                 automaticallyImplyLeading: false,
-                title: !isOnline ?  Text(
-                  'OffLine',
-                  style: Theme.of(context).textTheme.title.copyWith(
-                    fontWeight: FontWeight.bold,
-                    color: Theme.of(context).textTheme.title.color,
+                title: !isOnline ?  InkWell(
+                  onTap: ()=>_mainBloc.firebaseMessaging.deleteInstanceID(),
+                  child: Text(
+                    'OffLine',
+                    style: Theme.of(context).textTheme.title.copyWith(
+                      fontWeight: FontWeight.bold,
+                      color: Theme.of(context).textTheme.title.color,
+                    ),
+                    textAlign: TextAlign.center,
                   ),
-                  textAlign: TextAlign.center,
                 )
                     :
                 InkWell(
-                  // onTap: ()=> Utils.showDialogAssignReceiveCustomer(context,'','','', "title", 'body',
-                  //     onTapCancelNotification: () {
-                  //       print('onTapCancelNotification');
-                  //     },
-                  //     onTapAcceptNotification: (){
-                  //       print('onTapAcceptNotification');
-                  //     }
-                  // ),
+                  onTap: (){
+                    _mainBloc.firebaseMessaging.getToken().then((token) {
+                      print("token");
+                      print(token);
+                      // _deviceToken = token;
+                      // _pref?.setString(Const.DEVICE_TOKEN, token);
+                      // _mainBloc.add(UpdateTokenDiveEvent(token));
+                    });
+                  },
                   child: Text(
                     'Online',
                     style: Theme.of(context).textTheme.title.copyWith(
@@ -174,17 +179,19 @@ class MapPageState extends State<MapPage>{
                         changeOnline();
                         setState(() {
                           if(value == true){
-                            // _mapBloc.add(UpdateStatusDriverEvent(1));
+                            // _mainBloc.add(UpdateStatusDriverEvent(1));
                             if(_mainBloc.socketIOService.socket.disconnected)
                             {
                               _mainBloc.socketIOService.socket.connect();
+                              print('connected');
                             }
                           }else{
                             if(_mainBloc.socketIOService.socket.connected)
                             {
                               _mainBloc.socketIOService.socket.disconnect();
+                              print('Disconnected');
                             }
-                            // _mapBloc.add(UpdateStatusDriverEvent(0));
+                            // _mainBloc.add(UpdateStatusDriverEvent(0));
                           }
                           isOnline = value;
                           isInProcessPickup = true;
@@ -241,13 +248,7 @@ class MapPageState extends State<MapPage>{
                 sheetBelow: SnappingSheetContent(
                   childScrollController: scrollController,
                   draggable: true,
-                  child:
-                  // DummyContent(
-                  //   currentNumberCustomerOfList: _mainBloc.listOfDetailTrips.length,
-                  //   listOfDetailTrips: _mainBloc.listOfDetailTrips,
-                  //   controller: scrollController,
-                  // ),
-                  Container(
+                  child: Container(
                     height: double.infinity,
                     width: double.infinity,
                     color: Colors.white,
@@ -256,7 +257,7 @@ class MapPageState extends State<MapPage>{
                       padding: EdgeInsets.zero,
                       //padding: EdgeInsets.all(20).copyWith(top: 30),
                       controller: scrollController,
-                      child: !Utils.isEmpty(_mainBloc.listOfDetailTrips)
+                      child: !Utils.isEmpty(_mainBloc.listCustomer) && _mainBloc.soKhachDaDonDuoc != (Utils.isEmpty(_mainBloc.listCustomer) ? 1 :  _mainBloc.listCustomer[0].totalCustomer)
                           ?
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -296,7 +297,7 @@ class MapPageState extends State<MapPage>{
                                                               child: MarqueeWidget(
                                                                 direction: Axis.horizontal,
                                                                 child: Text(
-                                                                  _mainBloc.listOfDetailTrips[0].diaChiKhachDi?.toString()??'Không có địa chỉ Khách',
+                                                                  _mainBloc.listCustomer[0].diaChiKhachDi?.toString()??'Không có địa chỉ Khách',
                                                                   style: TextStyle(
                                                                       fontSize: 18,
                                                                       color: primaryColor,
@@ -315,12 +316,12 @@ class MapPageState extends State<MapPage>{
                                                       SizedBox(
                                                         height: 4,
                                                       ),
-                                                      Text("SĐT: " + _mainBloc.listOfDetailTrips[0].soDienThoaiKhach, style: TextStyle(fontSize: 12, color: Colors.grey)),
+                                                      Text("SĐT: " + _mainBloc.listCustomer[0].soDienThoaiKhach, style: TextStyle(fontSize: 12, color: Colors.grey)),
                                                       SizedBox(
                                                         height: 5,
                                                       ),
                                                       Text(
-                                                        'Tên KH: ${_mainBloc.listOfDetailTrips[0].tenKhachHang??''}',
+                                                        'Tên KH: ${_mainBloc.listCustomer[0].tenKhachHang??''}',
                                                         overflow: TextOverflow.ellipsis,
                                                         maxLines: 1,
                                                         style:TextStyle(
@@ -342,7 +343,7 @@ class MapPageState extends State<MapPage>{
                                               crossAxisAlignment: CrossAxisAlignment.end,
                                               children: <Widget>[
                                                 Text(
-                                                  '${_countCustomerSuccessfulOrCancel.toString()}/${_mainBloc.currentNumberCustomerOfList.toString()}',
+                                                  '${_mainBloc.soKhachDaDonDuoc.toString()}/${_mainBloc.listCustomer[0].totalCustomer.toString()}',
                                                   style: Theme.of(context).textTheme.title.copyWith(
                                                     fontWeight: FontWeight.bold,
                                                     color: Colors.white,
@@ -382,7 +383,7 @@ class MapPageState extends State<MapPage>{
                                               ),
                                               SizedBox(height: 3,),
                                               Text(
-                                                _mainBloc.trips?.toString() ?? "",
+                                                _mainBloc.listCustomer[0].chuyen?.toString() ?? "",
                                                 style: Theme.of(context).textTheme.subtitle.copyWith(
                                                   fontWeight: FontWeight.bold,
                                                   color: Theme.of(context).textTheme.title.color,
@@ -418,7 +419,7 @@ class MapPageState extends State<MapPage>{
                                               Row(
                                                 children: [
                                                   Text(
-                                                    _mainBloc.listOfDetailTrips[0].dienThoaiTaiXeLimousine?.toString()??"",
+                                                    _mainBloc.listCustomer[0].dienThoaiTaiXeLimousine?.toString()??"",
                                                     style: Theme.of(context).textTheme.subtitle.copyWith(
                                                       fontWeight: FontWeight.bold,
                                                       color: Theme.of(context).textTheme.title.color,
@@ -438,7 +439,7 @@ class MapPageState extends State<MapPage>{
                                                     width: 3,
                                                   ),
                                                   Text(
-                                                    _mainBloc.listOfDetailTrips[0].bienSoXeLimousine?.toString()??"",
+                                                    _mainBloc.listCustomer[0].bienSoXeLimousine?.toString()??"",
                                                     style: Theme.of(context).textTheme.subtitle.copyWith(fontWeight: FontWeight.normal, color: Colors.grey, fontSize: 12),
                                                   ),
                                                 ],
@@ -446,7 +447,7 @@ class MapPageState extends State<MapPage>{
                                             ],
                                           ),
                                           GestureDetector(
-                                            onTap: () => launch("tel://${_mainBloc.listOfDetailTrips[0].dienThoaiTaiXeLimousine}"),
+                                            onTap: () => launch("tel://${_mainBloc.listCustomer[0].dienThoaiTaiXeLimousine}"),
                                             child: Column(
                                               children: [
                                                 Icon(Icons.phone_missed_outlined),
@@ -483,12 +484,13 @@ class MapPageState extends State<MapPage>{
                                                     }).then((value){
                                                   if(!Utils.isEmpty(value)){
 
-                                                    _countCustomerSuccessfulOrCancel++;
+                                                    _mainBloc.soKhachDaDonDuoc++;
                                                     if(socketIOService.socket.connected)
                                                     {
                                                       socketIOService.socket.emit("TAIXE_TRUNGCHUYEN_CAPNHAT_TRANGTHAI_KHACH");
                                                     }
-                                                    _mainBloc.add(UpdateStatusCustomerEvent(status: 9,idTrungChuyen: [_mainBloc.listOfDetailTrips[0].idTrungChuyen],note: value[0]));
+                                                    _mainBloc.add(DeleteItem(_mainBloc.getCustomer(0).idTrungChuyen, 0));
+                                                    _mainBloc.add(UpdateStatusCustomerEvent(status: 9,idTrungChuyen: [_mainBloc.listCustomer[0].idTrungChuyen],note: value[0]));
                                                     Utils.showToast('Huỷ khách thành công');
                                                   }
                                                 });
@@ -520,59 +522,141 @@ class MapPageState extends State<MapPage>{
                                                 /// chuyển trạng thái đang đón khách
                                                 setState(() {
                                                   // don
-                                                  if(_mainBloc.listOfDetailTrips[0].loaiKhach == 1){
-                                                    if(statusDon == 2){
+                                                  if(_mainBloc.listCustomer[0].loaiKhach == 1){
+                                                    if(_mainBloc.listCustomer[0].statusCustomer == 2){
                                                       /// next Đang đón
-                                                      statusDon = 3;
-                                                      print('123123');
-                                                      _mapBloc.add(GetListLocationPolylineEvent(_mainBloc.listOfDetailTrips[0].toaDoDiaChiKhachDi));
-                                                      if(socketIOService.socket.connected)
-                                                      {
-                                                        socketIOService.socket.emit("TAIXE_TRUNGCHUYEN_CAPNHAT_TRANGTHAI_KHACH");
-                                                      }
-                                                      _mainBloc.add(UpdateStatusCustomerEvent(status: 3,idTrungChuyen: [_mainBloc.listOfDetailTrips[0].idTrungChuyen]));
+                                                      Customer customer = new Customer(
+                                                          idTrungChuyen: _mainBloc.listCustomer[0].idTrungChuyen,
+                                                          idTaiXeLimousine : _mainBloc.listCustomer[0].idTaiXeLimousine,
+                                                          hoTenTaiXeLimousine : _mainBloc.listCustomer[0].hoTenTaiXeLimousine,
+                                                          dienThoaiTaiXeLimousine : _mainBloc.listCustomer[0].dienThoaiTaiXeLimousine,
+                                                          tenXeLimousine : _mainBloc.listCustomer[0].tenXeLimousine,
+                                                          bienSoXeLimousine : _mainBloc.listCustomer[0].bienSoXeLimousine,
+                                                          tenKhachHang : _mainBloc.listCustomer[0].tenKhachHang,
+                                                          soDienThoaiKhach :_mainBloc.listCustomer[0].soDienThoaiKhach,
+                                                          diaChiKhachDi :_mainBloc.listCustomer[0].diaChiKhachDi,
+                                                          toaDoDiaChiKhachDi:_mainBloc.listCustomer[0].toaDoDiaChiKhachDi,
+                                                          diaChiKhachDen:_mainBloc.listCustomer[0].diaChiKhachDen,
+                                                          toaDoDiaChiKhachDen:_mainBloc.listCustomer[0].toaDoDiaChiKhachDen,
+                                                          diaChiLimoDi:_mainBloc.listCustomer[0].diaChiLimoDi,
+                                                          toaDoLimoDi:_mainBloc.listCustomer[0].toaDoLimoDi,
+                                                          diaChiLimoDen:_mainBloc.listCustomer[0].diaChiLimoDen,
+                                                          toaDoLimoDen:_mainBloc.listCustomer[0].toaDoLimoDen,
+                                                          loaiKhach:_mainBloc.listCustomer[0].loaiKhach,
+                                                          trangThaiTC: 3,
+                                                          soKhach:_mainBloc.listCustomer[0].soKhach,
+                                                          statusCustomer: 3,
+                                                          chuyen: _mainBloc.listCustomer[0].chuyen,
+                                                          totalCustomer: _mainBloc.currentNumberCustomerOfList
+                                                      );
+                                                      _mainBloc.add(UpdateCustomerItemList(customer));
+
+                                                      _mapBloc.add(GetListLocationPolylineEvent(_mainBloc.listCustomer[0].toaDoDiaChiKhachDi));
+                                                      // if(socketIOService.socket.connected)
+                                                      // {
+                                                      //   socketIOService.socket.emit("TAIXE_TRUNGCHUYEN_CAPNHAT_TRANGTHAI_KHACH");
+                                                      // }
+                                                      // _mainBloc.add(UpdateStatusCustomerEvent(status: 3,idTrungChuyen: [_mainBloc.listCustomer[0].idTrungChuyen]));
                                                       Utils.showToast('Đang đi đón khách');
-                                                    }else if(statusDon == 3){
+                                                    }else if(_mainBloc.listCustomer[0].statusCustomer == 3){
                                                       /// nex Đã đón
-                                                      if(socketIOService.socket.connected)
-                                                      {
-                                                        socketIOService.socket.emit("TAIXE_TRUNGCHUYEN_CAPNHAT_TRANGTHAI_KHACH");
-                                                      }
-                                                      _mainBloc.add(UpdateStatusCustomerEvent(status: 4,idTrungChuyen: [_mainBloc.listOfDetailTrips[0].idTrungChuyen]));
-                                                      _countCustomerSuccessfulOrCancel++;
-                                                      statusDon = 2;
+                                                      // if(socketIOService.socket.connected)
+                                                      // {
+                                                      //   socketIOService.socket.emit("TAIXE_TRUNGCHUYEN_CAPNHAT_TRANGTHAI_KHACH");
+                                                      // }
+                                                      // _mainBloc.add(UpdateStatusCustomerEvent(status: 4,idTrungChuyen: [_mainBloc.listCustomer[0].idTrungChuyen]));
+                                                      _mainBloc.soKhachDaDonDuoc++;
+
+                                                      //statusDon = 2;
+                                                      Customer customer = new Customer(
+                                                          idTrungChuyen: _mainBloc.listCustomer[0].idTrungChuyen,
+                                                          idTaiXeLimousine : _mainBloc.listCustomer[0].idTaiXeLimousine,
+                                                          hoTenTaiXeLimousine : _mainBloc.listCustomer[0].hoTenTaiXeLimousine,
+                                                          dienThoaiTaiXeLimousine : _mainBloc.listCustomer[0].dienThoaiTaiXeLimousine,
+                                                          tenXeLimousine : _mainBloc.listCustomer[0].tenXeLimousine,
+                                                          bienSoXeLimousine : _mainBloc.listCustomer[0].bienSoXeLimousine,
+                                                          tenKhachHang : _mainBloc.listCustomer[0].tenKhachHang,
+                                                          soDienThoaiKhach :_mainBloc.listCustomer[0].soDienThoaiKhach,
+                                                          diaChiKhachDi :_mainBloc.listCustomer[0].diaChiKhachDi,
+                                                          toaDoDiaChiKhachDi:_mainBloc.listCustomer[0].toaDoDiaChiKhachDi,
+                                                          diaChiKhachDen:_mainBloc.listCustomer[0].diaChiKhachDen,
+                                                          toaDoDiaChiKhachDen:_mainBloc.listCustomer[0].toaDoDiaChiKhachDen,
+                                                          diaChiLimoDi:_mainBloc.listCustomer[0].diaChiLimoDi,
+                                                          toaDoLimoDi:_mainBloc.listCustomer[0].toaDoLimoDi,
+                                                          diaChiLimoDen:_mainBloc.listCustomer[0].diaChiLimoDen,
+                                                          toaDoLimoDen:_mainBloc.listCustomer[0].toaDoLimoDen,
+                                                          loaiKhach:_mainBloc.listCustomer[0].loaiKhach,
+                                                          trangThaiTC: 4,
+                                                          soKhach:_mainBloc.listCustomer[0].soKhach,
+                                                          statusCustomer: 4, /// thanh cong
+                                                          chuyen: _mainBloc.listCustomer[0].chuyen,
+                                                          totalCustomer: _mainBloc.currentNumberCustomerOfList
+                                                      );
+                                                      _mainBloc.add(Delete(customer.idTrungChuyen,0));
+                                                      _mainBloc.add(AddOldCustomerItemList(customer));
+                                                      _mainBloc.add(UpdateTaiXeLimo(customer));
                                                       Utils.showToast('Đón khách thành công - chuyển sang khách tiếp theo');
+
                                                       mapController.removePolyline(myPolyline);
-                                                      if(!Utils.isEmpty(_mainBloc.listOfDetailTrips)){
-                                                        _mainBloc.listOfDetailTrips.removeAt(0);
-                                                      }
+
+
+                                                      // if(!Utils.isEmpty(_mainBloc.listCustomer)){
+                                                      //   _mainBloc.listCustomerToPickUpSuccess.add(_mainBloc.listCustomer[0]);
+                                                      //   _mainBloc.listCustomer.removeAt(0);
+                                                      // }
                                                     }
                                                   }
                                                   //tra
                                                   else{
-
                                                     /// bắn notification xác nhận - nhận được khách từ tài xế Limo
-                                                    if(statusTra == 6){
-                                                      statusTra = 7;/// nex Đang trả
+                                                    if( _mainBloc.listCustomer[0].statusCustomer == 6){
+                                                      //statusTra = 7;/// nex Đang trả
+                                                      Customer customer = new Customer(
+                                                          idTrungChuyen: _mainBloc.listCustomer[0].idTrungChuyen,
+                                                          idTaiXeLimousine : _mainBloc.listCustomer[0].idTaiXeLimousine,
+                                                          hoTenTaiXeLimousine : _mainBloc.listCustomer[0].hoTenTaiXeLimousine,
+                                                          dienThoaiTaiXeLimousine : _mainBloc.listCustomer[0].dienThoaiTaiXeLimousine,
+                                                          tenXeLimousine : _mainBloc.listCustomer[0].tenXeLimousine,
+                                                          bienSoXeLimousine : _mainBloc.listCustomer[0].bienSoXeLimousine,
+                                                          tenKhachHang : _mainBloc.listCustomer[0].tenKhachHang,
+                                                          soDienThoaiKhach :_mainBloc.listCustomer[0].soDienThoaiKhach,
+                                                          diaChiKhachDi :_mainBloc.listCustomer[0].diaChiKhachDi,
+                                                          toaDoDiaChiKhachDi:_mainBloc.listCustomer[0].toaDoDiaChiKhachDi,
+                                                          diaChiKhachDen:_mainBloc.listCustomer[0].diaChiKhachDen,
+                                                          toaDoDiaChiKhachDen:_mainBloc.listCustomer[0].toaDoDiaChiKhachDen,
+                                                          diaChiLimoDi:_mainBloc.listCustomer[0].diaChiLimoDi,
+                                                          toaDoLimoDi:_mainBloc.listCustomer[0].toaDoLimoDi,
+                                                          diaChiLimoDen:_mainBloc.listCustomer[0].diaChiLimoDen,
+                                                          toaDoLimoDen:_mainBloc.listCustomer[0].toaDoLimoDen,
+                                                          loaiKhach:_mainBloc.listCustomer[0].loaiKhach,
+                                                          trangThaiTC: 7,
+                                                          soKhach:_mainBloc.listCustomer[0].soKhach,
+                                                          statusCustomer: 7,
+                                                          chuyen: _mainBloc.listCustomer[0].chuyen,
+                                                          totalCustomer: _mainBloc.currentNumberCustomerOfList
+                                                      );
+                                                      _mainBloc.add(UpdateCustomerItemList(customer));
                                                       if(socketIOService.socket.connected)
                                                       {
                                                         socketIOService.socket.emit("TAIXE_TRUNGCHUYEN_CAPNHAT_TRANGTHAI_KHACH");
                                                       }
-                                                      _mainBloc.add(UpdateStatusCustomerEvent(status: 7,idTrungChuyen: [_mainBloc.listOfDetailTrips[0].idTrungChuyen]));
+                                                      _mainBloc.add(UpdateStatusCustomerEvent(status: 7,idTrungChuyen: [_mainBloc.listCustomer[0].idTrungChuyen]));
                                                       Utils.showToast('Đang đi trả khách');
-                                                    }else if(statusTra == 8){
+                                                    }else if(_mainBloc.listCustomer[0].statusCustomer == 7){
                                                       /// Đã trả
                                                       if(socketIOService.socket.connected)
                                                       {
                                                         socketIOService.socket.emit("TAIXE_TRUNGCHUYEN_CAPNHAT_TRANGTHAI_KHACH");
                                                       }
-                                                      _mainBloc.add(UpdateStatusCustomerEvent(status: 8,idTrungChuyen: [_mainBloc.listOfDetailTrips[0].idTrungChuyen]));
-                                                      _countCustomerSuccessfulOrCancel++;
-                                                      statusTra = 6;
+
+                                                      _mainBloc.add(UpdateStatusCustomerEvent(status: 8,idTrungChuyen: [_mainBloc.listCustomer[0].idTrungChuyen]));
+                                                      _mainBloc.soKhachDaDonDuoc++;
+                                                      _mainBloc.add(DeleteItem(_mainBloc.getCustomer(0).idTrungChuyen, 0));
                                                       Utils.showToast('Trả khách thành công');
-                                                      if(!Utils.isEmpty(_mainBloc.listOfDetailTrips)){
-                                                        _mainBloc.listOfDetailTrips.removeAt(0);
-                                                      }
+                                                      // if(!Utils.isEmpty(_mainBloc.listCustomer)){
+                                                      //   _mainBloc.listCustomerToPickUpSuccess.clear();
+                                                      //   _mainBloc.listCustomer.removeAt(0);
+                                                      // }
                                                     }
                                                   }
                                                 });
@@ -582,23 +666,23 @@ class MapPageState extends State<MapPage>{
                                                 decoration: BoxDecoration(
                                                   borderRadius: BorderRadius.circular(10),
                                                   color:
-                                                  _mainBloc.listOfDetailTrips[0].loaiKhach == 1
+                                                  _mainBloc.listCustomer[0].loaiKhach == 1
                                                       ?
-                                                  (statusDon == 2 ? Colors.orange : (statusDon == 3 ? Colors.blueAccent : statusDon == 4 ? Colors.orange : Colors.orange))
+                                                  (_mainBloc.listCustomer[0].statusCustomer == 2 ? Colors.orange : (_mainBloc.listCustomer[0].statusCustomer == 3 ? Colors.blueAccent : _mainBloc.listCustomer[0].statusCustomer == 4 ? Colors.orange : Colors.orange))
                                                       :
-                                                  (statusTra == 6 ? Colors.orange : (statusTra == 7 ? Colors.blueAccent : statusTra == 8 ? Colors.orange : Colors.orange)),
+                                                  (_mainBloc.listCustomer[0].statusCustomer == 6 ? Colors.orange : (_mainBloc.listCustomer[0].statusCustomer == 7 ? Colors.blueAccent : _mainBloc.listCustomer[0].statusCustomer == 8 ? Colors.orange : Colors.orange)),
                                                 ),
                                                 child: Center(
                                                   child: Text(
-                                                    _mainBloc.listOfDetailTrips[0].loaiKhach == 1
+                                                    _mainBloc.listCustomer[0].loaiKhach == 1
                                                         ?
-                                                    (statusDon == 2 ? 'Đón khách' : (statusDon == 3 ? 'Đang đón' : statusDon == 4 ? 'Đã đón' : ''))
+                                                    (_mainBloc.listCustomer[0].statusCustomer == 2 ? 'Đón khách' : (_mainBloc.listCustomer[0].statusCustomer == 3 ? 'Đang đón' : _mainBloc.listCustomer[0].statusCustomer == 4 ? 'Đã đón' : ''))
                                                         :
-                                                    (statusTra == 6 ? 'Nhận khách' : (statusTra == 7 ? 'Đang trả' : statusTra == 8 ? 'Đã trả' : ''))
+                                                    (_mainBloc.listCustomer[0].statusCustomer == 6 ? 'Nhận khách' : (_mainBloc.listCustomer[0].statusCustomer == 7 ? 'Đang trả' : _mainBloc.listCustomer[0].statusCustomer == 8 ? 'Đã trả' : ''))
                                                     ,
                                                     style: Theme.of(context).textTheme.button.copyWith(
                                                       fontWeight: FontWeight.bold,
-                                                      color:statusDon == 3 ? Colors.white : Colors.black,
+                                                      color:_mainBloc.listCustomer[0].statusCustomer == 3 ? Colors.white : Colors.black,
                                                     ),
                                                   ),
                                                 ),
@@ -635,12 +719,16 @@ class MapPageState extends State<MapPage>{
                                   child: ListView.separated(
                                       padding: EdgeInsets.zero,
                                       itemBuilder: (BuildContext context, int index) {
+                                        // if(_mainBloc.listCustomer[index].statusCustomer == 4 &&_countCustomerSuccessfulOrCancel <= _mainBloc.listCustomer.length ){
+                                        //   _countCustomerSuccessfulOrCancel++;
+                                        //   print('_countCustomerSuccessfulOrCancel +${_countCustomerSuccessfulOrCancel.toString()}');
+                                        // }
                                         return Padding(
                                           padding: const EdgeInsets.only(left: 10, right: 16),
                                           child: Container(
                                             width: double.infinity,
                                             decoration: BoxDecoration(
-                                              color: Theme.of(context).scaffoldBackgroundColor,
+                                              color:  Theme.of(this.context).scaffoldBackgroundColor,
                                               borderRadius: BorderRadius.circular(0),
                                               boxShadow: [
                                                 new BoxShadow(
@@ -675,55 +763,20 @@ class MapPageState extends State<MapPage>{
                                                           Row(
                                                             children: [
                                                               Text(
-                                                                _mainBloc.listOfDetailTrips[index].tenKhachHang?.toString()??'',
+                                                                _mainBloc.listCustomer[index].tenKhachHang?.toString()??'',
                                                                 style: TextStyle(fontWeight: FontWeight.bold),
                                                               ),
                                                               SizedBox(
                                                                 width: 5,
                                                               ),
-                                                              Text('(${_mainBloc.listOfDetailTrips[index].soDienThoaiKhach})', style: TextStyle(fontSize: 12, color: Colors.grey)),
+                                                              Text('(${_mainBloc.listCustomer[index].soDienThoaiKhach})', style: TextStyle(fontSize: 12, color: Colors.grey)),
                                                             ],
                                                           ),
-                                                          // SizedBox(
-                                                          //   height: 4,
-                                                          // ),
-                                                          // Container(
-                                                          //   width: 74,
-                                                          //   padding: EdgeInsets.all(2),
-                                                          //   child: Center(
-                                                          //     child: Text(
-                                                          //       '2 Khách',
-                                                          //       style: TextStyle(color: Colors.black, fontSize: 12),
-                                                          //     ),
-                                                          //   ),
-                                                          //   decoration: BoxDecoration(
-                                                          //     borderRadius: BorderRadius.all(
-                                                          //       Radius.circular(15),
-                                                          //     ),
-                                                          //     color: Colors.orange,
-                                                          //   ),
-                                                          // )
                                                         ],
                                                       ),
                                                       Expanded(
                                                         child: SizedBox(),
                                                       ),
-                                                      // Column(
-                                                      //   crossAxisAlignment: CrossAxisAlignment.end,
-                                                      //   children: <Widget>[
-                                                      //     Text(
-                                                      //       '5 phút',
-                                                      //       style: TextStyle(fontWeight: FontWeight.bold),
-                                                      //     ),
-                                                      //     Text(
-                                                      //       '2.2 km',
-                                                      //       style: Theme.of(Get.context).textTheme.caption.copyWith(
-                                                      //             color: Theme.of(Get.context).disabledColor,
-                                                      //             fontWeight: FontWeight.bold,
-                                                      //           ),
-                                                      //     ),
-                                                      //   ],
-                                                      // ),
                                                     ],
                                                   ),
                                                 ),
@@ -747,7 +800,7 @@ class MapPageState extends State<MapPage>{
                                                         height: 5,
                                                       ),
                                                       Text(
-                                                        _mainBloc.listOfDetailTrips[index].diaChiKhachDi?.toString()??'',
+                                                        _mainBloc.listCustomer[index].diaChiKhachDi?.toString()??'',
                                                         maxLines: 2,
                                                         overflow: TextOverflow.ellipsis,
                                                         style: Theme.of(context).textTheme.subtitle.copyWith(
@@ -786,7 +839,7 @@ class MapPageState extends State<MapPage>{
                                                           Row(
                                                             children: [
                                                               Text(
-                                                                _mainBloc.listOfDetailTrips[index].dienThoaiTaiXeLimousine?.toString()??'',
+                                                                _mainBloc.listCustomer[index].dienThoaiTaiXeLimousine?.toString()??'',
                                                                 style: Theme.of(context).textTheme.subtitle.copyWith(
                                                                   fontWeight: FontWeight.bold,
                                                                   color: Theme.of(context).textTheme.title.color,
@@ -806,32 +859,13 @@ class MapPageState extends State<MapPage>{
                                                                 width: 3,
                                                               ),
                                                               Text(
-                                                                '( ${_mainBloc.listOfDetailTrips[index].dienThoaiTaiXeLimousine?.toString()??""} )',
+                                                                '( ${_mainBloc.listCustomer[index].bienSoXeLimousine?.toString()??""} )',
                                                                 style: Theme.of(context).textTheme.subtitle.copyWith(fontWeight: FontWeight.normal, color: Colors.grey, fontSize: 12),
                                                               ),
                                                             ],
                                                           ),
                                                         ],
                                                       ),
-                                                      // GestureDetector(
-                                                      //   onTap: () => launch("tel://0963004959"),
-                                                      //   child: Container(
-                                                      //     padding: EdgeInsets.all(5),
-                                                      //     decoration: BoxDecoration(
-                                                      //       borderRadius: BorderRadius.all(Radius.circular(8)),
-                                                      //       color: Colors.orange
-                                                      //     ),
-                                                      //     child: Column(
-                                                      //       children: [
-                                                      //         Icon(Icons.phone_missed_outlined,color: Colors.white,),
-                                                      //         Text(
-                                                      //           'Lái xe',
-                                                      //           style: Theme.of(Get.context).textTheme.caption.copyWith(color: Colors.white, fontWeight: FontWeight.normal, fontSize: 13),
-                                                      //         ),
-                                                      //       ],
-                                                      //     ),
-                                                      //   ),
-                                                      // ),
                                                     ],
                                                   ),
                                                 ),
@@ -844,7 +878,25 @@ class MapPageState extends State<MapPage>{
                                                 ),
                                                 Padding(
                                                   padding: const EdgeInsets.only(right: 14, left: 14, top: 15, bottom: 12),
-                                                  child: Row(
+                                                  child:
+                                                  (_mainBloc.listCustomer[index].statusCustomer == 4 || _mainBloc.listCustomer[index].statusCustomer == 8 )?
+                                                  GestureDetector(
+                                                    onTap: () {
+                                                    },
+                                                    child: Container(
+                                                      height: 35,
+                                                      child: Center(
+                                                        child: Text(
+                                                          'Đã hoàn thành',
+                                                          style: Theme.of(context).textTheme.button.copyWith(
+                                                            fontWeight: FontWeight.bold,
+                                                            color: Colors.blue,
+                                                          ),
+                                                        ),
+                                                      ),
+                                                    ),
+                                                  ):
+                                                  Row(
                                                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                                     mainAxisSize: MainAxisSize.max,
                                                     children: [
@@ -864,8 +916,10 @@ class MapPageState extends State<MapPage>{
                                                                 {
                                                                   socketIOService.socket.emit("TAIXE_TRUNGCHUYEN_CAPNHAT_TRANGTHAI_KHACH");
                                                                 }
-                                                                _countCustomerSuccessfulOrCancel++;
-                                                                _mainBloc.add(UpdateStatusCustomerEvent(status: 9,idTrungChuyen: [_mainBloc.listOfDetailTrips[0].idTrungChuyen],note: value[0]));
+                                                                _mainBloc.soKhachDaDonDuoc++;
+                                                                //_mainBloc.listCustomer.removeAt(index);
+                                                                _mainBloc.add(DeleteItem(_mainBloc.getCustomer(index).idTrungChuyen, index));
+                                                                _mainBloc.add(UpdateStatusCustomerEvent(status: 9,idTrungChuyen: [_mainBloc.listCustomer[index].idTrungChuyen],note: value[0]));
                                                                 Utils.showToast('Huỷ khách thành công');
                                                               }
                                                             });
@@ -922,15 +976,14 @@ class MapPageState extends State<MapPage>{
                                       separatorBuilder: (BuildContext context, int index) => Container(
                                         height: 16,
                                       ),
-                                      itemCount: _mainBloc.listOfDetailTrips.length),
+                                      itemCount: _mainBloc.listCustomer.length),
                                 ),
                               ],
                             ),
                           )
                         ],
                       )
-                          :
-                      _mainBloc.currentNumberCustomerOfList == _countCustomerSuccessfulOrCancel && Utils.isEmpty(_mainBloc.listOfDetailTrips)
+                          : _mainBloc.soKhachDaDonDuoc == (Utils.isEmpty(_mainBloc.listCustomer) ? 10 :  _mainBloc.listCustomer[0].totalCustomer)
                           ?
                       Padding(
                         padding: const EdgeInsets.only(left: 10,right: 10,top: 2),
@@ -978,7 +1031,10 @@ class MapPageState extends State<MapPage>{
                                       TableCell(
                                         child: Padding(
                                           padding: const EdgeInsets.all(8.0),
-                                          child: Text( !Utils.isEmpty(_mainBloc.trips) ? _mainBloc.trips.toString().split(' / ')[1] ?? "" : "",),
+                                          child: Text(
+                                            // !Utils.isEmpty(_mainBloc.listCustomer[0].chuyen) ?
+                                            _mainBloc.listCustomer[0].chuyen.toString(),//.split(' / ')[1] ?? "" : "",
+                                          ),
                                         ),
                                       ),
                                     ],
@@ -988,29 +1044,82 @@ class MapPageState extends State<MapPage>{
                               SizedBox(height: 20,),
                               Padding(
                                 padding: const EdgeInsets.only(left: 16,right: 16),
-                                child: InkWell(
-                                  onTap: (){
-                                    print(_mainBloc.listTaiXeLimo.length.toString());
-                                    _mapBloc.add(CustomerTransferToLimo(
-                                      'Thông báo',
-                                      'Bạn nhận được khách từ LX Trung chuyển.',
-                                      _mainBloc.listTaiXeLimo
-                                    ));
-                                  },
-                                  child: Container(
-                                    height: 40.0,
-                                    decoration: BoxDecoration(
-                                        borderRadius: BorderRadius.circular(10.0),
-                                        color: Colors.orange
-                                    ),
-                                    child: Center(
-                                      child: Text(
-                                        'Giao khách cho Limo',
-                                        style: TextStyle(fontFamily: fontSub, fontSize: 16, color: white,),
-                                        textAlign: TextAlign.left,
+                                child: Row(
+                                  children: [
+                                    Expanded(
+                                      child: InkWell(
+                                        onTap: (){
+                                          // int _countExitsCustomer = 0;
+                                          // _mainBloc.listCustomer.forEach((element) {
+                                          //   if(Utils.isEmpty(_mainBloc.listTaiXeLimo)){
+                                          //     _countExitsCustomer++;
+                                          //     element.soKhach = _countExitsCustomer;
+                                          //     _mainBloc.listTaiXeLimo.add(element);
+                                          //   }
+                                          //   else{
+                                          //     var contain =  _mainBloc.listTaiXeLimo.where((phone) => phone.dienThoaiTaiXeLimousine == element.dienThoaiTaiXeLimousine);
+                                          //     if (contain.isEmpty){
+                                          //       _mainBloc.listTaiXeLimo.add(element);
+                                          //
+                                          //     }else{
+                                          //       _countExitsCustomer++;
+                                          //       final tile = _mainBloc.listTaiXeLimo.firstWhere((item) => item.dienThoaiTaiXeLimousine == element.dienThoaiTaiXeLimousine);
+                                          //       if (tile != null) tile.soKhach = _countExitsCustomer;
+                                          //     }
+                                          //   }
+                                          // });
+                                          _mainBloc.add(GetListTXLimo());
+                                        },
+                                        child: Container(
+                                          height: 40.0,
+                                          padding: EdgeInsets.all(4),
+                                          decoration: BoxDecoration(
+                                              borderRadius: BorderRadius.circular(10.0),
+                                              color: Colors.blue
+                                          ),
+                                          child: Center(
+                                            child: Text(
+                                              'Lấy DS LX Limo',
+                                              style: TextStyle(fontFamily: fontSub, fontSize: 16, color: white,),
+                                              textAlign: TextAlign.left,
+                                            ),
+                                          ),
+                                        ),
                                       ),
                                     ),
-                                  ),
+                                    SizedBox(width: 10,),
+                                    Expanded(
+                                      child: InkWell(
+                                        onTap: (){
+                                          if(!Utils.isEmpty(_mainBloc.listTaiXeLimo)){
+                                            _mapBloc.add(CustomerTransferToLimo(
+                                                'Thông báo',
+                                                'Bạn nhận được khách từ LX Trung chuyển.',
+                                                _mainBloc.listTaiXeLimo
+                                            ));
+                                          }
+                                          else{
+                                            Utils.showToast('Vui lòng lấy DS LX Limo');
+                                          }
+                                        },
+                                        child: Container(
+                                          height: 40.0,
+                                          padding: EdgeInsets.all(4),
+                                          decoration: BoxDecoration(
+                                              borderRadius: BorderRadius.circular(10.0),
+                                              color: Colors.orange
+                                          ),
+                                          child: Center(
+                                            child: Text(
+                                              'Giao khách cho Limo',
+                                              style: TextStyle(fontFamily: fontSub, fontSize: 16, color: white,),
+                                              textAlign: TextAlign.left,
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  ],
                                 ),
                               ),
                               SizedBox(height: 20,),
@@ -1138,7 +1247,7 @@ class MapPageState extends State<MapPage>{
                             onTap: (){
 
                               print(_mainBloc.currentNumberCustomerOfList);
-                              print(_countCustomerSuccessfulOrCancel);print(_mainBloc.listOfDetailTrips);
+                              print(_mainBloc.soKhachDaDonDuoc);print(_mainBloc.listCustomer);
                             },
                             child: Text('Hiện tại chưa có khách \n Hoặc \n Sang nhóm khách và chọn khách để đón nhé.')))),
                       ),
@@ -1406,8 +1515,9 @@ class MapPageState extends State<MapPage>{
                                     {
                                       socketIOService.socket.emit("TAIXE_TRUNGCHUYEN_CAPNHAT_TRANGTHAI_KHACH");
                                     }
-                                    _countCustomerSuccessfulOrCancel++;
-                                    _mainBloc.add(UpdateStatusCustomerEvent(status: 9,idTrungChuyen: [_mainBloc.listOfDetailTrips[0].idTrungChuyen],note: value[0]));
+                                    _mainBloc.soKhachDaDonDuoc++;
+                                    _mainBloc.add(DeleteItem(_mainBloc.getCustomer(0).idTrungChuyen, 0));
+                                    _mainBloc.add(UpdateStatusCustomerEvent(status: 9,idTrungChuyen: [_mainBloc.listCustomer[0].idTrungChuyen],note: value[0]));
                                     Utils.showToast('Huỷ khách thành công');
                                   }
                                 });

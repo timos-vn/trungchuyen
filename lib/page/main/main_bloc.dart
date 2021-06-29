@@ -5,6 +5,7 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter_animarker/flutter_map_marker_animation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_ringtone_player/flutter_ringtone_player.dart';
+import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:get/get.dart' as libGetX;
 import 'package:bloc/bloc.dart';
 import 'package:flutter/cupertino.dart';
@@ -13,6 +14,9 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:get/get.dart';
 import 'package:google_maps_controller/google_maps_controller.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:trungchuyen/models/database/dbhelper.dart';
+import 'package:trungchuyen/models/entity/customer.dart';
+import 'package:trungchuyen/models/entity/notification_customer.dart';
 import 'package:trungchuyen/models/network/request/tranfer_customer_request.dart';
 import 'package:trungchuyen/models/network/request/update_status_customer_request.dart';
 import 'package:trungchuyen/models/network/request/update_token_request.dart';
@@ -25,11 +29,14 @@ import 'package:flutter_animarker/lat_lng_interpolation.dart';
 import 'package:trungchuyen/page/map_limo/map_limo_bloc.dart';
 import 'package:trungchuyen/page/map_limo/map_limo_event.dart';
 import 'package:trungchuyen/service/soket_io_service.dart';
+import 'package:trungchuyen/themes/colors.dart';
 import 'package:trungchuyen/utils/const.dart';
 import 'package:trungchuyen/utils/log.dart';
 import 'package:trungchuyen/utils/utils.dart';
 import 'main_event.dart';
 import 'main_state.dart';
+
+
 
 class MainBloc extends Bloc<MainEvent, MainState> {
   int userId;
@@ -45,11 +52,14 @@ class MainBloc extends Bloc<MainEvent, MainState> {
   List<ListOfGroupAwaitingCustomerBody> listOfGroupAwaitingCustomer = new List<ListOfGroupAwaitingCustomerBody>();
   List<ListOfGroupAwaitingCustomerBody> listCustomerLimo = new List<ListOfGroupAwaitingCustomerBody>();
   List<DetailTripsResponseBody> listOfDetailTrips = new List<DetailTripsResponseBody>();
+  List<DetailTripsResponseBody> listCustomerToPickUpSuccess = new List<DetailTripsResponseBody>();
 
   List<DetailTripsLimoReponseBody> listOfDetailTripLimo = new List<DetailTripsLimoReponseBody>();
 
-  List<DetailTripsResponseBody> listTaiXeLimo = new List<DetailTripsResponseBody>();
+  List<Customer> listTaiXeLimo = new List<Customer>();
   List<DetailTripsLimoReponseBody> listTaiXeTC = new List<DetailTripsLimoReponseBody>();
+
+
 
   String trips;
   String timeStart;
@@ -59,9 +69,10 @@ class MainBloc extends Bloc<MainEvent, MainState> {
   bool isOnline = false;
   bool isInProcessPickup = false;
   int currentNumberCustomerOfList=0;
+  int soKhachDaDonDuoc = 0;
 
   FlutterLocalNotificationsPlugin _flutterLocalNotificationsPlugin;
-  FirebaseMessaging _firebaseMessaging;
+  FirebaseMessaging firebaseMessaging;
   int countNotifyUnRead;
   String _deviceToken;
   int countApproval = 0;
@@ -73,9 +84,11 @@ class MainBloc extends Bloc<MainEvent, MainState> {
   String _role;
   String username;
   Iterable markers;
+  String idUser;
   List<Map<String, dynamic>> listLocation = new List<Map<String, dynamic>>();
-
-
+  DatabaseHelper db = DatabaseHelper();
+  List<Customer> listCustomer = new List<Customer>();
+  List<NotificationCustomer> listNotificationCustomer = new List<NotificationCustomer>();
   void setCountAfterRead() {
     countNotifyUnRead = countNotifyUnRead <= 0 ? 0 : countNotifyUnRead - 1;
   }
@@ -87,8 +100,9 @@ class MainBloc extends Bloc<MainEvent, MainState> {
 
   MainBloc() : super(null) {
     socketIOService = Get.find<SocketIOService>();
-    _firebaseMessaging = FirebaseMessaging();
-    _firebaseMessaging.getToken().then((token) {
+    firebaseMessaging = FirebaseMessaging();
+    // _firebaseMessaging.deleteInstanceID();
+    firebaseMessaging.getToken().then((token) {
       print("token");
       print(token);
       _deviceToken = token;
@@ -117,7 +131,7 @@ class MainBloc extends Bloc<MainEvent, MainState> {
 
   void _registerNotification() {
     if (Platform.isIOS) getIosPermission();
-    _firebaseMessaging.configure(
+    firebaseMessaging.configure(
       // ignore: missing_return
       onMessage: (Map<String, dynamic> message) {
         try {
@@ -132,10 +146,17 @@ class MainBloc extends Bloc<MainEvent, MainState> {
           if(message['data']['EVENT'] == 'TRUNGCHUYEN_THONGBAO_TAIXE' && _role == '3'){
             String item = message['data']['IdChuyenTruyens'];
             List<String> listId = item.replaceAll('[', '').replaceAll(']', '').replaceAll('"', '').split(',');
-
+            NotificationCustomer notificationCustomer = new NotificationCustomer(
+              idTrungChuyen: item,
+              chuyen: message['data']['Chuyen'],
+              thoiGian: message['data']['ThoiGian'],
+              loaiKhach: message['data']['LoaiKhach']
+            );
+            db.addNotificationCustomer(notificationCustomer);
             Utils.showDialogAssignReceiveCustomer(context,message['data']['Chuyen'],message['data']['ThoiGian'],message['data']['LoaiKhach'], "title", 'body',
                 onTapCancelNotification: () {
                   print('onTapCancelNotification');
+                  db.removeNotificationCustomer(item);
                   if(socketIOService.socket.connected)
                   {
                     socketIOService.socket.emit("TAIXE_TRUNGCHUYEN_CAPNHAT_TRANGTHAI_KHACH");
@@ -146,6 +167,7 @@ class MainBloc extends Bloc<MainEvent, MainState> {
                 onTapAcceptNotification: (){
                   print('onTapAcceptNotification');
                   /// 1. don
+                  db.removeNotificationCustomer(item);
                   if(socketIOService.socket.connected)
                   {
                     socketIOService.socket.emit("TAIXE_TRUNGCHUYEN_CAPNHAT_TRANGTHAI_KHACH");
@@ -157,8 +179,6 @@ class MainBloc extends Bloc<MainEvent, MainState> {
                     add(UpdateStatusCustomerEvent(status: 5,idTrungChuyen: listId));
                     print('Update Nhan tra');
                   }
-
-
                 }
             );
           }
@@ -200,37 +220,51 @@ class MainBloc extends Bloc<MainEvent, MainState> {
           //   //   );
           //   // });
           // }
-          else if(message['data']['EVENT'] == 'TAIXE_TRUNGCHUYEN_GIAOKHACH_LIMO' && _role == '3'){
+          else if(message['data']['EVENT'] == 'TAIXE_TRUNGCHUYEN_GIAOKHACH_LIMO' && _role == '7'){
             String soKhach = message['data']['numberCustomer'];
+            print('SK: ${soKhach.toString()}');
+            print(message['data']);
             List<String> listSoKhach = soKhach.split('|');
-            String item = message['data']['listId'];
-            List<String> listId = item.split(',');
+            String itemTXLimo = message['data']['listIdTAIXELIMO'];
+            List<String> listIdTXLimo = itemTXLimo.split(',');
             String itemIdTC = message['data']['listIdTC'];
+
             List<String> listIdTC = itemIdTC.split(',');
             String numberCustomer;
-
-            listId.forEach((element) {
-              if(element == username){
-                numberCustomer = listSoKhach[listId.indexOf(element)];
+            String idDriverTC = message['data']['idDriverTC'];
+            listIdTXLimo.forEach((element) {
+              if(element == idUser){
+                numberCustomer = listSoKhach[listIdTXLimo.indexOf(element)];
               }
             });
             print('numberCustomer : ${numberCustomer.toString()}');
             Utils.showDialogReceiveCustomerFormTC(context: context, laiXeTC: message['data']['nameTC'],
-                sdtLaiXeTC: message['data']['phoneTC'], soKhach: numberCustomer.toString(),date: 'Null').then((value){
+                sdtLaiXeTC: message['data']['phoneTC'], soKhach: numberCustomer.toString(),date: '').then((value){
               if(value == true){
                 print('Xac Nhan');
-                add(UpdateStatusCustomerEvent(status: 10,idTrungChuyen: listId));
+                add(UpdateStatusCustomerEvent(status: 10,idTrungChuyen: listIdTC));
                 add(ConfirmWithTXTC(
-                  'Thông báo','Xác nhận thành công',listIdTC
+                  'Thông báo','Xác nhận thành công',idDriverTC.split(',')
                 ));
               }else{
-
                 print('Update Huy');
               }
             });
           }
           else if(message['data']['EVENT'] =='TAIXE_LIMO_XACNHAN' && _role == '3'){
             ///close popup
+            String itemIdLmo = message['data']['idLimo'];
+            if(!Utils.isEmpty(listTaiXeLimo)){
+              listTaiXeLimo.removeWhere((item) => item.idTaiXeLimousine == itemIdLmo);
+            }
+            if(Utils.isEmpty(listTaiXeLimo)){
+              blocked = false;
+              db.deleteAll();
+              listTaiXeLimo.clear();
+              listOfDetailTrips.clear();
+              listCustomer.clear();
+              Utils.showToast('Xác nhận thành công');
+            }
           }
           else{
             if(Platform.isAndroid){
@@ -266,13 +300,13 @@ class MainBloc extends Bloc<MainEvent, MainState> {
         add(NavigateToNotification());
       },
     );
-    _firebaseMessaging.subscribeToTopic(Const.TOPIC);
+    firebaseMessaging.subscribeToTopic(Const.TOPIC);
   }
 
   void getIosPermission() {
-    _firebaseMessaging.requestNotificationPermissions(
+    firebaseMessaging.requestNotificationPermissions(
         IosNotificationSettings(sound: true, badge: true, alert: true));
-    _firebaseMessaging.onIosSettingsRegistered
+    firebaseMessaging.onIosSettingsRegistered
         .listen((IosNotificationSettings settings) {
       logger.d("Settings registered: $settings");
     });
@@ -293,12 +327,77 @@ class MainBloc extends Bloc<MainEvent, MainState> {
       _refreshToken = _pref.getString(Const.REFRESH_TOKEN) ?? "";
       username = _pref.getString(Const.PHONE_NUMBER) ?? "";
       _role = _pref.getString(Const.CHUC_VU) ?? "";
+      idUser = _pref.getString(Const.USER_ID) ??'';
+    }
+
+
+    if (event is AddOldCustomerItemList) {
+      yield InitialMainState();
+      await db.addNew(event.customer);
+      listCustomer = await getListFromDb();
+      yield GetCustomerListSuccess();
+      add(GetCustomerItemList());
+    }
+
+    if (event is Delete) {
+      yield InitialMainState();
+      deleteItems(event.index);
+      await db.remove(event.idTC);
+      listCustomer = await getListFromDb();
+      yield GetCustomerListSuccess();
+      add(GetCustomerItemList());
+    }
+
+    if(event is UpdateCustomerItemList){
+      yield InitialMainState();
+      await db.update(event.customer);
+      listCustomer = await getListFromDb();
+      yield GetCustomerListSuccess();
+      add(GetCustomerItemList());
+    }
+
+    if (event is DeleteItem) {
+      yield MainLoading();
+      deleteItems(event.index);
+      await db.remove(event.idTC);
+      listCustomer = await getListFromDb();
+      yield GetCustomerListSuccess();
+      add(GetCustomerItemList());
+    }
+
+    if(event is GetCustomerItemList){
+      yield InitialMainState();
+      listCustomer = await getListFromDb();
+      if (Utils.isEmpty(listCustomer)) {
+        yield GetCustomerListSuccess();
+        return;
+      }
+      yield GetCustomerListSuccess();
+    }
+
+    if(event is GetListTaiXeLimo){
+          yield MainLoading();
+          listTaiXeLimo = await getListTXLimoFromDb();
+          if (Utils.isEmpty(listTaiXeLimo)) {
+            yield GetListTaiXeLimoSuccess();
+            return;
+          }
+          yield GetListTaiXeLimoSuccess();
+        }
+    if(event is UpdateTaiXeLimo){
+      yield InitialMainState();
+      await db.addDriverLimo(event.customer);
+      listTaiXeLimo = await getListTXLimoFromDb();
+      print('OHHHH' + listTaiXeLimo.length.toString());
+      yield GetListTaiXeLimoSuccess();
+      add(GetListTaiXeLimo());
     }
 
     if(event is ConfirmWithTXTC){
       yield MainLoading();
       var objData = {
         'EVENT':'TAIXE_LIMO_XACNHAN',
+        'idLimo':idUser
       };
       TranferCustomerRequestBody request = TranferCustomerRequestBody(
           title: event.title,
@@ -339,8 +438,9 @@ class MainBloc extends Bloc<MainEvent, MainState> {
       UpdateTokenRequestBody request = UpdateTokenRequestBody(
         deviceToken: event.deviceToken
       );
-      await _networkFactory.updateToken(request,_accessToken);
-      yield UpdateTokenSuccessState();
+      MainState state = _handleUpdateToken(await _networkFactory.updateToken(request,_accessToken));
+      // await _networkFactory.updateToken(request,_accessToken);
+      yield state;
     }
 
     if (event is NavigateBottomNavigation) {
@@ -402,6 +502,23 @@ class MainBloc extends Bloc<MainEvent, MainState> {
       }
   }
 
+  Future<List<Customer>> getListFromDb() {
+    return db.fetchAll();
+  }
+
+  Future<List<Customer>> getListTXLimoFromDb() {
+    return db.fetchAllDriverLimo();
+  }
+
+  void deleteItems(int index) {
+    listCustomer.removeAt(index);
+  }
+
+  Customer getCustomer(int i) {
+    return listCustomer.elementAt(i);
+  }
+
+
   MainState _handleLimoConfirmWithTC(Object data) {
     if (data is String) return MainFailure(data);
     try {
@@ -418,6 +535,16 @@ class MainBloc extends Bloc<MainEvent, MainState> {
       ListOfGroupAwaitingCustomer response = ListOfGroupAwaitingCustomer.fromJson(data);
       listOfGroupAwaitingCustomer = response.data;
       return GetListOfGroupCustomerSuccess();
+    } catch (e) {
+      print(e.toString());
+      return MainFailure(e.toString());
+    }
+  }
+
+  MainState _handleUpdateToken(Object data) {
+    if (data is String) return MainFailure(data);
+    try {
+      return UpdateTokenSuccessState();
     } catch (e) {
       print(e.toString());
       return MainFailure(e.toString());
@@ -445,5 +572,169 @@ class MainBloc extends Bloc<MainEvent, MainState> {
   //     return MainFailure('Error'.tr);
   //   }
   // }
+
+  Future<bool> showDialogTransferCustomer({@required BuildContext context, @required String content, Function accept, Function cancel, bool dismissible: false}) => showDialog(
+      barrierDismissible: dismissible,
+      context: context,
+      builder: (context) {
+        return WillPopScope(
+          onWillPop: () async {
+            return true;
+          },
+          child:  Center(
+            child: Padding(
+              padding: EdgeInsets.only(left: 30, right: 30),
+              child: Container(
+                decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.all(Radius.circular(16))),
+                height: 350,
+                width: double.infinity,
+                child: Material(
+                    animationDuration: Duration(seconds: 3),
+                    borderRadius: BorderRadius.all(Radius.circular(16)),
+                    child: Column(
+                      children: [
+                        Expanded(
+                            flex: 1,
+                            child: Container(
+                              decoration: BoxDecoration(color: Colors.grey, borderRadius: BorderRadius.only(topRight: Radius.circular(16), topLeft: Radius.circular(16))),
+                              child: Align(
+                                alignment: Alignment.centerLeft,
+                                child: Padding(
+                                  padding: const EdgeInsets.only(left: 10, right: 10, top: 10),
+                                  child: Align(
+                                      alignment: Alignment.centerLeft,
+                                      child: Text(
+                                        'Giao khách cho Limo',
+                                        style: TextStyle(color: Colors.white, fontSize: 25, fontWeight: FontWeight.bold),
+                                      )),
+                                ),
+                              ),
+                            )),
+                        Expanded(
+                            flex: 3,
+                            child: Container(
+                              padding: const EdgeInsets.only(right: 20),
+                              decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.only(bottomRight: Radius.circular(16), bottomLeft: Radius.circular(16))),
+                              child: ListView.separated(
+                                  shrinkWrap: true,
+                                  physics: ClampingScrollPhysics(),
+                                  separatorBuilder: (BuildContext context, int index) => Padding(
+                                    padding: const EdgeInsets.only(
+                                      left: 16,
+                                      right: 16,
+                                    ),
+                                    child: Divider(),
+                                  ),
+                                  itemBuilder: (BuildContext context, int index) {
+                                    return Container(
+                                      padding: const EdgeInsets.only(left: 16, right: 16, bottom: 10, top: 10),
+                                      child: Row(
+                                        children: [
+                                          Expanded(
+                                            child: Column(
+                                              children: [
+                                                Row(
+                                                  children: [
+                                                    Expanded(
+                                                        flex: 1,
+                                                        child: Text(
+                                                          'Lái xe Limo: ',
+                                                          style: TextStyle(color: Colors.grey),
+                                                        )),
+                                                    Expanded(
+                                                        flex: 2,
+                                                        child: Row(
+                                                          children: [
+                                                            Align(
+                                                                alignment: Alignment.centerLeft,
+                                                                child: Text(
+                                                                  listTaiXeLimo[index].hoTenTaiXeLimousine?.toString()??"",
+                                                                  style: TextStyle(color: Colors.black),
+                                                                )),
+                                                            SizedBox(width: 3,),
+                                                            Align(
+                                                                alignment: Alignment.centerLeft,
+                                                                child: Text(
+                                                                  "( ${listTaiXeLimo[index].dienThoaiTaiXeLimousine?.toString()??""} )",
+                                                                  style: TextStyle(color: Colors.grey,fontSize: 10),
+                                                                )),
+                                                          ],
+                                                        )),
+                                                  ],
+                                                ),
+                                                Row(
+                                                  children: [
+                                                    Expanded(
+                                                        flex: 1,
+                                                        child: Text(
+                                                          'BSX: ',
+                                                          style: TextStyle(color: Colors.grey),
+                                                        )),
+                                                    Expanded(
+                                                        flex: 2,
+                                                        child: Align(
+                                                            alignment: Alignment.centerLeft,
+                                                            child: Text(
+                                                              listTaiXeLimo[index].bienSoXeLimousine?.toString()??'',
+                                                              style: TextStyle(color: Colors.black),
+                                                            ))),
+                                                  ],
+                                                ),
+                                                Row(
+                                                  children: [
+                                                    Expanded(
+                                                        flex: 1,
+                                                        child: Text(
+                                                          'Số khách: ',
+                                                          style: TextStyle(color: Colors.grey),
+                                                        )),
+                                                    Expanded(
+                                                        flex: 2,
+                                                        child: Align(
+                                                            alignment: Alignment.centerLeft,
+                                                            child: Text(
+                                                              '${listTaiXeLimo[index].soKhach?.toString()??'0'}',
+                                                              style: TextStyle(color: Colors.black),
+                                                            ))),
+                                                  ],
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                          Center(
+                                            child: SpinKitPouringHourglass(
+                                              color: Colors.orange,
+                                              size: 40,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    );
+                                  },
+                                  itemCount: listTaiXeLimo.length),
+                            )),
+                        SizedBox(
+                          width: double.infinity,
+                          child: ElevatedButton(
+                            onPressed: () {
+                              Navigator.pop(context, true);
+                            },
+                            child: Text(
+                              'Xác nhận',
+                              style: TextStyle(color: white),
+                            ),
+                            style: ButtonStyle(
+                              backgroundColor: MaterialStateProperty.all(Colors.orange),
+                            ),
+                          ),
+                        ),
+                      ],
+                    )),
+              ),
+            ),
+          ),
+        );
+      });
+
 
 }

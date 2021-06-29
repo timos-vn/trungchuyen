@@ -7,6 +7,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:get/get.dart';
 import 'package:google_maps_controller/google_maps_controller.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:trungchuyen/models/database/dbhelper.dart';
+import 'package:trungchuyen/models/entity/customer.dart';
 import 'package:trungchuyen/models/network/request/push_location_request.dart';
 import 'package:trungchuyen/models/network/request/tranfer_customer_request.dart';
 import 'package:trungchuyen/models/network/response/detail_trips_repose.dart';
@@ -14,6 +16,7 @@ import 'package:trungchuyen/models/network/response/polyline_result_response.dar
 import 'package:trungchuyen/models/network/service/network_factory.dart';
 import 'package:trungchuyen/service/soket_io_service.dart';
 import 'package:trungchuyen/utils/const.dart';
+import 'package:trungchuyen/utils/utils.dart';
 import 'map_event.dart';
 import 'package:location/location.dart';
 import 'dart:async';
@@ -45,6 +48,9 @@ class MapBloc extends Bloc<MapEvent,MapState> {
   PolylineResultResponseBody polylineResultResponseBody;
   String _nameLXTC;
   String _sdtLXTC;
+  final db = DatabaseHelper();
+  String test1 = 'O';
+  String idUser;
 
   MapBloc(this.context) : super(null){
     _networkFactory = NetWorkFactory(context);
@@ -52,6 +58,18 @@ class MapBloc extends Bloc<MapEvent,MapState> {
 
   // TODO: implement initialState
   MapState get initialState => MapInitial();
+
+  // Future<List<Customer>> getListFromDb() {
+  //   return db.fetchAll();
+  // }
+  //
+  // void deleteItems(int index) {
+  //   listCustomer.removeAt(index);
+  // }
+  //
+  // Customer getCustomer(int i) {
+  //   return listCustomer.elementAt(i);
+  // }
 
 
   @override
@@ -63,20 +81,42 @@ class MapBloc extends Bloc<MapEvent,MapState> {
       _refreshToken = _prefs.getString(Const.REFRESH_TOKEN) ?? "";
       _nameLXTC = _prefs.getString(Const.FULL_NAME) ?? "";
       _sdtLXTC = _prefs.getString(Const.PHONE_NUMBER) ?? "";
+      idUser = _prefs.getString(Const.USER_ID) ??'';
     }
 
-    if(event is GetListCustomer){
-      yield MapLoading();
-      listOfCustomerTrips = event.listOfDetailTrips;
-      print(listOfCustomerTrips.length);
-      yield GetListCustomerSuccess(listOfCustomerTrips);
-    }
+    // if(event is GetCustomerList){
+    //   yield MapLoading();
+    //   listCustomer = await getListFromDb();
+    //   if (Utils.isEmpty(listCustomer)) {
+    //     yield GetListCustomerSuccess();
+    //     return;
+    //   }
+    //   yield GetListCustomerSuccess();
+    // }
+
+    // if (event is Delete) {
+    //   yield MapLoading();
+    //   deleteItems(event.index);
+    //   await db.remove(event.idTC);
+    //   listCustomer = await getListFromDb();
+    //   yield GetCustomerListSuccess();
+    //   add(GetCustomerList());
+    // }
+
+    // if(event is UpdateCustomerList){
+    //   yield MapLoading();
+    //   await db.update(event.customer);
+    //   listCustomer = await getListFromDb();
+    //   yield GetCustomerListSuccess();
+    //   add(GetCustomerList());
+    // }
+
+
     if(event is UpdateStatusDriverEvent){
       yield MapLoading();
       MapState state = _handleUpdateStatusDriver(await _networkFactory.updateStatusDriver(_accessToken, event.statusDriver));
       yield state;
     }
-
     if(event is CheckPermissionEvent){
       yield MapInitial();
       checkPermission();
@@ -119,25 +159,26 @@ class MapBloc extends Bloc<MapEvent,MapState> {
         List<String> listKhach = new List<String>();
         List<String> listIdTC = new List<String>();
         String numberCustomer;
-        String listId;
+        String listIdTAIXELIMO;
         String idTC;
-        List<DetailTripsResponseBody> listTaiXeTC = event.listTaiXeTC;
+        List<Customer> listTaiXeTC = event.listTaiXeTC;
         listTaiXeTC.forEach((element) {
           listIdTXLimo.add(element.idTaiXeLimousine);/// a | a |
           listKhach.add(element.soKhach.toString());
           listIdTC.add(element.idTrungChuyen);
         });
         numberCustomer = listKhach.join('|');
-        listId = listIdTXLimo.join(',');
+        listIdTAIXELIMO = listIdTXLimo.join(',');
         idTC  = listIdTC.join(',');
         print(listIdTXLimo);
         var objData = {
           'EVENT':'TAIXE_TRUNGCHUYEN_GIAOKHACH_LIMO',
           'numberCustomer' : numberCustomer,
-          'listId':listId,
+          'listIdTAIXELIMO':listIdTAIXELIMO,
           'nameTC': _nameLXTC,
           'phoneTC': _sdtLXTC,
-          'listIdTC':idTC
+          'listIdTC':idTC,
+          'idDriverTC':idUser
         };
         TranferCustomerRequestBody request = TranferCustomerRequestBody(
           title: event.title,
@@ -234,8 +275,6 @@ class MapBloc extends Bloc<MapEvent,MapState> {
     print(location + "---Tream---");
     latLngLocation = location;
   }
-
-
 
   Future<bool> checkPermission() async {
     permissionGranted = await location.hasPermission();

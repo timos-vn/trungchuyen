@@ -10,6 +10,7 @@ import 'package:trungchuyen/page/detail_trips_limo/detail_trips_limo_page.dart';
 import 'package:trungchuyen/page/list_customer_limo/list_customer_limo_bloc.dart';
 import 'package:trungchuyen/page/list_customer_limo/list_customer_limo_state.dart';
 import 'package:trungchuyen/page/main/main_bloc.dart';
+import 'package:trungchuyen/page/main/main_event.dart';
 import 'package:trungchuyen/themes/colors.dart';
 import 'package:trungchuyen/themes/images.dart';
 import 'package:intl/intl.dart';
@@ -38,7 +39,6 @@ class ListCustomerLimoPageState extends State<ListCustomerLimoPage> {
     super.initState();
     _bloc = ListCustomerLimoBloc(context);
     _mainBloc = BlocProvider.of<MainBloc>(context);
-
     DateTime parseDate = new DateFormat("yyyy-MM-dd").parse(DateTime.now().toString());
     _bloc.add(GetListCustomerLimo(parseDate));
   }
@@ -223,8 +223,8 @@ class ListCustomerLimoPageState extends State<ListCustomerLimoPage> {
                           SizedBox(
                             width: 8,
                           ),
-                          Text(
-                            item.tenTuyenDuong??'',
+                          Text(//item.tenTuyenDuong??
+                            '',
                             style: TextStyle(fontWeight: FontWeight.bold),
                           ),
                           Expanded(
@@ -323,7 +323,7 @@ class ListCustomerLimoPageState extends State<ListCustomerLimoPage> {
                             onTap: () {
                               print(item.ngayChay);
                               DateFormat format = DateFormat("dd/MM/yyyy");
-                              Navigator.push(context, MaterialPageRoute(builder: (context)=>DetailTripsLimoPage(dateTime: format.parse(item.ngayChay).toString(),idTrips: item.idTuyenDuong.toString(),idTime: item.idKhungGio.toString(),)));
+                              Navigator.push(context, MaterialPageRoute(builder: (context)=>DetailTripsLimoPage(dateTime: format.parse(item.ngayChay).toString(),idTrips: '',idTime: item.idKhungGio.toString(),))); //item.idTuyenDuong.toString()
                             },
                             child: Container(
                               padding: EdgeInsets.all(8),

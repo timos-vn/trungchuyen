@@ -10,7 +10,7 @@ class AppBinding extends Bindings {
   }
 
   void injectService() {
-    //Get.put(SocketIOService());
+    // Get.put(SocketIOService());
     // Get.put(LocationService());
     // Get.put(FireBaseService());
   }

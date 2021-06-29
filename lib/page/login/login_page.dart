@@ -76,6 +76,7 @@ class _LoginPageState extends State<LoginPage> {
           child: BlocListener<LoginBloc, LoginState>(
             listener: (context, state) {
               if (state is LoginSuccess) {
+                Get.put(SocketIOService());
                 ///0 : Offline
                 ///1 : Online
                 // if(_loginBloc.roleAccount == 3){

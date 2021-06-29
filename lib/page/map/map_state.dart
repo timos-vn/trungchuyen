@@ -9,10 +9,6 @@ abstract class  MapState extends Equatable {
 }
 class GetListCustomerSuccess extends MapState {
 
-  final List<DetailTripsResponseBody> listOfCustomerTrips;
-
-  GetListCustomerSuccess(this.listOfCustomerTrips);
-
   @override
   String toString() => 'GetListCustomerSuccess }';
 }
@@ -78,3 +74,4 @@ class PushLocationToLimoSuccess extends MapState {
   @override
   String toString() => 'PushLocationToLimoSuccess {}';
 }
+

@@ -5,6 +5,10 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
+import 'package:trungchuyen/models/database/dbhelper.dart';
+import 'package:trungchuyen/models/entity/customer.dart';
+import 'package:trungchuyen/models/entity/notification_customer.dart';
+import 'package:trungchuyen/models/network/response/detail_trips_repose.dart';
 import 'package:trungchuyen/page/account/account_bloc.dart';
 import 'package:trungchuyen/page/account/account_page.dart';
 import 'package:trungchuyen/page/list_customer_limo/list_customer_limo_bloc.dart';
@@ -58,8 +62,9 @@ class _MainPageState extends State<MainPage> with WidgetsBindingObserver{
   int _lastIndexToShop = 0;
   int _currentIndex = 0;
 
+  List<Customer> customerAwaiting = new List<Customer>();
 
-  //DatabaseHelper db;
+  DatabaseHelper db = DatabaseHelper();
   GlobalKey<NavigatorState> _currentTabKey;
   List<BottomNavigationBarItem> listBottomItems = List();
   final GlobalKey<NavigatorState> firstTabNavKey = GlobalKey<NavigatorState>();
@@ -72,10 +77,65 @@ class _MainPageState extends State<MainPage> with WidgetsBindingObserver{
   final GlobalKey<WaitingPageState> _waitingPageKey = GlobalKey();
   final GlobalKey<ListCustomerLimoPageState> _listCustomerLimoKey = GlobalKey();
 
+  Future<List<NotificationCustomer>> getListFromDbNotificationCustomer() {
+    return _mainBloc.db.fetchAllNotificationCustomer();
+  }
+
+  Future<List<Customer>> getListFromDbCustomer() {
+    return _mainBloc.db.fetchAll();
+  }
+
+  Future<List<NotificationCustomer>> getCurrentNotificationCustomer() async {
+    _mainBloc.listNotificationCustomer = await getListFromDbNotificationCustomer();
+    if (!Utils.isEmpty(_mainBloc.listNotificationCustomer)) {
+      print(_mainBloc.listNotificationCustomer.length);
+      return _mainBloc.listNotificationCustomer;
+    }else{
+      print('NuisNull1');
+      return null;
+    }
+  }
+
+  Future<List<Customer>> getListCustomer() async {
+    // _mainBloc.listOfDetailTrips.clear();
+    // _mainBloc.listCustomerToPickUpSuccess.clear();
+    _mainBloc.listCustomer = await getListFromDb();
+    if (!Utils.isEmpty(_mainBloc.listCustomer)) {
+      _mainBloc.indexAwaitingList = _mainBloc.listCustomer[0].indexListCustomer;
+      _mainBloc.blocked = true;
+      _mainBloc.listCustomer.forEach((element) {
+        if(element.statusCustomer == 4){
+          _mainBloc.soKhachDaDonDuoc++;
+        }
+      });
+      return _mainBloc.listCustomer ;
+    }else{
+      print('nullll');
+      return null;
+    }
+  }
+
+  Future<List<Customer>> getListTaiXeLimo() async {
+    _mainBloc.listTaiXeLimo = await getListDriverLimoFromDb();
+    if (!Utils.isEmpty(_mainBloc.listTaiXeLimo)) {
+      return _mainBloc.listTaiXeLimo ;
+    }else{
+      print('nullll listTaiXeLimo');
+      return null;
+    }
+  }
+  Future<List<Customer>> getListDriverLimoFromDb() {
+    return db.fetchAllDriverLimo();
+  }
+  Future<List<Customer>> getListFromDb() {
+    return db.fetchAll();
+  }
+
   @override
   void initState() {
+    // Get.put(SocketIOService());
     WidgetsBinding.instance.addObserver(this);
-    Get.put(SocketIOService());
+
     _mainBloc = MainBloc();
     _mapBloc = MapBloc(context);
     _waitingBloc = WaitingBloc(context);
@@ -85,7 +145,8 @@ class _MainPageState extends State<MainPage> with WidgetsBindingObserver{
     _mapLimoBloc = MapLimoBloc(context);
     _reportLimoBloc = ReportLimoBloc(context);
     _currentTabKey = firstTabNavKey;
-
+    getListCustomer();
+    getListTaiXeLimo();
     WidgetsBinding.instance.addObserver(
         LifecycleEventHandler(
             resumeCallBack: () async => setState(() {})),
@@ -93,6 +154,7 @@ class _MainPageState extends State<MainPage> with WidgetsBindingObserver{
     if(widget.roleAccount == 3){
 
     }else{
+
       if(_mainBloc.socketIOService.socket.disconnected)
       {
         _mainBloc.socketIOService.socket.connect();
@@ -279,8 +341,7 @@ class _MainPageState extends State<MainPage> with WidgetsBindingObserver{
                                 if(widget.roleAccount == 3){
                                   _mapPageKey?.currentState?.setState(() {
                                     _mainBloc.testing = "B";
-                                    _mainBloc.listOfDetailTrips = _mainBloc.listOfDetailTrips;
-                                    print(_mainBloc.listOfDetailTrips.length);
+                                    _mainBloc.listCustomer = _mainBloc.listCustomer;
                                   });
                                 }
                                 break;

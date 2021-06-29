@@ -64,6 +64,7 @@ class MapLimoPageState extends State<MapLimoPage> {
     super.initState();
     _mapLimoBloc = MapLimoBloc(context);
     _mainBloc = BlocProvider.of<MainBloc>(context);
+    _mapLimoBloc.add(CheckPermissionLimoEvent());
     socketIOService = Get.find<SocketIOService>();
     socketIOService.socket.on("TAIXE_TRUNGCHUYEN_CAPNHAT_TOADO", (data){
       String item = data['LOCATION'];

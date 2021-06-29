@@ -1,4 +1,5 @@
 import 'package:equatable/equatable.dart';
+import 'package:trungchuyen/models/entity/customer.dart';
 
 
 abstract class MainEvent extends Equatable {
@@ -193,4 +194,89 @@ class GetLocationEvent extends MainEvent {
 
   @override
   String toString() => 'GetLocationEvent {makerID:$makerID,lat:$lat,lng:$lng}';
+}
+//
+class UpdateCustomerItemList extends MainEvent{
+
+  final Customer customer;
+
+  UpdateCustomerItemList(this.customer);
+
+  @override
+  String toString() {
+    // TODO: implement toString
+    return 'UpdateCustomerItemList{}';
+  }
+}class AddOldCustomerItemList extends MainEvent{
+
+  final Customer customer;
+
+  AddOldCustomerItemList(this.customer);
+
+  @override
+  String toString() {
+    // TODO: implement toString
+    return 'AddOldCustomerItemList{}';
+  }
+}
+
+class UpdateTaiXeLimo extends MainEvent{
+
+  final Customer customer;
+
+  UpdateTaiXeLimo(this.customer);
+
+  @override
+  String toString() {
+    // TODO: implement toString
+    return 'UpdateTaiXeLimo{}';
+  }
+}
+
+class DeleteItem extends MainEvent{
+  final String idTC;
+  final int index;
+  DeleteItem(this.idTC, this.index);
+  @override
+  String toString() {
+    // TODO: implement toString
+    return 'DeleteItem{}';
+  }
+}
+
+class GetCustomerItemList extends MainEvent{
+
+  @override
+  String toString() {
+    // TODO: implement toString
+    return 'GetCustomerItemList{}';
+  }
+}
+
+class GetListTXLimo extends MainEvent{
+
+  @override
+  String toString() {
+    // TODO: implement toString
+    return 'GetListTXLimo{}';
+  }
+}
+class GetListTaiXeLimo extends MainEvent{
+
+  @override
+  String toString() {
+    // TODO: implement toString
+    return 'GetListTaiXeLimo{}';
+  }
+}
+
+class Delete extends MainEvent{
+  final String idTC;
+  final int index;
+  Delete(this.idTC, this.index);
+  @override
+  String toString() {
+    // TODO: implement toString
+    return 'Delete{}';
+  }
 }

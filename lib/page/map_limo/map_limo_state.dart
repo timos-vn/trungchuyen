@@ -43,3 +43,8 @@ class UpdateStatusDriverLimoState extends MapLimoState {
   @override
   String toString() => 'GetEventStateSuccess {}';
 }
+class CheckPermissionLimoSuccess extends MapLimoState {
+
+  @override
+  String toString() => 'CheckPermissionLimoSuccess {}';
+}

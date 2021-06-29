@@ -166,3 +166,14 @@ class GetLocationSuccess extends MainState {
   @override
   String toString() => 'GetLocationSuccess {}';
 }
+
+class GetCustomerListSuccess extends MainState {
+
+  @override
+  String toString() => 'GetCustomerListSuccess {}';
+}
+class GetListTaiXeLimoSuccess extends MainState {
+
+  @override
+  String toString() => 'GetListTaiXeLimoSuccess {}';
+}

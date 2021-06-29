@@ -8,10 +8,11 @@ abstract class DetailTripsEvent extends Equatable {
 class GetListDetailTrips extends DetailTripsEvent {
 
   final DateTime date;
-  final String idTrips;
-  final String idTime;
+  final int idRoom;
+  final int idTime;
+  final int typeCustomer;
 
-  GetListDetailTrips(this.date,this.idTrips,this.idTime);
+  GetListDetailTrips(this.date,this.idRoom,this.idTime,this.typeCustomer);
 
   @override
   String toString() => 'GetListDetailTrips {date: $date }';

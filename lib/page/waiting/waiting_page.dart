@@ -4,6 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:liquid_pull_to_refresh/liquid_pull_to_refresh.dart';
 import 'package:trungchuyen/models/database/dbhelper.dart';
 import 'package:trungchuyen/models/entity/customer.dart';
+import 'package:trungchuyen/models/network/response/detail_trips_repose.dart';
 import 'package:trungchuyen/models/network/response/list_of_group_awaiting_customer_response.dart';
 import 'package:trungchuyen/page/detail_trips/detail_trips_page.dart';
 import 'package:trungchuyen/page/main/main_bloc.dart';
@@ -30,7 +31,7 @@ class WaitingPageState extends State<WaitingPage> {
   MainBloc _mainBloc;
   //List<ListOfGroupAwaitingCustomerBody> _listOfGroupAwaitingCustomer = new List();
   DatabaseHelper db = DatabaseHelper();
-  List<Customer> langSt = new List<Customer>();
+
 
   @override
   void initState() {
@@ -64,14 +65,11 @@ class WaitingPageState extends State<WaitingPage> {
             print('Length123');
           }
           else if(state is GetListOfDetailTripsOfWaitingPageSuccess){
-            _mainBloc.listOfDetailTrips.clear();
-            _mainBloc.listOfDetailTrips = _bloc.listOfDetailTrips;
             /// add sqfliet
             ///
+            db.deleteAll();
 
-            int _countExitsCustomer = 0;
             _bloc.listOfDetailTrips.forEach((element) {
-              db.deleteAll();
               Customer customer = new Customer(
                 idTrungChuyen: element.idTrungChuyen,
                   idTaiXeLimousine : element.idTaiXeLimousine,
@@ -90,30 +88,35 @@ class WaitingPageState extends State<WaitingPage> {
                   diaChiLimoDen:element.diaChiLimoDen,
                   toaDoLimoDen:element.toaDoLimoDen,
                   loaiKhach:element.loaiKhach,
-                  trangThaiTC:element.trangThaiTC,
-                  soKhach:element.soKhach,
-                  statusCustomer: element.loaiKhach == 1 ? 2 : 5
+                  trangThaiTC: element.trangThaiTC,
+                  soKhach:1,
+                  statusCustomer: element.loaiKhach == 1 ? 2 : 5,
+                  chuyen: _mainBloc.trips,
+                  totalCustomer: _bloc.listOfDetailTrips.length,
+                  indexListCustomer:_mainBloc.indexAwaitingList,
               );
+              _mainBloc.listCustomer.add(customer);
+               db.addNew(customer);
 
-              db.addNew(customer);
-
-              if(Utils.isEmpty(_mainBloc.listTaiXeLimo)){
-                _countExitsCustomer++;
-                element.soKhach = _countExitsCustomer;
-                _mainBloc.listTaiXeLimo.add(element);
-              }
-              else{
-                var contain =  _mainBloc.listTaiXeLimo.where((phone) => phone.dienThoaiTaiXeLimousine == element.dienThoaiTaiXeLimousine);
-                if (contain.isEmpty){
-                  _mainBloc.listTaiXeLimo.add(element);
-                }else{
-                  _countExitsCustomer++;
-                  final tile = _mainBloc.listTaiXeLimo.firstWhere((item) => item.dienThoaiTaiXeLimousine == element.dienThoaiTaiXeLimousine);
-                  if (tile != null) tile.soKhach = _countExitsCustomer;
-                }
-              }
+              // if(Utils.isEmpty(_mainBloc.listTaiXeLimo)){
+              //   _countExitsCustomer++;
+              //   element.soKhach = _countExitsCustomer;
+              //   _mainBloc.listTaiXeLimo.add(element);
+              // }
+              // else{
+              //   var contain =  _mainBloc.listTaiXeLimo.where((phone) => phone.dienThoaiTaiXeLimousine == element.dienThoaiTaiXeLimousine);
+              //   if (contain.isEmpty){
+              //     _mainBloc.listTaiXeLimo.add(element);
+              //   }else{
+              //     _countExitsCustomer++;
+              //     final tile = _mainBloc.listTaiXeLimo.firstWhere((item) => item.dienThoaiTaiXeLimousine == element.dienThoaiTaiXeLimousine);
+              //     if (tile != null) tile.soKhach = _countExitsCustomer;
+              //   }
+              // }
             });
-            getListCustomer();
+
+            _mainBloc.currentNumberCustomerOfList = _bloc.listOfDetailTrips.length;
+            // _mainBloc.listOfDetailTrips = _bloc.listOfDetailTrips;
           }
         },
         child: BlocBuilder<WaitingBloc,WaitingState>(
@@ -122,29 +125,12 @@ class WaitingPageState extends State<WaitingPage> {
             return buildPage(context,state);
           },
         ),
-      //),
     )
     );
   }
 
-  Future<List<Customer>> getListCustomer() async {
-    langSt = await getListFromDb();
-    if (!Utils.isEmpty(langSt)) {
-      print(langSt);
-      return langSt;
-    }else{
-      print('nullll');
-      return null;
-    }
-  }
-
-  Future<List<Customer>> getListFromDb() {
-    return db.fetchAll();
-  }
 
   Stack buildPage(BuildContext context,WaitingState state){
-    // if(!Utils.isEmpty(_listOfGroupAwaitingCustomer))
-    //   _listOfGroupAwaitingCustomer = _bloc.listOfGroupAwaitingCustomer;
     return Stack(
       children: [
         !Utils.isEmpty(_mainBloc.listOfGroupAwaitingCustomer) ?
@@ -229,12 +215,12 @@ class WaitingPageState extends State<WaitingPage> {
   Widget buildListItem(ListOfGroupAwaitingCustomerBody item,int index) {
     return GestureDetector(
         onTap: () {
-          if(_mainBloc.listOfDetailTrips.length == 0){
+          if( _mainBloc.listCustomer.length == 0){
             Utils.showDialogAssign(context: context,titleHintText: 'Bạn sẽ đón nhóm Khách này?').then((value){
               if(!Utils.isEmpty(value)){
-                _mainBloc.trips = item.tenTuyenDuong + "  /  " + item.thoiGianDi + ' - ' + item.ngayChay;
+                _mainBloc.trips = item.thoiGianDi + ' - ' + item.ngayChay; //item.tenTuyenDuong + "  /  " +
                 DateFormat format = DateFormat("dd/MM/yyyy");
-                _bloc.add(GetListDetailTripsOfPageWaiting(format.parse(item.ngayChay),item.idTuyenDuong,item.idKhungGio));
+                _bloc.add(GetListDetailTripsOfPageWaiting(format.parse(item.ngayChay),item.idVanPhong,item.idKhungGio,item.loaiKhach));
                 _mainBloc.blocked = true;
                 _mainBloc.indexAwaitingList = index;
                 _mainBloc.currentNumberCustomerOfList = item.soKhach;
@@ -246,7 +232,7 @@ class WaitingPageState extends State<WaitingPage> {
             });
           } else{
             print('đi đón nốt người đi thằng ngu');
-            Utils.showToast( 'Bạn vẫn đang trong tuyến.');
+            Utils.showToast( 'Bạn vẫn đang trong tuyến hoặc chưa trả khách xong.');
           }
 
         },
@@ -286,8 +272,8 @@ class WaitingPageState extends State<WaitingPage> {
                           SizedBox(
                             width: 8,
                           ),
-                          Text(
-                            item.tenTuyenDuong??'',
+                          Text(//item.tenTuyenDuong??
+                            '',
                             style: TextStyle(fontWeight: FontWeight.bold),
                           ),
                           Expanded(
@@ -385,7 +371,7 @@ class WaitingPageState extends State<WaitingPage> {
                           GestureDetector(
                             onTap: () {
                               DateTime parseDate = new DateFormat("yyyy-MM-dd").parse(DateTime.now().toString());
-                              Navigator.push(context, MaterialPageRoute(builder: (context)=>DetailTripsPage(dateTime: parseDate,idTrips: item.idTuyenDuong.toString(),idTime: item.idKhungGio.toString(),)));
+                              Navigator.push(context, MaterialPageRoute(builder: (context)=>DetailTripsPage(dateTime: parseDate,idRoom: item.idVanPhong,idTime: item.idKhungGio,typeCustomer: item.loaiKhach,)));///item.idTuyenDuong.toString()
                             },
                             child: Container(
                               padding: EdgeInsets.all(8),
