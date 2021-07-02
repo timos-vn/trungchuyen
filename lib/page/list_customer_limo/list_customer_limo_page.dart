@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:liquid_pull_to_refresh/liquid_pull_to_refresh.dart';
 import 'package:trungchuyen/models/network/response/list_of_group_awaiting_customer_response.dart';
+import 'package:trungchuyen/models/network/response/list_of_group_limo_customer_response.dart';
 import 'package:trungchuyen/page/detail_trips/detail_trips_page.dart';
 import 'package:trungchuyen/page/detail_trips_limo/detail_trips_limo_bloc.dart';
 import 'package:trungchuyen/page/detail_trips_limo/detail_trips_limo_event.dart';
@@ -55,7 +56,7 @@ class ListCustomerLimoPageState extends State<ListCustomerLimoPage> {
         backgroundColor: Colors.white,
       ),
       body:BlocListener<ListCustomerLimoBloc,ListCustomerLimoState>(
-        cubit: _bloc,
+        bloc: _bloc,
         /// khach Trung Chuyen
         // 1. Khách trung chuyển
         // 0: Không cần TC
@@ -93,7 +94,7 @@ class ListCustomerLimoPageState extends State<ListCustomerLimoPage> {
           }
         },
         child: BlocBuilder<ListCustomerLimoBloc,ListCustomerLimoState>(
-          cubit: _bloc,
+          bloc: _bloc,
           builder: (BuildContext context, ListCustomerLimoState state) {
             return buildPage(context,state);
           },
@@ -164,7 +165,7 @@ class ListCustomerLimoPageState extends State<ListCustomerLimoPage> {
     );
   }
 
-  Widget buildListItem(ListOfGroupAwaitingCustomerBody item,int index) {
+  Widget buildListItem(ListOfGroupLimoCustomerResponseBody item,int index) {
     return GestureDetector(
         onTap: () {
           // if(_mainBloc.listOfDetailTrips.length == 0){
@@ -223,30 +224,14 @@ class ListCustomerLimoPageState extends State<ListCustomerLimoPage> {
                           SizedBox(
                             width: 8,
                           ),
-                          Text(//item.tenTuyenDuong??
-                            '',
+                          Text(
+                              item.tenTuyenDuong??'',
                             style: TextStyle(fontWeight: FontWeight.bold),
                           ),
                           Expanded(
                             child: SizedBox(),
                           ),
-                          Container(
-                            height: 45,
-                            width: 45,
-                            padding: EdgeInsets.all(8),
-                            decoration: BoxDecoration(
-                                color:  (  index == _mainBloc.indexAwaitingList && _mainBloc.blocked == true) ? (item.loaiKhach == 1 ? Colors.orange.withOpacity(0.5) : Colors.blue.withOpacity(0.5)) : (item.loaiKhach == 1 ? Colors.orange : Colors.blue),
-                                borderRadius: BorderRadius.all(Radius.circular(32))),
-                            child: Center(
-                              child: Text(
-                               '${item.loaiKhach == 1 ? 'Đón' : 'Trả'}',
-                                style: Theme.of(this.context).textTheme.caption.copyWith(
-                                  color:( index == _mainBloc.indexAwaitingList && _mainBloc.blocked == true) ? Colors.white.withOpacity(0.5) :Colors.white,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                            ),
-                          ),
+
                         ],
                       ),
                     ),
@@ -323,7 +308,7 @@ class ListCustomerLimoPageState extends State<ListCustomerLimoPage> {
                             onTap: () {
                               print(item.ngayChay);
                               DateFormat format = DateFormat("dd/MM/yyyy");
-                              Navigator.push(context, MaterialPageRoute(builder: (context)=>DetailTripsLimoPage(dateTime: format.parse(item.ngayChay).toString(),idTrips: '',idTime: item.idKhungGio.toString(),))); //item.idTuyenDuong.toString()
+                              Navigator.push(context, MaterialPageRoute(builder: (context)=>DetailTripsLimoPage(dateTime: format.parse(item.ngayChay).toString(),idTrips: item.idTuyenDuong,idTime: item.idKhungGio))); //item.idTuyenDuong.toString()
                             },
                             child: Container(
                               padding: EdgeInsets.all(8),

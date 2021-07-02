@@ -34,7 +34,7 @@ class MapLimoBloc extends Bloc<MapLimoEvent,MapLimoState> {
   Location location = new Location();
   String markerID;
 
-  MapLimoBloc(this.context) : super(null){
+  MapLimoBloc(this.context) {
     _networkFactory = NetWorkFactory(context);
   }
 

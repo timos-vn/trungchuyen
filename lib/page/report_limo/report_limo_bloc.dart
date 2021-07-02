@@ -25,7 +25,7 @@ class ReportLimoBloc extends Bloc<ReportLimoEvent,ReportLimoState> {
   ReportReponseDetail reponseDetail;
   int tongKhach = 0;
 
-  ReportLimoBloc(this.context) : super(null){
+  ReportLimoBloc(this.context) {
     _networkFactory = NetWorkFactory(context);
   }
 

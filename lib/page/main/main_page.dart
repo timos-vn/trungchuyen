@@ -7,7 +7,7 @@ import 'package:intl/intl.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:trungchuyen/models/database/dbhelper.dart';
 import 'package:trungchuyen/models/entity/customer.dart';
-import 'package:trungchuyen/models/entity/notification_customer.dart';
+import 'package:trungchuyen/models/entity/notification_trung_chuyen.dart';
 import 'package:trungchuyen/models/network/response/detail_trips_repose.dart';
 import 'package:trungchuyen/page/account/account_bloc.dart';
 import 'package:trungchuyen/page/account/account_page.dart';
@@ -77,7 +77,7 @@ class _MainPageState extends State<MainPage> with WidgetsBindingObserver{
   final GlobalKey<WaitingPageState> _waitingPageKey = GlobalKey();
   final GlobalKey<ListCustomerLimoPageState> _listCustomerLimoKey = GlobalKey();
 
-  Future<List<NotificationCustomer>> getListFromDbNotificationCustomer() {
+  Future<List<NotificationCustomerOfTC>> getListFromDbNotificationCustomer() {
     return _mainBloc.db.fetchAllNotificationCustomer();
   }
 
@@ -85,7 +85,7 @@ class _MainPageState extends State<MainPage> with WidgetsBindingObserver{
     return _mainBloc.db.fetchAll();
   }
 
-  Future<List<NotificationCustomer>> getCurrentNotificationCustomer() async {
+  Future<List<NotificationCustomerOfTC>> getCurrentNotificationCustomer() async {
     _mainBloc.listNotificationCustomer = await getListFromDbNotificationCustomer();
     if (!Utils.isEmpty(_mainBloc.listNotificationCustomer)) {
       print(_mainBloc.listNotificationCustomer.length);
@@ -145,16 +145,20 @@ class _MainPageState extends State<MainPage> with WidgetsBindingObserver{
     _mapLimoBloc = MapLimoBloc(context);
     _reportLimoBloc = ReportLimoBloc(context);
     _currentTabKey = firstTabNavKey;
-    getListCustomer();
-    getListTaiXeLimo();
+
+    if(widget.roleAccount == 3){
+      getListCustomer();
+      getListTaiXeLimo();
+      //_mainBloc.add(GetListNotificationCustomerTC());
+    }else if(widget.roleAccount == 7){
+      _mainBloc.add(GetListNotificationOfLimo());
+    }
     WidgetsBinding.instance.addObserver(
-        LifecycleEventHandler(
-            resumeCallBack: () async => setState(() {})),
+        LifecycleEventHandler(resumeCallBack: () async => setState(() {})),
     );
     if(widget.roleAccount == 3){
 
     }else{
-
       if(_mainBloc.socketIOService.socket.disconnected)
       {
         _mainBloc.socketIOService.socket.connect();
@@ -177,6 +181,13 @@ class _MainPageState extends State<MainPage> with WidgetsBindingObserver{
       if(_mainBloc.socketIOService.socket.disconnected)
       {
         _mainBloc.socketIOService.socket.connect();
+        if(widget.roleAccount == 3){
+          // getListCustomer();
+          // getListTaiXeLimo();
+          //_mainBloc.add(GetListNotificationCustomerTC());
+        }else if(widget.roleAccount == 7){
+          _mainBloc.add(GetListNotificationOfLimo());
+        }
       }
       // _mapBloc.add(UpdateStatusDriverEvent(1));
     }else if(state == AppLifecycleState.inactive || state == AppLifecycleState.paused){
@@ -250,7 +261,7 @@ class _MainPageState extends State<MainPage> with WidgetsBindingObserver{
               ),
             ],
             child: BlocListener<MainBloc, MainState>(
-              cubit: _mainBloc,
+              bloc: _mainBloc,
               // bloc: _mainBloc,
               listener: (context, state) {
                 if (state is LogoutFailure) {
@@ -284,7 +295,7 @@ class _MainPageState extends State<MainPage> with WidgetsBindingObserver{
                 }
               },
               child: BlocBuilder<MainBloc, MainState>(
-                cubit: _mainBloc,
+                bloc: _mainBloc,
                 builder: (context, state) {
                   if (state is MainPageState) {
                     _currentIndex = state.position;
@@ -332,7 +343,7 @@ class _MainPageState extends State<MainPage> with WidgetsBindingObserver{
                                 }else{
                                   _listCustomerLimoKey?.currentState?.setState(() {
                                     _mainBloc.testing = "B ${testcase++}";
-                                    _mainBloc.listCustomerLimo = _listCustomerLimoBloc.listCustomerLimo;
+                                    _mainBloc.listCustomerLimo = _mainBloc.listCustomerLimo;
                                   });
                                 }
                                 break;

@@ -3,9 +3,15 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:trungchuyen/models/network/response/detail_trips_limo_reponse.dart';
 import 'package:trungchuyen/models/network/response/detail_trips_repose.dart';
+import 'package:trungchuyen/models/network/response/list_of_group_limo_customer_response.dart';
 import 'package:trungchuyen/page/detail_trips_limo/detail_trips_limo_event.dart';
+import 'package:trungchuyen/page/note/note_page.dart';
+import 'package:trungchuyen/page/reason_cancel/reason_cancel_page.dart';
+import 'package:trungchuyen/themes/colors.dart';
+import 'package:trungchuyen/themes/font.dart';
 import 'package:trungchuyen/themes/images.dart';
 import 'package:intl/intl.dart';
+import 'package:trungchuyen/utils/utils.dart';
 
 import 'detail_trips_limo_bloc.dart';
 import 'detail_trips_limo_state.dart';
@@ -13,10 +19,11 @@ import 'detail_trips_limo_state.dart';
 class DetailTripsLimoPage extends StatefulWidget {
 
   final String dateTime;
-  final String idTrips;
-  final String idTime;
+  final int idTrips;
+  final int idTime;
+  final String tuyenDuong;
 
-  const DetailTripsLimoPage({Key key,this.dateTime, this.idTrips, this.idTime}) : super(key: key);
+  const DetailTripsLimoPage({Key key,this.dateTime, this.idTrips, this.idTime,this.tuyenDuong}) : super(key: key);
 
   @override
   _DetailTripsLimoPageState createState() => _DetailTripsLimoPageState();
@@ -46,15 +53,18 @@ class _DetailTripsLimoPageState extends State<DetailTripsLimoPage> {
            centerTitle: true,
         ),
         body:BlocListener<DetailTripsLimoBloc,DetailTripsLimoState>(
-          cubit: _bloc,
+          bloc: _bloc,
           listener:  (context, state){
             if(state is GetListOfDetailTripsLimoSuccess){
               _listOfDetailTripsLimo = _bloc.listOfDetailTripsLimo;
               print('ok');
             }
+            else if(state is ConfirmCustomerLimoSuccess){
+              _bloc.add(GetListDetailTripsLimo(widget.dateTime,widget.idTrips,widget.idTime));
+            }
           },
           child: BlocBuilder<DetailTripsLimoBloc,DetailTripsLimoState>(
-            cubit: _bloc,
+            bloc: _bloc,
             builder: (BuildContext context, DetailTripsLimoState state) {
               return buildPage(context,state);
             },
@@ -78,7 +88,7 @@ class _DetailTripsLimoPageState extends State<DetailTripsLimoPage> {
                       shrinkWrap: true,
                       itemCount: _listOfDetailTripsLimo.length,
                       itemBuilder: (BuildContext context, int index) {
-                        return buildListItem(_listOfDetailTripsLimo[index]);
+                        return buildListItem(_listOfDetailTripsLimo[index],index);
                       })
               ),
             ),
@@ -97,7 +107,7 @@ class _DetailTripsLimoPageState extends State<DetailTripsLimoPage> {
     );
   }
 
-  Widget buildListItem(DetailTripsLimoReponseBody item) {
+  Widget buildListItem(DetailTripsLimoReponseBody item, int index) {
     return GestureDetector(
         onTap: () {
 
@@ -123,7 +133,8 @@ class _DetailTripsLimoPageState extends State<DetailTripsLimoPage> {
                   padding: const EdgeInsets.all(14),
                   color: Colors.grey.withOpacity(0.2),
                   child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.center,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: <Widget>[
                       ClipRRect(
                         borderRadius: BorderRadius.circular(10),
@@ -133,30 +144,21 @@ class _DetailTripsLimoPageState extends State<DetailTripsLimoPage> {
                           width: 40,
                         ),
                       ),
-                      SizedBox(
-                        width: 8,
-                      ),
-                      Column(
-                        children: [
-                          Text(
-                            item.hoTenTaiXeTrungChuyen??'',
-                            style: TextStyle(fontWeight: FontWeight.bold),
-                          ),
-                          Text(
-                            item.bienSoXeTrungChuyen??'',
-                            style: TextStyle(fontWeight: FontWeight.normal,fontSize: 10,color: Colors.grey),
-                          ),
-                        ],
-                      ),
-                      SizedBox(
-                        width: 8,
-                      ),
-                      Expanded(
-                        child: Align(
-                          alignment: Alignment.centerRight,
+
+                      Container(
+
+                        padding: EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.all(Radius.circular(16))
+                        ),
+                        child: Center(
                           child: Text(
-                            item.dienThoaiTaiXeTrungChuyen??'',
-                            style: TextStyle(fontWeight: FontWeight.normal,color: Colors.grey),
+                            '${item.khachTrungChuyen == 1 ? 'Khách Trung chuyển' : ((item.trangThaiVe == 1 || item.trangThaiVe == 2) ? 'Chờ Xác Nhận' : (item.trangThaiVe == 3 ? 'Khách Huỷ' : 'Hoàn Thành'))}',
+                            style: Theme.of(this.context).textTheme.caption.copyWith(
+                              color: Colors.pink,
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
                         ),
                       ),
@@ -167,34 +169,6 @@ class _DetailTripsLimoPageState extends State<DetailTripsLimoPage> {
                   height: 0.5,
                   color: Theme.of(this.context).disabledColor,
                 ),
-                // Padding(
-                //   padding: const EdgeInsets.only(right: 16, left: 16, top: 10, bottom: 10),
-                //   child: Column(
-                //     crossAxisAlignment: CrossAxisAlignment.start,
-                //     children: <Widget>[
-                //       Text(
-                //         'Thông tin chuyến',
-                //         style: Theme.of(this.context).textTheme.caption.copyWith(
-                //           color: Theme.of(this.context).disabledColor,
-                //           fontWeight: FontWeight.normal,
-                //         ),
-                //       ),
-                //       SizedBox(
-                //         height: 5,
-                //       ),
-                //       Text(
-                //         //'dateStartingOrFinishing',
-                //         '${item.thoiGianChay??''}' + " / " + '${item.ngayChay??''}',
-                //         maxLines: 2,
-                //         overflow: TextOverflow.ellipsis,
-                //         style: Theme.of(this.context).textTheme.subtitle.copyWith(
-                //           fontWeight: FontWeight.normal,
-                //           color: Theme.of(this.context).textTheme.title.color,
-                //         ),
-                //       ),
-                //     ],
-                //   ),
-                // ),
                 Padding(
                   padding: const EdgeInsets.only(right: 16, left: 16, top: 0, bottom: 0),
                   child: Divider(
@@ -214,33 +188,32 @@ class _DetailTripsLimoPageState extends State<DetailTripsLimoPage> {
                           fontWeight: FontWeight.normal,
                         ),
                       ),
-                      SizedBox(
-                        height: 5,
+                      Divider(),
+                      Row(
+                        children: [
+                          Text(
+                            '${item.tenKhachHang??''}'.toUpperCase(),
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                            style: Theme.of(this.context).textTheme.subtitle.copyWith(
+                              fontWeight: FontWeight.normal,
+                              color: Theme.of(this.context).textTheme.title.color,
+                            ),
+                          ),
+                          SizedBox(width: 5,),
+                          Text(
+                            '${item.soDienThoaiKhach??''}',
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                             fontSize: 12,
+                              color: Colors.grey,
+                            ),
+                          ),
+                        ],
                       ),
-                      Text(
-                        '${item.tenKhachHang??''}',
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                        style: Theme.of(this.context).textTheme.subtitle.copyWith(
-                          fontWeight: FontWeight.normal,
-                          color: Theme.of(this.context).textTheme.title.color,
-                        ),
-                      ),
-                      SizedBox(
-                        height: 5,
-                      ),
-                      Text(
-                        '${item.soDienThoaiKhach??''}',
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                        style: Theme.of(this.context).textTheme.subtitle.copyWith(
-                          fontWeight: FontWeight.normal,
-                          color: Theme.of(this.context).textTheme.title.color,
-                        ),
-                      ),
-                      SizedBox(
-                        height: 5,
-                      ),
+
+                      Divider(),
                       Text(
                         'Địa chỉ khách đển: ${item.diaChiKhachDen??''}',
                         maxLines: 2,
@@ -250,9 +223,7 @@ class _DetailTripsLimoPageState extends State<DetailTripsLimoPage> {
                           color: Theme.of(this.context).textTheme.title.color,
                         ),
                       ),
-                      SizedBox(
-                        height: 5,
-                      ),
+                      Divider(),
                       Text(
                         'Địa chỉ khách đi: ${item.diaChiKhachDi??''}',
                         maxLines: 2,
@@ -262,6 +233,91 @@ class _DetailTripsLimoPageState extends State<DetailTripsLimoPage> {
                           color: Theme.of(this.context).textTheme.title.color,
                         ),
                       ),
+                      Divider(),
+                      Text(
+                        'Ghi chú: ${item.ghiChu??''}',
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: Theme.of(this.context).textTheme.subtitle.copyWith(
+                          fontWeight: FontWeight.normal,
+                          color: Colors.red,
+                        ),
+                      ),
+                      SizedBox(height:10,),
+                      Visibility(
+                        visible: item.khachTrungChuyen == 0 && ( item.trangThaiVe != 3 || item.trangThaiVe != 5), /// == 0 Khong TC
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          children: [
+                            InkWell(
+                              onTap:(){
+                                // print(item.idDatVe);
+                                showDialog(
+                                    context: context,
+                                    builder: (context) {
+                                      return WillPopScope(
+                                        onWillPop: () async => false,
+                                        child: ReasonCancelPage(),
+                                      );
+                                    }).then((value){
+                                  if(!Utils.isEmpty(value)){
+
+                                   _bloc.add(ConfirmCustomerLimoEvent(item.idDatVe, 3,value));
+                                    Utils.showToast('Huỷ khách thành công');
+                                  }
+                                });
+                              },
+                              child: Container(
+                                width: 148.0,
+                                height: 30.0,
+                                decoration: BoxDecoration(
+                                    borderRadius: BorderRadius.circular(18.0),
+                                    color: Colors.grey
+                                ),
+                                child: Center(
+                                  child: Text(
+                                    'Khách huỷ',
+                                    style: TextStyle(fontFamily: fontSub, fontSize: 13, color: white,),
+                                    textAlign: TextAlign.left,
+                                  ),
+                                ),
+                              ),
+                            ),
+                            InkWell(
+                              onTap:(){
+                                showDialog(
+                                    context: context,
+                                    builder: (context) {
+                                      return WillPopScope(
+                                        onWillPop: () async => false,
+                                        child: NotePage(),
+                                      );
+                                    }).then((value){
+                                  _bloc.add(ConfirmCustomerLimoEvent(item.idDatVe, 5,value));
+                                  Utils.showToast('Nhận khách thành công');
+                                });
+
+                              },
+                              child: Container(
+                                width: 148.0,
+                                height: 30.0,
+                                decoration: BoxDecoration(
+                                    borderRadius: BorderRadius.circular(18.0),
+                                    color: Colors.blue
+                                ),
+                                child: Center(
+                                  child: Text(
+                                    'Xác nhận đón',
+                                    style: TextStyle(fontFamily: fontSub, fontSize: 13, color: white,),
+                                    textAlign: TextAlign.left,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      )
                     ],
                   ),
                 ),

@@ -36,14 +36,14 @@ class _ReportLimoPageState extends State<ReportLimoPage> {
   @override
   Widget build(BuildContext context) {
     return BlocListener<ReportLimoBloc,ReportLimoState>(
-        cubit: _bloc,
+        bloc: _bloc,
         listener: (context,state){
           if(state is GetReportLimoEventSuccess){
             countTotalCustomer = _bloc.tongKhach;
           }
         },
         child: BlocBuilder<ReportLimoBloc,ReportLimoState>(
-          cubit: _bloc,
+          bloc: _bloc,
           builder: (BuildContext context, ReportLimoState state){
             return buildPage(context,state);
           },

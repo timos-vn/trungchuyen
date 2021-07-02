@@ -67,9 +67,3 @@ class ValidateErrorPassword extends LoginState {
   @override
   String toString() => 'ValidateErrorPassword { error: $error }';
 }
-
-class UpdateStatusDriverState extends LoginState {
-
-  @override
-  String toString() => 'UpdateStatusDriverState {}';
-}

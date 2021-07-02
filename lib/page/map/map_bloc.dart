@@ -52,7 +52,7 @@ class MapBloc extends Bloc<MapEvent,MapState> {
   String test1 = 'O';
   String idUser;
 
-  MapBloc(this.context) : super(null){
+  MapBloc(this.context)  {
     _networkFactory = NetWorkFactory(context);
   }
 

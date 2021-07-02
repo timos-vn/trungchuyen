@@ -1,16 +1,15 @@
-
-class ListOfGroupAwaitingCustomer {
-  List<ListOfGroupAwaitingCustomerBody> data;
+class ListOfGroupLimoCustomerResponse {
+  List<ListOfGroupLimoCustomerResponseBody> data;
   int statusCode;
   String message;
 
-  ListOfGroupAwaitingCustomer({this.data, this.statusCode, this.message});
+  ListOfGroupLimoCustomerResponse({this.data, this.statusCode, this.message});
 
-  ListOfGroupAwaitingCustomer.fromJson(Map<String, dynamic> json) {
+  ListOfGroupLimoCustomerResponse.fromJson(Map<String, dynamic> json) {
     if (json['data'] != null) {
-      data = new List<ListOfGroupAwaitingCustomerBody>();
+      data = new List<ListOfGroupLimoCustomerResponseBody>();
       json['data'].forEach((v) {
-        data.add(new ListOfGroupAwaitingCustomerBody.fromJson(v));
+        data.add(new ListOfGroupLimoCustomerResponseBody.fromJson(v));
       });
     }
     statusCode = json['statusCode'];
@@ -28,30 +27,30 @@ class ListOfGroupAwaitingCustomer {
   }
 }
 
-class ListOfGroupAwaitingCustomerBody {
+class ListOfGroupLimoCustomerResponseBody {
   String ngayChay;
-  int idVanPhong;
-  String diaChi;
+  int idTuyenDuong;
+  String tenTuyenDuong;
   int idKhungGio;
   String thoiGianDi;
   String thoiGianDen;
   int loaiKhach;
   int soKhach;
 
-  ListOfGroupAwaitingCustomerBody(
+  ListOfGroupLimoCustomerResponseBody(
       {this.ngayChay,
-        this.idVanPhong,
-        this.diaChi,
+        this.idTuyenDuong,
+        this.tenTuyenDuong,
         this.idKhungGio,
         this.thoiGianDi,
         this.thoiGianDen,
         this.loaiKhach,
         this.soKhach});
 
-  ListOfGroupAwaitingCustomerBody.fromJson(Map<String, dynamic> json) {
+  ListOfGroupLimoCustomerResponseBody.fromJson(Map<String, dynamic> json) {
     ngayChay = json['ngayChay'];
-    idVanPhong = json['idVanPhong'];
-    diaChi = json['diaChi'];
+    idTuyenDuong = json['idTuyenDuong'];
+    tenTuyenDuong = json['tenTuyenDuong'];
     idKhungGio = json['idKhungGio'];
     thoiGianDi = json['thoiGianDi'];
     thoiGianDen = json['thoiGianDen'];
@@ -62,8 +61,8 @@ class ListOfGroupAwaitingCustomerBody {
   Map<String, dynamic> toJson() {
     final Map<String, dynamic> data = new Map<String, dynamic>();
     data['ngayChay'] = this.ngayChay;
-    data['idVanPhong'] = this.idVanPhong;
-    data['diaChi'] = this.diaChi;
+    data['idTuyenDuong'] = this.idTuyenDuong;
+    data['tenTuyenDuong'] = this.tenTuyenDuong;
     data['idKhungGio'] = this.idKhungGio;
     data['thoiGianDi'] = this.thoiGianDi;
     data['thoiGianDen'] = this.thoiGianDen;
@@ -72,6 +71,4 @@ class ListOfGroupAwaitingCustomerBody {
     return data;
   }
 }
-
-
 

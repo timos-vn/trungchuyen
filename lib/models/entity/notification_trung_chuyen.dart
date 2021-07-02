@@ -1,20 +1,20 @@
 import 'package:equatable/equatable.dart';
 
-class NotificationCustomer extends Equatable {
+class NotificationCustomerOfTC extends Equatable {
   final String idTrungChuyen;
   final String chuyen;
   final String thoiGian;
   final String loaiKhach;
 
 
-  NotificationCustomer(
+  NotificationCustomerOfTC(
       {this.idTrungChuyen,
         this.chuyen,
         this.thoiGian,
         this.loaiKhach,
       });
 
-  NotificationCustomer.fromDb(Map<String, dynamic> map)
+  NotificationCustomerOfTC.fromDb(Map<String, dynamic> map)
       :
         idTrungChuyen = map['idTrungChuyen'],
         thoiGian = map['ThoiGian'],

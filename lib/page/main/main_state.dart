@@ -172,6 +172,22 @@ class GetCustomerListSuccess extends MainState {
   @override
   String toString() => 'GetCustomerListSuccess {}';
 }
+class GetListNotificationOfLimoSuccess extends MainState {
+
+  @override
+  String toString() => 'GetListNotificationOfLimoSuccess {}';
+}
+
+class GetListNotificationCustomerSuccess extends MainState {
+
+  @override
+  String toString() => 'GetListNotificationCustomerSuccess {}';
+}
+class GetListNotificationOfTC extends MainState {
+
+  @override
+  String toString() => 'GetListNotificationOfTC {}';
+}
 class GetListTaiXeLimoSuccess extends MainState {
 
   @override

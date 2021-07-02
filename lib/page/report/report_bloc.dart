@@ -23,7 +23,7 @@ class ReportBloc extends Bloc<ReportEvent,ReportState> {
   ReportReponseDetail reponseDetail;
   int tongKhach = 0;
 
-  ReportBloc(this.context) : super(null){
+  ReportBloc(this.context)  {
     _networkFactory = NetWorkFactory(context);
   }
 

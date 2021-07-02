@@ -4,7 +4,8 @@ import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:trungchuyen/models/entity/customer.dart';
-import 'package:trungchuyen/models/entity/notification_customer.dart';
+import 'package:trungchuyen/models/entity/notification_of_limo.dart';
+import 'package:trungchuyen/models/entity/notification_trung_chuyen.dart';
 import 'package:trungchuyen/utils/log.dart';
 
 class DatabaseHelper {
@@ -60,9 +61,20 @@ class DatabaseHelper {
        idTrungChuyen TEXT,
        chuyen TEXT,
        thoiGian TEXT,
-       loaiKhach TEXT)
+       loaiKhach INTEGER)
   ''');
     print("DB NotificationCustomer was created!");
+
+    db.execute('''
+    CREATE TABLE NotificationLimo(
+       idTrungChuyen TEXT,
+       nameTC TEXT,
+       phoneTC TEXT,
+       numberCustomer TEXT,
+       listIdTAIXELIMO TEXT,
+       idDriverTC TEXT)
+  ''');
+    print("DB NotificationLimo was created!");
 
     db.execute('''
     CREATE TABLE DriverLimoInfo(
@@ -105,6 +117,8 @@ class DatabaseHelper {
       db.delete("NotificationCustomer");
       db.execute('ALTER TABLE DriverLimoInfo ADD COLUMN attributes TEXT');
       db.delete("DriverLimoInfo");
+      db.execute('ALTER TABLE NotificationLimo ADD COLUMN attributes TEXT');
+      db.delete("NotificationLimo");
     }
     db.execute('DROP TABLE IF EXISTS CustomerPending');
     db.delete("CustomerPending");
@@ -112,6 +126,8 @@ class DatabaseHelper {
     db.delete("NotificationCustomer");
     db.execute('DROP TABLE IF EXISTS DriverLimoInfo');
     db.delete("DriverLimoInfo");
+    db.execute('DROP TABLE IF EXISTS NotificationLimo');
+    db.delete("NotificationLimo");
   }
 
   Future<Database> init() async {
@@ -181,9 +197,9 @@ class DatabaseHelper {
   }
 
   ///Notification_Customer
-  Future<void> addNotificationCustomer(NotificationCustomer notificationCustomer) async {
+  Future<void> addNotificationCustomer(NotificationCustomerOfTC notificationCustomer) async {
     var client = await db;
-    NotificationCustomer oldNotificationCustomer = await fetchNotificationCustomer(notificationCustomer.idTrungChuyen);
+    NotificationCustomerOfTC oldNotificationCustomer = await fetchNotificationCustomer(notificationCustomer.idTrungChuyen);
     if (oldNotificationCustomer == null)
       await client.insert('NotificationCustomer', notificationCustomer.toMapForDb(),
           conflictAlgorithm: ConflictAlgorithm.replace);
@@ -192,18 +208,18 @@ class DatabaseHelper {
     }
   }
 
-  Future<NotificationCustomer> fetchNotificationCustomer(String idTrungChuyen,) async {
+  Future<NotificationCustomerOfTC> fetchNotificationCustomer(String idTrungChuyen,) async {
     var client = await db;
     final Future<List<Map<String, dynamic>>> futureMaps =
     client.query('NotificationCustomer', where: 'idTrungChuyen = ?', whereArgs: [idTrungChuyen]);
     var maps = await futureMaps;
     if (maps.length != 0) {
-      return NotificationCustomer.fromDb(maps.first);
+      return NotificationCustomerOfTC.fromDb(maps.first);
     }
     return null;
   }
 
-  Future<int> updateNotificationCustomer(NotificationCustomer notificationCustomer) async {
+  Future<int> updateNotificationCustomer(NotificationCustomerOfTC notificationCustomer) async {
     var client = await db;
     return client.update('NotificationCustomer', notificationCustomer.toMapForDb(),
         where: 'idTrungChuyen = ?',
@@ -211,13 +227,13 @@ class DatabaseHelper {
         conflictAlgorithm: ConflictAlgorithm.replace);
   }
 
-  Future<List<NotificationCustomer>> fetchAllNotificationCustomer() async {
+  Future<List<NotificationCustomerOfTC>> fetchAllNotificationCustomer() async {
     var client = await db;
     var res = await client.query('NotificationCustomer');
 
     if (res.isNotEmpty) {
       var products =
-      res.map((productMap) => NotificationCustomer.fromDb(productMap)).toList();
+      res.map((productMap) => NotificationCustomerOfTC.fromDb(productMap)).toList();
       return products;
     }
     return [];
@@ -233,6 +249,60 @@ class DatabaseHelper {
     await client.delete('NotificationCustomer');
   }
 
+
+  ///Notification_Limo
+  Future<void> addNotificationLimo(NotificationOfLimo notificationOfLimo) async {
+    var client = await db;
+    NotificationOfLimo oldNotificationLimo = await fetchNotificationLimo(notificationOfLimo.idTrungChuyen);
+    if (oldNotificationLimo == null)
+      await client.insert('NotificationLimo', notificationOfLimo.toMapForDb(),
+          conflictAlgorithm: ConflictAlgorithm.replace);
+    else {
+      await updateNotificationLimo(oldNotificationLimo);
+    }
+  }
+
+  Future<NotificationOfLimo> fetchNotificationLimo(String idTrungChuyen,) async {
+    var client = await db;
+    final Future<List<Map<String, dynamic>>> futureMaps =
+    client.query('NotificationLimo', where: 'idTrungChuyen = ?', whereArgs: [idTrungChuyen]);
+    var maps = await futureMaps;
+    if (maps.length != 0) {
+      return NotificationOfLimo.fromDb(maps.first);
+    }
+    return null;
+  }
+
+  Future<int> updateNotificationLimo(NotificationOfLimo notificationCustomer) async {
+    var client = await db;
+    return client.update('NotificationLimo', notificationCustomer.toMapForDb(),
+        where: 'idTrungChuyen = ?',
+        whereArgs: [notificationCustomer.idTrungChuyen],
+        conflictAlgorithm: ConflictAlgorithm.replace);
+  }
+
+  Future<List<NotificationOfLimo>> fetchAllNotificationLimo() async {
+    var client = await db;
+    var res = await client.query('NotificationLimo');
+
+    if (res.isNotEmpty) {
+      var products =
+      res.map((productMap) => NotificationOfLimo.fromDb(productMap)).toList();
+      return products;
+    }
+    return [];
+  }
+
+  Future<void> removeNotificationLimo(String idTrungChuyen) async {
+    var client = await db;
+    return client.delete('NotificationLimo', where: 'idTrungChuyen = ?', whereArgs: [idTrungChuyen]);
+  }
+
+  Future<void> deleteAllNotificationLimo() async {
+    var client = await db;
+    await client.delete('NotificationLimo');
+  }
+
   ///Tai xe Limo
   Future<void> addDriverLimo(Customer customer) async {
     var client = await db;
@@ -242,7 +312,9 @@ class DatabaseHelper {
           conflictAlgorithm: ConflictAlgorithm.replace);
     else {
       int sk = oldCustomer.soKhach + 1;
-      await updateRowDriverLimo(oldCustomer,sk);
+
+      String listIdTC = oldCustomer.idTrungChuyen + ',' + customer.idTrungChuyen;
+      await updateRowDriverLimo(oldCustomer,sk,listIdTC);
     }
   }
 
@@ -257,9 +329,9 @@ class DatabaseHelper {
     return null;
   }
 
-  Future<int> updateRowDriverLimo(Customer customer, int soKhach) async{
+  Future<int> updateRowDriverLimo(Customer customer, int soKhach,String listIdTC) async{
     var client = await db;
-    return client.rawUpdate('UPDATE DriverLimoInfo SET soKhach = ? WHERE idTrungChuyen = ?', [soKhach, customer.idTrungChuyen]);
+    return client.rawUpdate('UPDATE DriverLimoInfo SET soKhach = ?,idTrungChuyen = ? WHERE idTaiXeLimousine = ?', [soKhach,listIdTC ,customer.idTaiXeLimousine]);
     // await db.rawUpdate('UPDATE dogs SET age = ? WHERE id = ?', [35, 0]);
   }
 

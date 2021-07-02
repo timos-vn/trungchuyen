@@ -206,11 +206,18 @@ class NetWorkFactory {
   }
 
   Future<Object> groupCustomerAWaiting(String token, DateTime date) async {
-    return await requestApi(_dio.get('/api/v1/trungchuyen/' + date.toString(), options: Options(headers: {"Authorization": "Bearer $token"}))); //["Authorization"] = "Bearer " + token
+    return await requestApi(_dio.get('/api/v1/trungchuyen/nhomkhachcho', options: Options(headers: {"Authorization": "Bearer $token"}),queryParameters: {
+      "ngayTrungChuyen": date,
+    }));
   }
 
   Future<Object> getDetailTrips(String token, DateTime date, String idRoom, String idTime, String typeCustomer) async {
-    return await requestApi(_dio.get('/api/v1/trungchuyen/' + date.toString() +'/'+ idRoom + '/' + idTime+ '/' + typeCustomer , options: Options(headers: {"Authorization": "Bearer $token"}))); //["Authorization"] = "Bearer " + token
+    return await requestApi(_dio.get('/api/v1/trungchuyen/dskhachcho', options: Options(headers: {"Authorization": "Bearer $token"}),queryParameters: {
+      "ngayTrungChuyen": date,
+      "idVanPhong": idRoom,
+      "idKhungGio": idTime,
+      "loaiKhachTC": typeCustomer,
+    })); //["Authorization"] = "Bearer " + token
   }
   ///0 : Offline
   ///1 : Online
@@ -234,11 +241,17 @@ class NetWorkFactory {
   }
 
   Future<Object> getListCustomerLimo(String token,DateTime dateTime) async {
-    return await requestApi(_dio.get('/api/v1/limo/' + dateTime.toString(), options: Options(headers: {"Authorization": "Bearer $token"}))); //["Authorization"] = "Bearer " + token
+    return await requestApi(_dio.get('/api/v1/limo/nhomkhachcho', options: Options(headers: {"Authorization": "Bearer $token"}), queryParameters: {
+      "ngayChay": dateTime,
+    })); //["Authorization"] = "Bearer " + token
   }
 
   Future<Object> getDetailTripsLimo(String token, String date, String idTrips, String idTime) async {
-    return await requestApi(_dio.get('/api/v1/limo/' + date.toString() +'/'+ idTrips + '/' + idTime, options: Options(headers: {"Authorization": "Bearer $token"}))); //["Authorization"] = "Bearer " + token
+    return await requestApi(_dio.get('/api/v1/limo/dskhachcho' , options: Options(headers: {"Authorization": "Bearer $token"}),queryParameters: {
+      "ngayChay": date,
+      "idTuyenDuong": idTrips,
+      "idKhungGio": idTime,
+    })); //["Authorization"] = "Bearer " + token
   }
 
   Future<Object> sendNotification(TranferCustomerRequestBody request,String token) async {
@@ -254,6 +267,14 @@ class NetWorkFactory {
       "origin": currentLocation,
       "destination": customerlocation,
     })); //["Authorization"] = "Bearer " + token
+  }
+
+  Future<Object> confirmCustomerLimo(String token, String idDatVe, int trangThai,String note) async {
+    return await requestApi(_dio.get('/api/v1/limo/xacnhan-donkhach', options: Options(headers: {"Authorization": "Bearer $token"}),queryParameters: {
+      "idDatVe": idDatVe,
+      "trangThai": trangThai,
+      "ghiChu": note,
+    }));
   }
 
 }

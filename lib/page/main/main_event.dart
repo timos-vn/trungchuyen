@@ -1,5 +1,7 @@
 import 'package:equatable/equatable.dart';
 import 'package:trungchuyen/models/entity/customer.dart';
+import 'package:trungchuyen/models/entity/notification_of_limo.dart';
+import 'package:trungchuyen/models/entity/notification_trung_chuyen.dart';
 
 
 abstract class MainEvent extends Equatable {
@@ -231,6 +233,28 @@ class UpdateTaiXeLimo extends MainEvent{
     // TODO: implement toString
     return 'UpdateTaiXeLimo{}';
   }
+}class AddNotificationOfLimo extends MainEvent{
+
+  final NotificationOfLimo notificationOfLimo;
+
+  AddNotificationOfLimo(this.notificationOfLimo);
+
+  @override
+  String toString() {
+    // TODO: implement toString
+    return 'AddNotificationOfLimo{}';
+  }
+}class AddNotificationOfTC extends MainEvent{
+
+  final NotificationCustomerOfTC notificationCustomerOfTC;
+
+  AddNotificationOfTC(this.notificationCustomerOfTC);
+
+  @override
+  String toString() {
+    // TODO: implement toString
+    return 'UpdateTaiXeLimo{}';
+  }
 }
 
 class DeleteItem extends MainEvent{
@@ -267,6 +291,20 @@ class GetListTaiXeLimo extends MainEvent{
   String toString() {
     // TODO: implement toString
     return 'GetListTaiXeLimo{}';
+  }
+}class GetListNotificationOfLimo extends MainEvent{
+
+  @override
+  String toString() {
+    // TODO: implement toString
+    return 'GetListNotificationOfLimo{}';
+  }
+}class GetListNotificationCustomerTC extends MainEvent{
+
+  @override
+  String toString() {
+    // TODO: implement toString
+    return 'GetListNotificationCustomerTC{}';
   }
 }
 

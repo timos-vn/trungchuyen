@@ -95,7 +95,7 @@ class MapPageState extends State<MapPage>{
   @override
   Widget build(BuildContext context) {
     return BlocListener<MapBloc,MapState>(
-      cubit: _mapBloc,
+      bloc: _mapBloc,
       listener:  (context, state){
         if(state is GetListCustomerSuccess){
 
@@ -115,7 +115,7 @@ class MapPageState extends State<MapPage>{
         }
       },
       child: BlocBuilder<MapBloc,MapState>(
-        cubit: _mapBloc,
+        bloc: _mapBloc,
         builder: (BuildContext context, MapState state) {
           return Scaffold(
             body: buildPage(context,state)
@@ -490,7 +490,7 @@ class MapPageState extends State<MapPage>{
                                                       socketIOService.socket.emit("TAIXE_TRUNGCHUYEN_CAPNHAT_TRANGTHAI_KHACH");
                                                     }
                                                     _mainBloc.add(DeleteItem(_mainBloc.getCustomer(0).idTrungChuyen, 0));
-                                                    _mainBloc.add(UpdateStatusCustomerEvent(status: 9,idTrungChuyen: [_mainBloc.listCustomer[0].idTrungChuyen],note: value[0]));
+                                                    _mainBloc.add(UpdateStatusCustomerEvent(status: 9,idTrungChuyen: [_mainBloc.listCustomer[0].idTrungChuyen],note: value));
                                                     Utils.showToast('Huỷ khách thành công');
                                                   }
                                                 });
@@ -552,21 +552,19 @@ class MapPageState extends State<MapPage>{
                                                       _mainBloc.add(UpdateCustomerItemList(customer));
 
                                                       _mapBloc.add(GetListLocationPolylineEvent(_mainBloc.listCustomer[0].toaDoDiaChiKhachDi));
-                                                      // if(socketIOService.socket.connected)
-                                                      // {
-                                                      //   socketIOService.socket.emit("TAIXE_TRUNGCHUYEN_CAPNHAT_TRANGTHAI_KHACH");
-                                                      // }
-                                                      // _mainBloc.add(UpdateStatusCustomerEvent(status: 3,idTrungChuyen: [_mainBloc.listCustomer[0].idTrungChuyen]));
+                                                      if(socketIOService.socket.connected)
+                                                      {
+                                                        socketIOService.socket.emit("TAIXE_TRUNGCHUYEN_CAPNHAT_TRANGTHAI_KHACH");
+                                                      }
+                                                      _mainBloc.add(UpdateStatusCustomerEvent(status: 3,idTrungChuyen: [_mainBloc.listCustomer[0].idTrungChuyen]));
                                                       Utils.showToast('Đang đi đón khách');
                                                     }else if(_mainBloc.listCustomer[0].statusCustomer == 3){
                                                       /// nex Đã đón
-                                                      // if(socketIOService.socket.connected)
-                                                      // {
-                                                      //   socketIOService.socket.emit("TAIXE_TRUNGCHUYEN_CAPNHAT_TRANGTHAI_KHACH");
-                                                      // }
-                                                      // _mainBloc.add(UpdateStatusCustomerEvent(status: 4,idTrungChuyen: [_mainBloc.listCustomer[0].idTrungChuyen]));
-                                                      _mainBloc.soKhachDaDonDuoc++;
-
+                                                      if(socketIOService.socket.connected)
+                                                      {
+                                                        socketIOService.socket.emit("TAIXE_TRUNGCHUYEN_CAPNHAT_TRANGTHAI_KHACH");
+                                                      }
+                                                      _mainBloc.add(UpdateStatusCustomerEvent(status: 4,idTrungChuyen: [_mainBloc.listCustomer[0].idTrungChuyen]));
                                                       //statusDon = 2;
                                                       Customer customer = new Customer(
                                                           idTrungChuyen: _mainBloc.listCustomer[0].idTrungChuyen,
@@ -595,11 +593,9 @@ class MapPageState extends State<MapPage>{
                                                       _mainBloc.add(Delete(customer.idTrungChuyen,0));
                                                       _mainBloc.add(AddOldCustomerItemList(customer));
                                                       _mainBloc.add(UpdateTaiXeLimo(customer));
+                                                      _mainBloc.soKhachDaDonDuoc++;
                                                       Utils.showToast('Đón khách thành công - chuyển sang khách tiếp theo');
-
                                                       mapController.removePolyline(myPolyline);
-
-
                                                       // if(!Utils.isEmpty(_mainBloc.listCustomer)){
                                                       //   _mainBloc.listCustomerToPickUpSuccess.add(_mainBloc.listCustomer[0]);
                                                       //   _mainBloc.listCustomer.removeAt(0);
@@ -648,10 +644,9 @@ class MapPageState extends State<MapPage>{
                                                       {
                                                         socketIOService.socket.emit("TAIXE_TRUNGCHUYEN_CAPNHAT_TRANGTHAI_KHACH");
                                                       }
-
                                                       _mainBloc.add(UpdateStatusCustomerEvent(status: 8,idTrungChuyen: [_mainBloc.listCustomer[0].idTrungChuyen]));
-                                                      _mainBloc.soKhachDaDonDuoc++;
                                                       _mainBloc.add(DeleteItem(_mainBloc.getCustomer(0).idTrungChuyen, 0));
+                                                      _mainBloc.soKhachDaDonDuoc++;
                                                       Utils.showToast('Trả khách thành công');
                                                       // if(!Utils.isEmpty(_mainBloc.listCustomer)){
                                                       //   _mainBloc.listCustomerToPickUpSuccess.clear();
@@ -919,7 +914,7 @@ class MapPageState extends State<MapPage>{
                                                                 _mainBloc.soKhachDaDonDuoc++;
                                                                 //_mainBloc.listCustomer.removeAt(index);
                                                                 _mainBloc.add(DeleteItem(_mainBloc.getCustomer(index).idTrungChuyen, index));
-                                                                _mainBloc.add(UpdateStatusCustomerEvent(status: 9,idTrungChuyen: [_mainBloc.listCustomer[index].idTrungChuyen],note: value[0]));
+                                                                _mainBloc.add(UpdateStatusCustomerEvent(status: 9,idTrungChuyen: [_mainBloc.listCustomer[index].idTrungChuyen],note: value));
                                                                 Utils.showToast('Huỷ khách thành công');
                                                               }
                                                             });
@@ -1517,7 +1512,7 @@ class MapPageState extends State<MapPage>{
                                     }
                                     _mainBloc.soKhachDaDonDuoc++;
                                     _mainBloc.add(DeleteItem(_mainBloc.getCustomer(0).idTrungChuyen, 0));
-                                    _mainBloc.add(UpdateStatusCustomerEvent(status: 9,idTrungChuyen: [_mainBloc.listCustomer[0].idTrungChuyen],note: value[0]));
+                                    _mainBloc.add(UpdateStatusCustomerEvent(status: 9,idTrungChuyen: [_mainBloc.listCustomer[0].idTrungChuyen],note: value));
                                     Utils.showToast('Huỷ khách thành công');
                                   }
                                 });

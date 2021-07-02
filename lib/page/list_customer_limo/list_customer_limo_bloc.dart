@@ -5,6 +5,7 @@ import 'package:trungchuyen/models/network/request/tranfer_customer_request.dart
 import 'package:trungchuyen/models/network/response/detail_trips_limo_reponse.dart';
 import 'package:trungchuyen/models/network/response/detail_trips_repose.dart';
 import 'package:trungchuyen/models/network/response/list_of_group_awaiting_customer_response.dart';
+import 'package:trungchuyen/models/network/response/list_of_group_limo_customer_response.dart';
 import 'package:trungchuyen/models/network/service/network_factory.dart';
 import 'package:trungchuyen/page/main/main_bloc.dart';
 import 'package:trungchuyen/page/waiting/waiting_event.dart';
@@ -26,12 +27,12 @@ class ListCustomerLimoBloc extends Bloc<ListCustomerLimoEvent,ListCustomerLimoSt
   String get refreshToken => _refreshToken;
   SharedPreferences _prefs;
   SharedPreferences get prefs => _prefs;
-  List<ListOfGroupAwaitingCustomerBody> listCustomerLimo;
+  List<ListOfGroupLimoCustomerResponseBody> listCustomerLimo;
   List<DetailTripsLimoReponseBody> listOfDetailTripsLimo = new List<DetailTripsLimoReponseBody>();
   String _nameLXLimo;
   String _sdtLXLimo;
 
-  ListCustomerLimoBloc(this.context) : super(null){
+  ListCustomerLimoBloc(this.context){
     _networkFactory = NetWorkFactory(context);
     // _mainBloc = BlocProvider.of<MainBloc>(context);
   }
@@ -58,7 +59,7 @@ class ListCustomerLimoBloc extends Bloc<ListCustomerLimoEvent,ListCustomerLimoSt
 
     if(event is GetListDetailTripLimo){
       yield ListCustomerLimoLoading();
-      ListCustomerLimoState state = _handleGetListOfDetailTrips(await _networkFactory.getDetailTripsLimo(_accessToken,event.date.toString(),event.idTrips.toString(),event.idTime.toString()));
+      ListCustomerLimoState state = _handleGetListOfDetailTrips(await _networkFactory.getDetailTripsLimo(_accessToken,event.date.toString(),event.idRoom.toString(),event.idTime.toString()));
       yield state;
     }
 
@@ -114,7 +115,7 @@ class ListCustomerLimoBloc extends Bloc<ListCustomerLimoEvent,ListCustomerLimoSt
   ListCustomerLimoState _handleAwaitingCustomer(Object data) {
     if (data is String) return ListCustomerLimoFailure(data);
     try {
-      ListOfGroupAwaitingCustomer response = ListOfGroupAwaitingCustomer.fromJson(data);
+      ListOfGroupLimoCustomerResponse response = ListOfGroupLimoCustomerResponse.fromJson(data);
       listCustomerLimo = response.data;
       return GetListCustomerLimoSuccess();
     } catch (e) {

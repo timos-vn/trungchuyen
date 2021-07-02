@@ -24,12 +24,6 @@ class Const {
   static const String TYPE_ONE = '1';
   static const String TYPE_ALL = '0';
 
-  static const String BAR_CHART = 'bar';
-  static const String PIE_CHART = 'pie';
-  static const String LINE_CHART = 'line';
-
-  static const String CHART = 'C';
-  static const String TABLE = 'G';
 
   static TextInputFormatter FORMAT_DECIMA_NUMBER = BlacklistingTextInputFormatter(RegExp('[\\-|\\ |\\/|\\*|\$|\\#|\\+|\\|]'));
   static const String DATE_FORMAT = "dd/MM/yyyy";

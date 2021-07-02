@@ -9,7 +9,7 @@ class AccountBloc extends Bloc<AccountEvent,AccountState> {
 
   BuildContext context;
   NetWorkFactory _networkFactory;
-  AccountBloc(this.context) : super(null){
+  AccountBloc(this.context){
     _networkFactory = NetWorkFactory(context);
   }
 
@@ -18,5 +18,9 @@ class AccountBloc extends Bloc<AccountEvent,AccountState> {
     // TODO: implement mapEventToState
     throw UnimplementedError();
   }
+
+  @override
+  // TODO: implement initialState
+  AccountState get initialState => AccountInitial();
 
 }

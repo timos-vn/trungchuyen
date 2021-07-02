@@ -90,7 +90,7 @@ class MapLimoPageState extends State<MapLimoPage> {
   @override
   Widget build(BuildContext context) {
     return BlocListener<MapLimoBloc,MapLimoState>(
-      cubit: _mapLimoBloc,
+      bloc: _mapLimoBloc,
       listener:  (context, state){
         if(state is GetListCustomerLimoSuccess){
 
@@ -100,7 +100,7 @@ class MapLimoPageState extends State<MapLimoPage> {
         }
       },
       child: BlocBuilder<MapLimoBloc,MapLimoState>(
-        cubit: _mapLimoBloc,
+        bloc: _mapLimoBloc,
         builder: (BuildContext context, MapLimoState state) {
           return Scaffold(
             body: buildPage(context, state)

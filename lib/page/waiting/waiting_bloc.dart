@@ -24,7 +24,7 @@ class WaitingBloc extends Bloc<WaitingEvent,WaitingState> {
   List<ListOfGroupAwaitingCustomerBody> listOfGroupAwaitingCustomer;
   List<DetailTripsResponseBody> listOfDetailTrips = new List<DetailTripsResponseBody>();
   String test ='K';
-  WaitingBloc(this.context) : super(null){
+  WaitingBloc(this.context)  {
     _networkFactory = NetWorkFactory(context);
     // _mainBloc = BlocProvider.of<MainBloc>(context);
   }

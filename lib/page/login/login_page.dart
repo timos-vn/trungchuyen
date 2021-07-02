@@ -39,8 +39,8 @@ class _LoginPageState extends State<LoginPage> {
   void _checkVersion() async {
     final newVersion = NewVersion(
         context: context,
-        androidId: 'Trung chuyển.net.vn.vinaoptic',
-        iOSId: 'Trung chuyển.net.vn.vinaoptic',
+        androidId: 'takecare.hn.trungchuyen',
+        iOSId: 'takecare.hn.trungchuyen',
         dialogTitle: 'Thông báo cập nhật',
         dialogText: 'Đã có phiên bản mới xin vui lòng cập nhật để có thể sử dụng những tính năng mới nhất.',
         dismissText: 'Để sau',
@@ -54,7 +54,7 @@ class _LoginPageState extends State<LoginPage> {
   void initState() {
     // TODO: implement initState
     super.initState();
-    // _checkVersion();
+    _checkVersion();
 
     _loginBloc = LoginBloc(context);
 
@@ -85,7 +85,7 @@ class _LoginPageState extends State<LoginPage> {
                 //   // _loginBloc.add(UpdateStatusDriverEvent(1));
                 //
                 // }
-               Navigator.push(context, (MaterialPageRoute(builder: (context)=>MainPage(roleAccount: _loginBloc.roleAccount,))));
+                Navigator.push(context, (MaterialPageRoute(builder: (context)=>MainPage(roleAccount: _loginBloc.roleAccount,))));
               }
               if (state is LoginFailure) {
                 Utils.showNotifySnackBar(context,state.error.toString());

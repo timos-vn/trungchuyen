@@ -31,10 +31,11 @@ class CustomerTransferToTC extends ListCustomerLimoEvent {
 class GetListDetailTripLimo extends ListCustomerLimoEvent {
 
   final DateTime date;
-  final int idTrips;
+  final int idRoom;
   final int idTime;
+  final int typeCustomer;
 
-  GetListDetailTripLimo(this.date,this.idTrips,this.idTime);
+  GetListDetailTripLimo(this.date,this.idRoom,this.idTime,this.typeCustomer);
 
   @override
   String toString() => 'GetListDetailTripLimo {date: $date }';

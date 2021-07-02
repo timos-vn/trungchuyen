@@ -1,8 +1,8 @@
 import 'package:flutter/cupertino.dart';
 import 'package:get/get.dart';
 import 'package:trungchuyen/utils/validator.dart';
-import 'login_bloc.dart';
 
+import 'login_bloc.dart';
 
 class LoginController extends GetxController{
   var counter = 0.obs;
@@ -35,7 +35,7 @@ class LoginController extends GetxController{
 
     //if(username == _user.uId && password == _user.pass){
     if(username == "" && password == ""){
-      //Get.to(InfoCompanyPage(),transition: Transition.zoom);
+     // Get.to(InfoCompanyPage(),transition: Transition.zoom);
       //Get.snackbar('Status','Login is successful',snackPosition: SnackPosition.BOTTOM);
     }else{
       Get.snackbar('Status'.tr,'LoginFailed'.tr,snackPosition: SnackPosition.BOTTOM, margin: EdgeInsets.symmetric(vertical: 5,horizontal: 5));

@@ -16,7 +16,8 @@ import 'package:google_maps_controller/google_maps_controller.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:trungchuyen/models/database/dbhelper.dart';
 import 'package:trungchuyen/models/entity/customer.dart';
-import 'package:trungchuyen/models/entity/notification_customer.dart';
+import 'package:trungchuyen/models/entity/notification_of_limo.dart';
+import 'package:trungchuyen/models/entity/notification_trung_chuyen.dart';
 import 'package:trungchuyen/models/network/request/tranfer_customer_request.dart';
 import 'package:trungchuyen/models/network/request/update_status_customer_request.dart';
 import 'package:trungchuyen/models/network/request/update_token_request.dart';
@@ -24,6 +25,7 @@ import 'package:trungchuyen/models/network/response/detail_trips_limo_reponse.da
 import 'package:trungchuyen/models/network/response/detail_trips_repose.dart';
 import 'package:trungchuyen/models/network/response/list_notification_response.dart';
 import 'package:trungchuyen/models/network/response/list_of_group_awaiting_customer_response.dart';
+import 'package:trungchuyen/models/network/response/list_of_group_limo_customer_response.dart';
 import 'package:trungchuyen/models/network/service/network_factory.dart';
 import 'package:flutter_animarker/lat_lng_interpolation.dart';
 import 'package:trungchuyen/page/map_limo/map_limo_bloc.dart';
@@ -50,7 +52,7 @@ class MainBloc extends Bloc<MainEvent, MainState> {
   String get token => _pref?.getString(Const.ACCESS_TOKEN) ?? "";
 
   List<ListOfGroupAwaitingCustomerBody> listOfGroupAwaitingCustomer = new List<ListOfGroupAwaitingCustomerBody>();
-  List<ListOfGroupAwaitingCustomerBody> listCustomerLimo = new List<ListOfGroupAwaitingCustomerBody>();
+  List<ListOfGroupLimoCustomerResponseBody> listCustomerLimo = new List<ListOfGroupLimoCustomerResponseBody>();
   List<DetailTripsResponseBody> listOfDetailTrips = new List<DetailTripsResponseBody>();
   List<DetailTripsResponseBody> listCustomerToPickUpSuccess = new List<DetailTripsResponseBody>();
 
@@ -88,7 +90,8 @@ class MainBloc extends Bloc<MainEvent, MainState> {
   List<Map<String, dynamic>> listLocation = new List<Map<String, dynamic>>();
   DatabaseHelper db = DatabaseHelper();
   List<Customer> listCustomer = new List<Customer>();
-  List<NotificationCustomer> listNotificationCustomer = new List<NotificationCustomer>();
+  List<NotificationCustomerOfTC> listNotificationCustomer = new List<NotificationCustomerOfTC>();
+  List<NotificationOfLimo> listNotificationOfLimo = new List<NotificationOfLimo>();
   void setCountAfterRead() {
     countNotifyUnRead = countNotifyUnRead <= 0 ? 0 : countNotifyUnRead - 1;
   }
@@ -98,7 +101,7 @@ class MainBloc extends Bloc<MainEvent, MainState> {
     print('updateCount: $countApproval');
   }
 
-  MainBloc() : super(null) {
+  MainBloc()   {
     socketIOService = Get.find<SocketIOService>();
     firebaseMessaging = FirebaseMessaging();
     // _firebaseMessaging.deleteInstanceID();
@@ -144,15 +147,17 @@ class MainBloc extends Bloc<MainEvent, MainState> {
           //         ? message['data']//['payload']
           //         : message['data']));
           if(message['data']['EVENT'] == 'TRUNGCHUYEN_THONGBAO_TAIXE' && _role == '3'){
+            ///[\"76bb398e-107b-41a9-9f67-b2a3bef6345e\",\"120290eb-150e-4116-b54f-ea49f5cb1fa8\",\"a3132c8e-b3d6-4c67-b1a2-0c6244674ec7\"]
             String item = message['data']['IdChuyenTruyens'];
             List<String> listId = item.replaceAll('[', '').replaceAll(']', '').replaceAll('"', '').split(',');
-            NotificationCustomer notificationCustomer = new NotificationCustomer(
+            NotificationCustomerOfTC notificationCustomer = new NotificationCustomerOfTC(
               idTrungChuyen: item,
               chuyen: message['data']['Chuyen'],
               thoiGian: message['data']['ThoiGian'],
               loaiKhach: message['data']['LoaiKhach']
             );
-            db.addNotificationCustomer(notificationCustomer);
+            add(AddNotificationOfTC(notificationCustomer));
+
             Utils.showDialogAssignReceiveCustomer(context,message['data']['Chuyen'],message['data']['ThoiGian'],message['data']['LoaiKhach'], "title", 'body',
                 onTapCancelNotification: () {
                   print('onTapCancelNotification');
@@ -228,7 +233,6 @@ class MainBloc extends Bloc<MainEvent, MainState> {
             String itemTXLimo = message['data']['listIdTAIXELIMO'];
             List<String> listIdTXLimo = itemTXLimo.split(',');
             String itemIdTC = message['data']['listIdTC'];
-
             List<String> listIdTC = itemIdTC.split(',');
             String numberCustomer;
             String idDriverTC = message['data']['idDriverTC'];
@@ -238,6 +242,17 @@ class MainBloc extends Bloc<MainEvent, MainState> {
               }
             });
             print('numberCustomer : ${numberCustomer.toString()}');
+
+            NotificationOfLimo notificationOfLimo = new NotificationOfLimo(
+              idTrungChuyen: itemIdTC,
+              nameTC: message['data']['nameTC'].toString(),
+              phoneTC: message['data']['phoneTC'],
+              numberCustomer: numberCustomer.toString(),
+              listIdTAIXELIMO: itemTXLimo,
+              idDriverTC: idDriverTC
+            );
+            add(AddNotificationOfLimo(notificationOfLimo));
+
             Utils.showDialogReceiveCustomerFormTC(context: context, laiXeTC: message['data']['nameTC'],
                 sdtLaiXeTC: message['data']['phoneTC'], soKhach: numberCustomer.toString(),date: '').then((value){
               if(value == true){
@@ -258,8 +273,10 @@ class MainBloc extends Bloc<MainEvent, MainState> {
               listTaiXeLimo.removeWhere((item) => item.idTaiXeLimousine == itemIdLmo);
             }
             if(Utils.isEmpty(listTaiXeLimo)){
+              db.deleteAllDriverLimo();
               blocked = false;
               db.deleteAll();
+              soKhachDaDonDuoc = 0;
               listTaiXeLimo.clear();
               listOfDetailTrips.clear();
               listCustomer.clear();
@@ -331,6 +348,89 @@ class MainBloc extends Bloc<MainEvent, MainState> {
     }
 
 
+    if (event is AddNotificationOfLimo) {
+      yield InitialMainState();
+      await db.addNotificationLimo(event.notificationOfLimo);
+      listNotificationOfLimo = await getListNotificationOfLimoFromDb();
+      yield GetListNotificationOfLimoSuccess();
+      // add(GetCustomerItemList());
+    }
+
+    if(event is GetListNotificationOfLimo){
+      yield InitialMainState();
+      listNotificationOfLimo = await getListNotificationOfLimoFromDb();
+      if (!Utils.isEmpty(listNotificationOfLimo)) {
+        listNotificationOfLimo.forEach((element) {
+          Utils.showDialogReceiveCustomerFormTC(context: context, laiXeTC: element.nameTC,
+              sdtLaiXeTC:  element.phoneTC, soKhach:  element.numberCustomer,date: '').then((value){
+            if(value == true){
+              db.removeNotificationLimo(element.idTrungChuyen);
+              print('Xac Nhan');
+              add(UpdateStatusCustomerEvent(status: 10,idTrungChuyen: element.idTrungChuyen.split(',')));
+              add(ConfirmWithTXTC(
+                'Thông báo','Xác nhận thành công',element.idDriverTC.split(',')
+              ));
+            }else{
+              print('Update Huy');
+            }
+          });
+        });
+        yield GetListNotificationOfLimoSuccess();
+        return;
+      }
+      yield GetListNotificationOfLimoSuccess();
+    }
+
+    if(event is GetListNotificationCustomerTC){
+      yield InitialMainState();
+      listNotificationCustomer = await getListNotificationOfTCFromDb();
+      if (!Utils.isEmpty(listNotificationCustomer)) {
+
+        listNotificationCustomer.forEach((element) {
+          List<String> listId = element.idTrungChuyen.replaceAll('[', '').replaceAll(']', '').replaceAll('"', '').split(',');
+          Utils.showDialogAssignReceiveCustomer(context,element.chuyen,element.thoiGian,element.loaiKhach, "title", 'body',
+              onTapCancelNotification: () {
+                print('onTapCancelNotification');
+                db.removeNotificationCustomer(element.idTrungChuyen);
+                if(socketIOService.socket.connected)
+                {
+                  socketIOService.socket.emit("TAIXE_TRUNGCHUYEN_CAPNHAT_TRANGTHAI_KHACH");
+                }
+                add(UpdateStatusCustomerEvent(status: 1,idTrungChuyen: listId));
+                print('Update Huy');
+              },
+              onTapAcceptNotification: (){
+                print('onTapAcceptNotification');
+                /// 1. don
+               db.removeNotificationCustomer(element.idTrungChuyen);
+                if(socketIOService.socket.connected)
+                {
+                  socketIOService.socket.emit("TAIXE_TRUNGCHUYEN_CAPNHAT_TRANGTHAI_KHACH");
+                }
+                if( element.loaiKhach == '1'){
+                  add(UpdateStatusCustomerEvent(status: 2,idTrungChuyen:listId));
+                  print('Update Nhan don');
+                }else{
+                  add(UpdateStatusCustomerEvent(status: 5,idTrungChuyen: listId));
+                  print('Update Nhan tra');
+                }
+              }
+          );
+        });
+        yield GetListNotificationCustomerSuccess();
+        return;
+      }
+      yield GetListNotificationCustomerSuccess();
+    }
+
+    if (event is AddNotificationOfTC) {
+      yield InitialMainState();
+      await db.addNotificationCustomer(event.notificationCustomerOfTC);
+      listNotificationCustomer = await getListNotificationOfTCFromDb();
+      yield GetListNotificationOfTC();
+      // add(GetCustomerItemList());
+    }
+
     if (event is AddOldCustomerItemList) {
       yield InitialMainState();
       await db.addNew(event.customer);
@@ -388,7 +488,6 @@ class MainBloc extends Bloc<MainEvent, MainState> {
       yield InitialMainState();
       await db.addDriverLimo(event.customer);
       listTaiXeLimo = await getListTXLimoFromDb();
-      print('OHHHH' + listTaiXeLimo.length.toString());
       yield GetListTaiXeLimoSuccess();
       add(GetListTaiXeLimo());
     }
@@ -504,6 +603,12 @@ class MainBloc extends Bloc<MainEvent, MainState> {
 
   Future<List<Customer>> getListFromDb() {
     return db.fetchAll();
+  }
+  Future<List<NotificationOfLimo>> getListNotificationOfLimoFromDb() {
+    return db.fetchAllNotificationLimo();
+  }
+  Future<List<NotificationCustomerOfTC>> getListNotificationOfTCFromDb() {
+    return db.fetchAllNotificationCustomer();
   }
 
   Future<List<Customer>> getListTXLimoFromDb() {

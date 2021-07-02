@@ -2,13 +2,13 @@ name: trungchuyen
 description: A new Flutter application.
 
 publish_to: 'none' # Remove this line if you wish to publish to pub.dev
-version: 1.0.0+2
+version: 1.0.0+4
 
 environment:
   sdk: ">=2.7.0 <3.0.0"
 
 dependencies:
-  flutter_bloc: ^6.1.2
+  flutter_bloc: ^4.0.0
   get: 4.1.3
   flutter:
     sdk: flutter
@@ -18,7 +18,7 @@ dependencies:
   dotted_border: ^1.0.5
   google_fonts: ^1.1.0
   material_design_icons_flutter: ^4.0.5345
-  shared_preferences: any
+  shared_preferences: ^2.0.0
   font_awesome_flutter: ^9.0.0
   cached_network_image: ^2.1.0+1
   animator: ^1.0.0+3
@@ -52,7 +52,7 @@ dependencies:
   #  flutter_datetime_picker: ^1.5.0
   syncfusion_flutter_datepicker: ^18.4.30-beta
   firebase_auth: ^0.18.1
-  firebase_messaging: ^6.0.13
+  firebase_messaging: ^7.0.1
   url_launcher: any
   snapping_sheet: ^3.0.0+2
   flutter_spinkit: ^4.1.2

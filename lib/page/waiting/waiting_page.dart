@@ -58,7 +58,7 @@ class WaitingPageState extends State<WaitingPage> {
         backgroundColor: Colors.white,
       ),
       body:BlocListener<WaitingBloc,WaitingState>(
-        cubit: _bloc,
+        bloc: _bloc,
         listener:  (context, state){
           if(state is GetListOfWaitingCustomerSuccess){
            _mainBloc.listOfGroupAwaitingCustomer = _bloc.listOfGroupAwaitingCustomer;
@@ -120,7 +120,7 @@ class WaitingPageState extends State<WaitingPage> {
           }
         },
         child: BlocBuilder<WaitingBloc,WaitingState>(
-          cubit: _bloc,
+          bloc: _bloc,
           builder: (BuildContext context, WaitingState state) {
             return buildPage(context,state);
           },

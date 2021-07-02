@@ -2,19 +2,21 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:trungchuyen/models/database/dbhelper.dart';
 import 'package:trungchuyen/models/network/request/login_request.dart';
 import 'package:trungchuyen/models/network/response/login_response.dart';
-import 'package:trungchuyen/models/network/service/host.dart';
 import 'package:trungchuyen/models/network/service/network_factory.dart';
 import 'package:trungchuyen/utils/const.dart';
 import 'package:trungchuyen/utils/utils.dart';
 import 'package:trungchuyen/utils/validator.dart';
+
 import 'login_event.dart';
 import 'login_sate.dart';
 
 class LoginBloc extends Bloc<LoginEvent,LoginState> with Validators{
 
   NetWorkFactory _networkFactory;
+
   BuildContext context;
   String _accessToken;
   String _refreshToken;
@@ -24,29 +26,19 @@ class LoginBloc extends Bloc<LoginEvent,LoginState> with Validators{
   String _username;
   String get username => _username;
   String  _errorHostId,_errorUsername, _errorPass;
-
+  DatabaseHelper db = DatabaseHelper();
+  String _hotURL;
+  String get hotURL => _hotURL;
   int roleAccount;
-  // DatabaseHelper db = DatabaseHelper();
-
-  // List<Lang> langSt = new List<Lang>();
   String codeLang = "v";
 
-  // init(BuildContext context) {
-  //   _networkFactory = NetWorkFactory(context);
-  //   _firebaseMessaging.getToken().then((token) {
-  //     print(token);
-  //     _deviceToken = token;
-  //   });
-  // }
-  LoginBloc(this.context) : super(null) {
+  LoginBloc(this.context) {
     _networkFactory = NetWorkFactory(context);
     // _googleSignIn = GoogleSignIn();
     // _facebookSignIn = FacebookLogin();
     _firebaseMessaging = FirebaseMessaging();
     _firebaseMessaging.getToken().then((token) => _deviceToken = token);
   }
-
-
   @override
   // TODO: implement initialState
   LoginState get initialState => LoginInitial();
@@ -61,20 +53,15 @@ class LoginBloc extends Bloc<LoginEvent,LoginState> with Validators{
       _refreshToken = _prefs.getString(Const.REFRESH_TOKEN) ?? "";
     }
 
-    if(event is UpdateStatusDriverEvent){
-      yield LoginInitial();
-      LoginState state = _handleUpdateStatusDriver(await _networkFactory.updateStatusDriver(_accessToken, 1));//event.statusDriver
-      yield state;
-    }
 
     if (event is Login) {
       yield LoginLoading();
       LoginRequestBody request = LoginRequestBody(
-        username:"0989888668",// event.username, /// 0989888668
-        password:"0989888668" ,///event.password, /// 0974629615
+        username: event.username, /// 0989888668
+        password:event.password, /// 0974629615
       );
       LoginState state = _handleLogin(await _networkFactory.login(request),event.savePassword,event.username,event.password);
-    yield state;
+      yield state;
     }
 
     if (event is ValidateHostId) {
@@ -94,16 +81,6 @@ class LoginBloc extends Bloc<LoginEvent,LoginState> with Validators{
     }
   }
 
-  LoginState _handleUpdateStatusDriver(Object data) {
-    if (data is String) return LoginFailure(data);
-    try {
-      return UpdateStatusDriverState();
-    } catch (e) {
-      print(e.toString());
-      return LoginFailure(e.toString());
-    }
-  }
-
   LoginState _handleLogin(Object data,bool savePassword,String username,String pass) {
     if (data is String) return LoginFailure(data);
     try {
@@ -114,7 +91,7 @@ class LoginBloc extends Bloc<LoginEvent,LoginState> with Validators{
       LoginResponseData dataUser = loginResponseData;
       roleAccount = dataUser.taiKhoan.chucVu;
       _username = dataUser.taiKhoan.hoTen.toString().trim();
-     Utils.saveDataLogin(_prefs, dataUser,_accessToken,_refreshToken,username,pass);
+      Utils.saveDataLogin(_prefs, dataUser,_accessToken,_refreshToken,username,pass);
       return LoginSuccess();
     } catch (e) {
       print(e.toString());
@@ -145,4 +122,6 @@ class LoginBloc extends Bloc<LoginEvent,LoginState> with Validators{
       add(ValidatePass(pass));
     }
   }
+
+
 }

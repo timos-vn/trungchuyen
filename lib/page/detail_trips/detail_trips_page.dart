@@ -46,7 +46,7 @@ class _DetailTripsPageState extends State<DetailTripsPage> {
            centerTitle: true,
         ),
         body:BlocListener<DetailTripsBloc,DetailTripsState>(
-          cubit: _bloc,
+          bloc: _bloc,
           listener:  (context, state){
             if(state is GetListOfDetailTripsSuccess){
               _listOfDetailTrips = _bloc.listOfDetailTrips;
@@ -54,7 +54,7 @@ class _DetailTripsPageState extends State<DetailTripsPage> {
             }
           },
           child: BlocBuilder<DetailTripsBloc,DetailTripsState>(
-            cubit: _bloc,
+            bloc: _bloc,
             builder: (BuildContext context, DetailTripsState state) {
               return buildPage(context,state);
             },

@@ -23,7 +23,7 @@ class DetailTripsBloc extends Bloc<DetailTripsEvent,DetailTripsState> {
   SharedPreferences get prefs => _prefs;
   List<DetailTripsResponseBody> listOfDetailTrips = new List<DetailTripsResponseBody>();
 
-  DetailTripsBloc(this.context) : super(null){
+  DetailTripsBloc(this.context){
     _networkFactory = NetWorkFactory(context);
   }
 
