@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 import 'package:sqflite/sqflite.dart';
+import 'package:trungchuyen/models/entity/account.dart';
 import 'package:trungchuyen/models/entity/customer.dart';
 import 'package:trungchuyen/models/entity/notification_of_limo.dart';
 import 'package:trungchuyen/models/entity/notification_trung_chuyen.dart';
@@ -66,6 +67,13 @@ class DatabaseHelper {
     print("DB NotificationCustomer was created!");
 
     db.execute('''
+    CREATE TABLE AccountSave(
+      userName TEXT,
+      pass TEXT)
+  ''');
+    print("Database AccountSave was created!");
+
+    db.execute('''
     CREATE TABLE NotificationLimo(
        idTrungChuyen TEXT,
        nameTC TEXT,
@@ -119,6 +127,8 @@ class DatabaseHelper {
       db.delete("DriverLimoInfo");
       db.execute('ALTER TABLE NotificationLimo ADD COLUMN attributes TEXT');
       db.delete("NotificationLimo");
+      db.execute('ALTER TABLE AccountSave ADD COLUMN attributes TEXT');
+      db.delete("AccountSave");
     }
     db.execute('DROP TABLE IF EXISTS CustomerPending');
     db.delete("CustomerPending");
@@ -128,6 +138,8 @@ class DatabaseHelper {
     db.delete("DriverLimoInfo");
     db.execute('DROP TABLE IF EXISTS NotificationLimo');
     db.delete("NotificationLimo");
+    db.execute('DROP TABLE IF EXISTS AccountSave');
+    db.delete("AccountSave");
   }
 
   Future<Database> init() async {
@@ -138,6 +150,48 @@ class DatabaseHelper {
     return database;
   }
 
+  /// Account
+  Future<void> saveAccount(AccountInfo accountInfo) async {
+    var client = await db;
+    AccountInfo oldAccountInfo = await fetchAccountInfo(accountInfo.userName);
+    if (oldAccountInfo == null)
+      await client.insert('AccountSave', accountInfo.toMapForDb(),
+          conflictAlgorithm: ConflictAlgorithm.replace);
+    else {
+      await updateAccountInfo(oldAccountInfo);
+    }
+  }
+
+  Future<int> updateAccountInfo(AccountInfo accountInfo) async {
+    var client = await db;
+    return client.update('AccountSave', accountInfo.toMapForDb(),
+        conflictAlgorithm: ConflictAlgorithm.replace);
+  }
+
+  Future<AccountInfo> fetchAccountInfo(String userName,) async {
+    var client = await db;
+    final Future<List<Map<String, dynamic>>> futureMaps =
+    client.query('AccountSave', where: 'userName = ?', whereArgs: [userName]);
+    var maps = await futureMaps;
+    if (maps.length != 0) {
+      return AccountInfo.fromDb(maps.first);
+    }
+    return null;
+  }
+
+  Future<List<AccountInfo>> fetchAllAccountInfo() async {
+    var client = await db;
+    var res = await client.query('AccountSave');
+
+    if (res.isNotEmpty) {
+      var accountInfo =
+      res.map((productMap) => AccountInfo.fromDb(productMap)).toList();
+      return accountInfo;
+    }
+    return [];
+  }
+
+  ///Customer
   Future<void> addNew(Customer customer) async {
     var client = await db;
     Customer oldCustomer = await fetchCustomer(customer.idTrungChuyen);
@@ -145,7 +199,7 @@ class DatabaseHelper {
       await client.insert('CustomerPending', customer.toMapForDb(),
           conflictAlgorithm: ConflictAlgorithm.replace);
     else {
-      await update(oldCustomer);
+      await updateCustomer(oldCustomer);
     }
   }
 
@@ -183,11 +237,19 @@ class DatabaseHelper {
     await client.delete('CustomerPending', where: 'idTrungChuyen = ?', whereArgs: [customer.idTrungChuyen]);
   }
 
-  Future<int> update(Customer customer) async {
+  Future<int> updateCustomer(Customer customer) async {
     var client = await db;
     return client.update('CustomerPending', customer.toMapForDb(),
         where: 'idTrungChuyen = ?',
         whereArgs: [customer.idTrungChuyen],
+        conflictAlgorithm: ConflictAlgorithm.replace);
+  }
+
+  Future<int> updateCustomerHuyOrDoiTaiXe(String idTCOld,Customer customer) async {
+    var client = await db;
+    return client.update('CustomerPending', customer.toMapForDb(),
+        where: 'idTrungChuyen = ?',
+        whereArgs: [idTCOld],
         conflictAlgorithm: ConflictAlgorithm.replace);
   }
 
@@ -312,7 +374,6 @@ class DatabaseHelper {
           conflictAlgorithm: ConflictAlgorithm.replace);
     else {
       int sk = oldCustomer.soKhach + 1;
-
       String listIdTC = oldCustomer.idTrungChuyen + ',' + customer.idTrungChuyen;
       await updateRowDriverLimo(oldCustomer,sk,listIdTC);
     }

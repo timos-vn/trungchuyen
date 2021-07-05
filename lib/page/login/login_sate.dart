@@ -67,3 +67,12 @@ class ValidateErrorPassword extends LoginState {
   @override
   String toString() => 'ValidateErrorPassword { error: $error }';
 }
+class SaveUserNamePasswordSuccessful extends LoginState {
+  final String userName;
+  final String passWord;
+
+  SaveUserNamePasswordSuccessful(this.userName,this.passWord);
+
+  @override
+  String toString() => 'SaveUserNamePasswordSuccessful { userName: $userName }';
+}

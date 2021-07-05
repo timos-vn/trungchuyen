@@ -1,12 +1,13 @@
-import 'package:flutter/cupertino.dart';
-import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 
 class Const {
   /// DF server
   // ignore: non_constant_identifier_names
-  static  String HOST_URL = "https://apidev.trungchuyenhn.com";
+  /// live : https://api.trungchuyenhn.com
+  /// dev : https://apidev.trungchuyenhn.com
+  // ignore: non_constant_identifier_names
+  static  String HOST_URL = "https://api.trungchuyenhn.com";
   // ignore: non_constant_identifier_names
   static  int PORT_URL = 0;
 
@@ -16,7 +17,7 @@ class Const {
 
   static const WAITING= 0;
   static const MAP = 1;
-  static const REPORT = 2;
+  static const CONFIRM = 2;
   static const ACCOUNT = 3;
 
   static const String ACTION_UPDATE = '1';

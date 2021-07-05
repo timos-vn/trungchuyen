@@ -15,7 +15,7 @@ class HostSingleton {
   HostSingleton._internal() {}
 
   void showError(){
-   print('test connection show Error');
-   print( host +':'+ port.toString());
+   // print('test connection show Error');
+   // print( host +':'+ port.toString());
   }
 }

@@ -23,11 +23,9 @@ class LoginPage extends StatefulWidget {
 }
 
 class _LoginPageState extends State<LoginPage> {
-  @override
-  TextEditingController hostIdController;
+
   TextEditingController usernameController;
   TextEditingController passwordController;
-  FocusNode hostIdFocus;
   FocusNode usernameFocus;
   FocusNode passwordFocus;
   bool isChecked = false;
@@ -47,7 +45,19 @@ class _LoginPageState extends State<LoginPage> {
         updateText:'Cập nhật'
     );
     final status = await newVersion.getVersionStatus();
-    newVersion.showUpdateDialog(status);
+    print(status.appStoreLink);
+    print(status.localVersion);
+    print(status.storeVersion);
+    List<String> localVersion = status.localVersion.split('.');
+    List<String> storeVersion = status.storeVersion.split('.');
+    if(int.parse(localVersion[0]) < int.parse(storeVersion[0])){
+      newVersion.showUpdateDialog(status);
+    }else if((int.parse(localVersion[0]) == int.parse(storeVersion[0])) && (int.parse(localVersion[1]) < int.parse(storeVersion[1]))){
+      newVersion.showUpdateDialog(status);
+    }else if((int.parse(localVersion[0]) == int.parse(storeVersion[0])) && (int.parse(localVersion[1]) == int.parse(storeVersion[1])) && (int.parse(localVersion[0]) < int.parse(storeVersion[0]))){
+      newVersion.showUpdateDialog(status);
+    }
+
   }
 
   @override
@@ -55,14 +65,12 @@ class _LoginPageState extends State<LoginPage> {
     // TODO: implement initState
     super.initState();
     _checkVersion();
-
     _loginBloc = LoginBloc(context);
+    _loginBloc.add(SaveUserNamePassWordEvent());
 
-    hostIdFocus = FocusNode();
     usernameFocus = FocusNode();
     passwordFocus = FocusNode();
 
-    hostIdController = TextEditingController();
     usernameController = TextEditingController();
     passwordController = TextEditingController();
   }
@@ -87,11 +95,15 @@ class _LoginPageState extends State<LoginPage> {
                 // }
                 Navigator.push(context, (MaterialPageRoute(builder: (context)=>MainPage(roleAccount: _loginBloc.roleAccount,))));
               }
-              if (state is LoginFailure) {
+              else if (state is LoginFailure) {
                 Utils.showNotifySnackBar(context,state.error.toString());
               }
               else if(state is ChangeLanguageSuccess){
                 _selectedLang = state.nameLng;
+              }
+              else if (state is SaveUserNamePasswordSuccessful){
+                usernameController.text = state.userName;
+                passwordController.text = state.passWord;
               }
             },
             child: BlocBuilder<LoginBloc, LoginState>(builder: (BuildContext context, LoginState state,) {
@@ -172,6 +184,7 @@ class _LoginPageState extends State<LoginPage> {
     return InkWell(
       onTap: (){
         setState(() {
+          print(isChecked);
           if(isChecked == true ){
             isChecked = false;
           }else{
@@ -188,6 +201,7 @@ class _LoginPageState extends State<LoginPage> {
               value: isChecked,
               onChanged: (bool newValue) {
                 setState(() {
+                  print(isChecked);
                   isChecked = newValue;
                 });
               },
@@ -207,7 +221,7 @@ class _LoginPageState extends State<LoginPage> {
     return  GestureDetector(
       onTap: (){
         //page.login(hostIdController.text,usernameController.text,passwordController.text,isChecked);
-        _loginBloc.add(Login(usernameController.text,passwordController.text,false));
+        _loginBloc.add(Login(usernameController.text,passwordController.text,isChecked));
       },
       child: Container(
         width: 148.0,
@@ -227,8 +241,6 @@ class _LoginPageState extends State<LoginPage> {
     );
   }
 
-
-
   Padding buildInputUserName(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.fromLTRB(40.0, 0.0, 40.0, 0.0),
@@ -240,7 +252,7 @@ class _LoginPageState extends State<LoginPage> {
         hintText: 'Tên tài khoản'.tr,
         onChanged: (text) => _loginBloc.checkUsernameBloc(text),
         //labelText: S.of(context).phone_number,
-        keyboardType: TextInputType.text,
+        keyboardType: TextInputType.phone,
         prefixIcon: Icons.account_circle,
         onSubmitted: (text) => Utils.navigateNextFocusChange(context,  usernameFocus,  passwordFocus),
       ),
@@ -253,13 +265,14 @@ class _LoginPageState extends State<LoginPage> {
       child: TextFieldWidget(
         controller: passwordController,
         textInputAction: TextInputAction.done,
-        keyboardType: TextInputType.text,
+        keyboardType: TextInputType.phone,
         isPassword: true,
         errorText: errorPass,
         hintText: 'Mật khẩu'.tr,
         prefixIcon: Icons.vpn_key,
         onChanged: (text) => _loginBloc.checkPassBloc(text),
         focusNode: passwordFocus,
+        onSubmitted: (_)=>_loginBloc.add(Login(usernameController.text,passwordController.text,false)),
       ),
     );
   }

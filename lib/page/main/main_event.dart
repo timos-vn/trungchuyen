@@ -308,13 +308,52 @@ class GetListTaiXeLimo extends MainEvent{
   }
 }
 
-class Delete extends MainEvent{
+class DeleteCustomerFormDB extends MainEvent{
   final String idTC;
-  final int index;
-  Delete(this.idTC, this.index);
+  DeleteCustomerFormDB(this.idTC);
   @override
   String toString() {
     // TODO: implement toString
-    return 'Delete{}';
+    return 'DeleteCustomerFormDB{}';
   }
+}
+class DeleteCustomerHuyOrDoiTaiFormDB extends MainEvent{
+  final String idTC;
+  DeleteCustomerHuyOrDoiTaiFormDB(this.idTC);
+  @override
+  String toString() {
+    // TODO: implement toString
+    return 'DeleteCustomerHuyOrDoiTaiFormDB{}';
+  }
+}
+class KhachHuyOrDoiTaiXe extends MainEvent{
+  final String idTC;
+  KhachHuyOrDoiTaiXe(this.idTC);
+  @override
+  String toString() {
+    // TODO: implement toString
+    return 'KhachHuyOrDoiTaiXe{}';
+  }
+}
+
+class UpdateKhachHuyOrDoiTaiXe extends MainEvent{
+  final String idTCOld;
+  final Customer customer;
+
+  UpdateKhachHuyOrDoiTaiXe(this.idTCOld, this.customer);
+
+  @override
+  String toString() {
+    // TODO: implement toString
+    return 'KhachHuyOrDoiTaiXe{}';
+  }
+}
+class GetListGroupCustomerTC extends MainEvent {
+
+  final DateTime date;
+
+  GetListGroupCustomerTC(this.date,);
+
+  @override
+  String toString() => 'GetListGroupCustomerTC {date: $date }';
 }

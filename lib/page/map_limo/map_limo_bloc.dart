@@ -1,7 +1,11 @@
+import 'dart:async';
+import 'dart:convert';
+
 import 'package:async/async.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter_animarker/lat_lng_interpolation.dart';
 import 'package:flutter_animarker/models/lat_lng_delta.dart';
+import 'package:flutter_animarker/models/lat_lng_info.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:get/get.dart';
 import 'package:google_maps_controller/google_maps_controller.dart';
@@ -14,7 +18,7 @@ import 'package:trungchuyen/utils/const.dart';
 import 'package:trungchuyen/utils/marker_icon.dart';
 import 'map_limo_event.dart';
 import 'map_limo_state.dart';
-
+String latLngLocation;
 class MapLimoBloc extends Bloc<MapLimoEvent,MapLimoState> {
   //SocketIOService socketIOService;
 
@@ -29,6 +33,9 @@ class MapLimoBloc extends Bloc<MapLimoEvent,MapLimoState> {
   SharedPreferences get prefs => _prefs;
   PermissionStatus permissionGranted;
   bool serviceEnabled;
+  String currentLocationLimo;
+  StreamSubscription<LocationData> locationSubscription;
+  LatLngInterpolationStream latLngStream = LatLngInterpolationStream();
   List<DetailTripsResponseBody> listOfCustomerTrips = new List<DetailTripsResponseBody>();
 
   Location location = new Location();
@@ -51,6 +58,17 @@ class MapLimoBloc extends Bloc<MapLimoEvent,MapLimoState> {
       _refreshToken = _prefs.getString(Const.REFRESH_TOKEN) ?? "";
     }
 
+    if(event is OnlineEvent){
+      yield MapLimoInitial();
+      startListenChangeLocation();
+      yield OnlineSuccess();
+    }
+    if(event is OfflineEvent){
+      yield MapLimoInitial();
+      stopListenChangeLocation();
+      yield OfflineSuccess();
+    }
+
     if(event is CheckPermissionLimoEvent){
       yield MapLimoInitial();
       checkPermission();
@@ -68,6 +86,16 @@ class MapLimoBloc extends Bloc<MapLimoEvent,MapLimoState> {
       MapLimoState state = _handleUpdateStatusDriver(await _networkFactory.updateStatusDriver(_accessToken, event.statusDriver));
       yield state;
     }
+    if(event is PushLocationOfLimoEvent){
+      yield MapLimoInitial();
+      SocketIOService socketIOService = Get.find();
+      if(socketIOService.socket.connected)
+      {
+        socketIOService.socket.emit("TAIXE_CAPNHAT_TOADO",event.location);
+        print('TAIXE_LIMO_CAPNHAT_TOADO => ${event.location.toString()}');
+      }
+      yield PushLocationOfLimoSuccess();
+    }
     if(event is GetEvent){
       yield MapLimoInitial();
       // subscriptions.add(_latLngStream.getAnimatedPosition("DriverMarker"));
@@ -76,7 +104,42 @@ class MapLimoBloc extends Bloc<MapLimoEvent,MapLimoState> {
     }
   }
 
+  startListenChangeLocation() async {
+    int countPush = 0;
+    if (await checkPermission()) {
+      locationSubscription = location.onLocationChanged.listen((LocationData currentLocation) {
 
+        currentLocationLimo = currentLocation.latitude.toString() + "," + currentLocation.longitude.toString() ;
+        countPush++;
+        latLngStream.addLatLng(LatLngInfo(currentLocation.latitude, currentLocation.longitude, "DriverMarker"));
+        //add(GetCurrentLocationEvent(currentLocationTC));
+        currentLocations(currentLocationLimo);
+        // print('---Tream--- ${currentLocationTC.toString()}');
+        ///{\"lat\":20.9763858,\"lng\":105.8175841}
+        // print(countPush);
+        if(countPush == 1){
+          countPush=0;
+          var obj = {
+            'lat':currentLocation.latitude,
+            'lng':currentLocation.longitude
+          };
+          add(PushLocationOfLimoEvent(json.encode(obj)));
+        }
+      });
+    }
+  }
+
+  stopListenChangeLocation(){
+    locationSubscription.cancel();
+    // if (socketIOService!=null && socketIOService.socket.connected){
+    //   socketIOService.socket.emit('driver_offline');
+    // }
+  }
+
+  currentLocations(String location){
+    print(location + "---Tream---");
+    latLngLocation = location;
+  }
 
   MapLimoState _handleUpdateStatusDriver(Object data) {
     if (data is String) return MapLimoFailure(data);

@@ -108,3 +108,14 @@ class UpdateCustomerList extends MapEvent{
   }
 }
 
+class UpdateStatusCustomerMapEvent extends MapEvent{
+  final int status;
+  final String idTrungChuyen;
+  final String note;
+  UpdateStatusCustomerMapEvent({this.status,this.idTrungChuyen,this.note});
+
+  @override
+  String toString() {
+    return 'UpdateStatusCustomerMapEvent{status: $status, idTrungChuyen:$idTrungChuyen}';
+  }
+}

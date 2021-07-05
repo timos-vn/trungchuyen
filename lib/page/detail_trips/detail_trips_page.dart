@@ -7,6 +7,7 @@ import 'package:trungchuyen/page/detail_trips/detail_trips_event.dart';
 import 'package:trungchuyen/page/detail_trips/detail_trips_state.dart';
 import 'package:trungchuyen/themes/images.dart';
 import 'package:intl/intl.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class DetailTripsPage extends StatefulWidget {
 
@@ -214,33 +215,47 @@ class _DetailTripsPageState extends State<DetailTripsPage> {
                           fontWeight: FontWeight.normal,
                         ),
                       ),
-                      SizedBox(
-                        height: 5,
+                      Divider(),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+
+                              Text(
+                                '${item.tenKhachHang??''}',
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                                style: Theme.of(this.context).textTheme.subtitle.copyWith(
+                                  fontWeight: FontWeight.normal,
+                                  color: Theme.of(this.context).textTheme.title.color,
+                                ),
+                              ),
+                              Divider(),
+                              Text(
+                                '${item.soDienThoaiKhach??''}',
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                                style: Theme.of(this.context).textTheme.subtitle.copyWith(
+                                  fontWeight: FontWeight.normal,
+                                  color: Theme.of(this.context).textTheme.title.color,
+                                ),
+                              ),
+                              SizedBox(
+                                height: 5,
+                              ),
+                            ],
+                          ),
+                          InkWell(
+                            onTap: () => launch("tel://${item.soDienThoaiKhach}"),
+                            child: Container(
+                                padding: EdgeInsets.all(8),
+                                child: Icon(Icons.phone_callback_outlined)),
+                          )
+                        ],
                       ),
-                      Text(
-                        '${item.tenKhachHang??''}',
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                        style: Theme.of(this.context).textTheme.subtitle.copyWith(
-                          fontWeight: FontWeight.normal,
-                          color: Theme.of(this.context).textTheme.title.color,
-                        ),
-                      ),
-                      SizedBox(
-                        height: 5,
-                      ),
-                      Text(
-                        '${item.soDienThoaiKhach??''}',
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                        style: Theme.of(this.context).textTheme.subtitle.copyWith(
-                          fontWeight: FontWeight.normal,
-                          color: Theme.of(this.context).textTheme.title.color,
-                        ),
-                      ),
-                      SizedBox(
-                        height: 5,
-                      ),
+                      Divider(),
                       Text(
                         'Địa chỉ khách đển: ${item.diaChiKhachDen??''}',
                         maxLines: 2,
@@ -250,9 +265,7 @@ class _DetailTripsPageState extends State<DetailTripsPage> {
                           color: Theme.of(this.context).textTheme.title.color,
                         ),
                       ),
-                      SizedBox(
-                        height: 5,
-                      ),
+                      Divider(),
                       Text(
                         'Địa chỉ khách đi: ${item.diaChiKhachDi??''}',
                         maxLines: 2,

@@ -1,13 +1,21 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:get/get.dart' as libGetX;
+import 'package:trungchuyen/page/account/account_bloc.dart';
+import 'package:trungchuyen/page/account/account_state.dart';
+import 'package:trungchuyen/page/report/report_page.dart';
+import 'package:trungchuyen/page/report_limo/report_limo_page.dart';
 import 'package:trungchuyen/themes/colors.dart';
 import 'package:trungchuyen/utils/utils.dart';
+import 'package:trungchuyen/widget/pending_action.dart';
 import 'dart:io' show Platform, exit;
 
 import 'package:trungchuyen/widget/separator.dart';
+
+import 'account_event.dart';
 
 
 class AccountPage extends StatefulWidget {
@@ -20,21 +28,37 @@ class AccountPage extends StatefulWidget {
 
 class _AccountPageState extends State<AccountPage> with TickerProviderStateMixin {
 
+  AccountBloc _accountBloc;
+
   @override
-  Widget build(BuildContext context) {
-    // SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle(
-    //     statusBarIconBrightness: Brightness.light,
-    //     statusBarColor: mainColor
-    // ));
-    return Scaffold(
-        body: buildPage(context));
+  void initState() {
+    // TODO: implement initState
+    _accountBloc = AccountBloc(context);
+    _accountBloc.add(GetInfoAccount());
+    super.initState();
   }
 
-  Widget buildPage(BuildContext context){
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+        body: BlocListener<AccountBloc,AccountState>(
+            bloc: _accountBloc,
+            listener: (context, state){
+
+            },
+            child: BlocBuilder<AccountBloc,AccountState>(
+              bloc: _accountBloc,
+              builder: (BuildContext context, AccountState state){
+                return buildPage(context,state);
+              },
+            )
+        ));
+  }
+
+  Widget buildPage(BuildContext context,AccountState state){
     return Stack(
       children: <Widget>[
         Container(
-          // color: mainColor,
           height: double.infinity,
           width: double.infinity,
           child: Column(
@@ -44,7 +68,7 @@ class _AccountPageState extends State<AccountPage> with TickerProviderStateMixin
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Text('Account'.tr,style: TextStyle(color: Colors.white,fontWeight: FontWeight.bold,fontSize: 18),),
+                    Text('Account'.tr,style: TextStyle(color: Colors.orange,fontWeight: FontWeight.bold,fontSize: 18),),
                   ],
                 ),
               ),
@@ -101,13 +125,30 @@ class _AccountPageState extends State<AccountPage> with TickerProviderStateMixin
                             SizedBox(height: 10,),
                             Separator(color: Colors.grey),
                             SizedBox(height: 15,),
-                            InkWell(
-                              child: Row(
-                                children: [
-                                  Icon(Icons.person_add_alt_1_outlined),
-                                  SizedBox(width: 10,),
-                                  Text('InviteFriend'.tr),
-                                ],
+                            Visibility(
+                              visible: _accountBloc.role == "3",
+                              child: InkWell(
+                                onTap: ()=> Navigator.push(context, MaterialPageRoute(builder: (context)=> ReportPage())),
+                                child: Row(
+                                  children: [
+                                    Icon( MdiIcons.chartArc),
+                                    SizedBox(width: 10,),
+                                    Text('Report'.tr),
+                                  ],
+                                ),
+                              ),
+                            ),
+                            Visibility(
+                              visible: _accountBloc.role == "7",
+                              child: InkWell(
+                                onTap: ()=> Navigator.push(context, MaterialPageRoute(builder: (context)=> ReportLimoPage())),
+                                child: Row(
+                                  children: [
+                                    Icon( MdiIcons.chartArc),
+                                    SizedBox(width: 10,),
+                                    Text('Report'.tr),
+                                  ],
+                                ),
                               ),
                             ),
                             SizedBox(height: 10,),
@@ -186,7 +227,7 @@ class _AccountPageState extends State<AccountPage> with TickerProviderStateMixin
                                         mainAxisAlignment: MainAxisAlignment.center,
                                         crossAxisAlignment: CrossAxisAlignment.start,
                                         children: [
-                                          Text('0963xxxx',style: TextStyle(color: Colors.black.withOpacity(0.8),fontWeight: FontWeight.bold),),
+                                          Text(_accountBloc.userName??'',style: TextStyle(color: Colors.black.withOpacity(0.8),fontWeight: FontWeight.bold),),
                                           SizedBox(height: 5,),
                                           Text('Diamond',style: TextStyle(color: Colors.grey,fontSize: 12),),
                                         ],
@@ -220,10 +261,10 @@ class _AccountPageState extends State<AccountPage> with TickerProviderStateMixin
             ],
           ),
         ),
-        // Visibility(
-        //   visible:true,
-        //   child: PendingAction(),
-        // ),
+        Visibility(
+          visible: state is AccountLoading,
+          child: PendingAction(),
+        ),
       ],
     );
   }
@@ -239,6 +280,7 @@ class _AccountPageState extends State<AccountPage> with TickerProviderStateMixin
       ),
       FlatButton(
         onPressed: () {
+          _accountBloc.add(LogOut());
           if (Platform.isAndroid) {
             SystemNavigator.pop();
           } else if (Platform.isIOS) {

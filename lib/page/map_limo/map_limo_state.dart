@@ -48,3 +48,19 @@ class CheckPermissionLimoSuccess extends MapLimoState {
   @override
   String toString() => 'CheckPermissionLimoSuccess {}';
 }
+class PushLocationOfLimoSuccess extends MapLimoState {
+
+  @override
+  String toString() => 'PushLocationOfLimoSuccess {}';
+}
+
+class OnlineSuccess extends MapLimoState {
+
+  @override
+  String toString() => 'OnlineSuccess {}';
+}
+class OfflineSuccess extends MapLimoState {
+
+  @override
+  String toString() => 'OfflineSuccess {}';
+}

@@ -11,6 +11,8 @@ import 'package:trungchuyen/models/entity/notification_trung_chuyen.dart';
 import 'package:trungchuyen/models/network/response/detail_trips_repose.dart';
 import 'package:trungchuyen/page/account/account_bloc.dart';
 import 'package:trungchuyen/page/account/account_page.dart';
+import 'package:trungchuyen/page/limo_confirm/limo_confirm_bloc.dart';
+import 'package:trungchuyen/page/limo_confirm/limo_confirm_page.dart';
 import 'package:trungchuyen/page/list_customer_limo/list_customer_limo_bloc.dart';
 import 'package:trungchuyen/page/list_customer_limo/list_customer_limo_page.dart';
 import 'package:trungchuyen/page/map/map_bloc.dart';
@@ -52,11 +54,12 @@ class _MainPageState extends State<MainPage> with WidgetsBindingObserver{
   MainBloc _mainBloc;
   MapBloc _mapBloc;
   WaitingBloc _waitingBloc;
-  ReportBloc _reportBloc;
+  // ReportBloc _reportBloc;
   AccountBloc _accountBloc;
   ListCustomerLimoBloc _listCustomerLimoBloc;
   MapLimoBloc _mapLimoBloc;
-  ReportLimoBloc _reportLimoBloc;
+  // ReportLimoBloc _reportLimoBloc;
+   LimoConfirmBloc _limoConfirmBloc;
 
   int testcase = 0;
   int _lastIndexToShop = 0;
@@ -71,6 +74,7 @@ class _MainPageState extends State<MainPage> with WidgetsBindingObserver{
   final GlobalKey<NavigatorState> secondTabNavKey = GlobalKey<NavigatorState>();
   final GlobalKey<NavigatorState> thirdTabNavKey = GlobalKey<NavigatorState>();
   final GlobalKey<NavigatorState> fourthTabNavKey = GlobalKey<NavigatorState>();
+
 
   final GlobalKey<MapPageState> _mapPageKey = GlobalKey();
   final GlobalKey<MapLimoPageState> _mapLimoPageKey = GlobalKey();
@@ -139,31 +143,33 @@ class _MainPageState extends State<MainPage> with WidgetsBindingObserver{
     _mainBloc = MainBloc();
     _mapBloc = MapBloc(context);
     _waitingBloc = WaitingBloc(context);
-    _reportBloc = ReportBloc(context);
+    // _reportBloc = ReportBloc(context);
     _accountBloc = AccountBloc(context);
     _listCustomerLimoBloc = ListCustomerLimoBloc(context);
     _mapLimoBloc = MapLimoBloc(context);
-    _reportLimoBloc = ReportLimoBloc(context);
+    // _reportLimoBloc = ReportLimoBloc(context);
+    _limoConfirmBloc = LimoConfirmBloc(context);
     _currentTabKey = firstTabNavKey;
 
     if(widget.roleAccount == 3){
       getListCustomer();
       getListTaiXeLimo();
       //_mainBloc.add(GetListNotificationCustomerTC());
-    }else if(widget.roleAccount == 7){
+    }
+    else if(widget.roleAccount == 7){
       _mainBloc.add(GetListNotificationOfLimo());
     }
     WidgetsBinding.instance.addObserver(
         LifecycleEventHandler(resumeCallBack: () async => setState(() {})),
     );
-    if(widget.roleAccount == 3){
-
-    }else{
-      if(_mainBloc.socketIOService.socket.disconnected)
-      {
-        _mainBloc.socketIOService.socket.connect();
-      }
-    }
+    // if(widget.roleAccount == 3){
+    //
+    // }else{
+    //   if(_mainBloc.socketIOService.socket.disconnected)
+    //   {
+    //     _mainBloc.socketIOService.socket.connect();
+    //   }
+    // }
     super.initState();
   }
 
@@ -235,10 +241,16 @@ class _MainPageState extends State<MainPage> with WidgetsBindingObserver{
                   return _mapBloc;
                 },
               ),
-              BlocProvider<ReportBloc>(
+              // BlocProvider<ReportBloc>(
+              //   create: (context) {
+              //     if (_reportBloc == null) _reportBloc = ReportBloc(context);
+              //     return _reportBloc;
+              //   },
+              // ),
+              BlocProvider<LimoConfirmBloc>(
                 create: (context) {
-                  if (_reportBloc == null) _reportBloc = ReportBloc(context);
-                  return _reportBloc;
+                  if (_limoConfirmBloc == null) _limoConfirmBloc = LimoConfirmBloc(context);
+                  return _limoConfirmBloc;
                 },
               ),
               BlocProvider<AccountBloc>(
@@ -259,6 +271,7 @@ class _MainPageState extends State<MainPage> with WidgetsBindingObserver{
                   return _mapLimoBloc;
                 },
               ),
+
             ],
             child: BlocListener<MainBloc, MainState>(
               bloc: _mainBloc,
@@ -310,7 +323,7 @@ class _MainPageState extends State<MainPage> with WidgetsBindingObserver{
                         _waitingBloc.add(GetListGroupAwaitingCustomer(parseDate));
                       }
                     }
-                    if (_currentIndex == Const.REPORT) {
+                    if (_currentIndex == Const.CONFIRM) {
 
                     }
                     if (_currentIndex == Const.ACCOUNT) {
@@ -337,7 +350,7 @@ class _MainPageState extends State<MainPage> with WidgetsBindingObserver{
                                 if(widget.roleAccount == 3){
                                   _waitingPageKey?.currentState?.setState(() {
                                     _mainBloc.testing = "B ${testcase++}";
-                                    _mainBloc.listOfGroupAwaitingCustomer = _waitingBloc.listOfGroupAwaitingCustomer;
+                                    _mainBloc.listOfGroupAwaitingCustomer = _mainBloc.listOfGroupAwaitingCustomer;
 
                                   });
                                 }else{
@@ -388,7 +401,7 @@ class _MainPageState extends State<MainPage> with WidgetsBindingObserver{
                               break;
                             case 2:
                               key = thirdTabNavKey;
-                              newWidget =widget.roleAccount == 3 ? ReportPage() : ReportLimoPage();
+                              newWidget = LimoConfirmPage();//widget.roleAccount == 3 ? ReportPage() : ReportLimoPage();
                               break;
                             case 3:
                               key = fourthTabNavKey;
@@ -437,14 +450,24 @@ class _MainPageState extends State<MainPage> with WidgetsBindingObserver{
           style: TextStyle(color: _currentIndex == Const.MAP ? orange : grey, fontSize: 10),
         ),
       ),
+      // BottomNavigationBarItem(
+      //   icon: Icon(
+      //     MdiIcons.chartArc,
+      //     color: _currentIndex == Const.REPORT ? orange : grey,
+      //   ),
+      //   title: Text(
+      //     'Report'.tr,
+      //     style: TextStyle(color: _currentIndex == Const.REPORT ? orange : grey, fontSize: 10),
+      //   ),
+      // ),
       BottomNavigationBarItem(
         icon: Icon(
-          MdiIcons.chartArc,
-          color: _currentIndex == Const.REPORT ? orange : grey,
+          Icons.stream,
+          color: _currentIndex == Const.CONFIRM ? orange : grey,
         ),
         title: Text(
-          'Report'.tr,
-          style: TextStyle(color: _currentIndex == Const.REPORT ? orange : grey, fontSize: 10),
+          'Xác nhận khách'.tr,
+          style: TextStyle(color: _currentIndex == Const.CONFIRM ? orange : grey, fontSize: 10),
         ),
       ),
       BottomNavigationBarItem(

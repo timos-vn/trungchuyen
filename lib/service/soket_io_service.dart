@@ -25,9 +25,9 @@ class SocketIOService extends GetxService {
   }
 
   initSocket() {
-    try {//  {194.233.66.136
-
-      socket = IO.io('https://trungchuyenhn.com:8443/', <String, dynamic>{
+    try {
+      /// Live = 8443, develop = 2096
+      socket = IO.io('https://trungchuyenhn.com:2096/', <String, dynamic>{
         'transports': ['websocket'],
         'query': {'token': '$_accessToken'},
         'autoConnect': false

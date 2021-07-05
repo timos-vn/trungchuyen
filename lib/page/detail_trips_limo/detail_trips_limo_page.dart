@@ -12,6 +12,7 @@ import 'package:trungchuyen/themes/font.dart';
 import 'package:trungchuyen/themes/images.dart';
 import 'package:intl/intl.dart';
 import 'package:trungchuyen/utils/utils.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import 'detail_trips_limo_bloc.dart';
 import 'detail_trips_limo_state.dart';
@@ -190,29 +191,47 @@ class _DetailTripsLimoPageState extends State<DetailTripsLimoPage> {
                       ),
                       Divider(),
                       Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Text(
-                            '${item.tenKhachHang??''}'.toUpperCase(),
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                            style: Theme.of(this.context).textTheme.subtitle.copyWith(
-                              fontWeight: FontWeight.normal,
-                              color: Theme.of(this.context).textTheme.title.color,
-                            ),
+                          Column(
+                            children: [
+                              SizedBox(
+                                height: 5,
+                              ),
+                              Text(
+                                '${item.tenKhachHang??''}',
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                                style: Theme.of(this.context).textTheme.subtitle.copyWith(
+                                  fontWeight: FontWeight.normal,
+                                  color: Theme.of(this.context).textTheme.title.color,
+                                ),
+                              ),
+                              SizedBox(
+                                height: 5,
+                              ),
+                              Text(
+                                '${item.soDienThoaiKhach??''}',
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                                style: Theme.of(this.context).textTheme.subtitle.copyWith(
+                                  fontWeight: FontWeight.normal,
+                                  color: Theme.of(this.context).textTheme.title.color,
+                                ),
+                              ),
+                              SizedBox(
+                                height: 5,
+                              ),
+                            ],
                           ),
-                          SizedBox(width: 5,),
-                          Text(
-                            '${item.soDienThoaiKhach??''}',
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                            style: TextStyle(
-                             fontSize: 12,
-                              color: Colors.grey,
-                            ),
-                          ),
+                          InkWell(
+                            onTap: () => launch("tel://${item.soDienThoaiKhach}"),
+                            child: Container(
+                                padding: EdgeInsets.all(8),
+                                child: Icon(Icons.phone_callback_outlined)),
+                          )
                         ],
                       ),
-
                       Divider(),
                       Text(
                         'Địa chỉ khách đển: ${item.diaChiKhachDen??''}',

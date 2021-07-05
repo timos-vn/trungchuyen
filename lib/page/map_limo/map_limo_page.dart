@@ -66,7 +66,7 @@ class MapLimoPageState extends State<MapLimoPage> {
     _mainBloc = BlocProvider.of<MainBloc>(context);
     _mapLimoBloc.add(CheckPermissionLimoEvent());
     socketIOService = Get.find<SocketIOService>();
-    socketIOService.socket.on("TAIXE_TRUNGCHUYEN_CAPNHAT_TOADO", (data){
+    socketIOService.socket.on("TAIXE_CAPNHAT_TOADO", (data){
       String item = data['LOCATION'];
       String _location = item.replaceAll('{', '').replaceAll('}', '').replaceAll("\"","").replaceAll('lat', '').replaceAll('lng', '').replaceAll(':', '');
       String makerId = data['PHONE'];
@@ -80,7 +80,7 @@ class MapLimoPageState extends State<MapLimoPage> {
         }
         latLngStream.addLatLng(new LatLngInfo(double.parse( _location.split(',')[0]), double.parse( _location.split(',')[1]),makerId));
       });
-      print('TAIXE_TRUNGCHUYEN_CAPNHAT_TOADO => ${data.toString()}');
+      print('TAIXE_CAPNHAT_TOADO => ${data.toString()}');
     });
 
     print('LengthABCCC123');
@@ -103,6 +103,65 @@ class MapLimoPageState extends State<MapLimoPage> {
         bloc: _mapLimoBloc,
         builder: (BuildContext context, MapLimoState state) {
           return Scaffold(
+            appBar: AppBar(
+              backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+              automaticallyImplyLeading: false,
+              title: !isOnline ?  InkWell(
+                //onTap: ()=>_mainBloc.firebaseMessaging.deleteInstanceID(),
+                child: Text(
+                  'OffLine',
+                  style: Theme.of(context).textTheme.title.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: Theme.of(context).textTheme.title.color,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+              )
+                  :
+              Text(
+                'Online',
+                style: Theme.of(context).textTheme.title.copyWith(
+                  fontWeight: FontWeight.bold,
+                  color: Theme.of(context).textTheme.title.color,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              centerTitle: true,
+              actions: [
+                Container(
+                  padding: EdgeInsets.only(right: 10),
+                  alignment: Alignment.centerRight,
+                  child: Switch(
+                    activeColor: Colors.orange,
+                    hoverColor: Colors.orange,
+                    value: isOnline,
+                    onChanged: (bool value) {
+                      changeOnline();
+                      setState(() {
+                        if(value == true){
+                          // _mainBloc.add(UpdateStatusDriverEvent(1));
+                          if(_mainBloc.socketIOService.socket.disconnected)
+                          {
+                            _mainBloc.socketIOService.socket.connect();
+                            print('connected');
+                          }
+                        }else{
+                          if(_mainBloc.socketIOService.socket.connected)
+                          {
+                            _mainBloc.socketIOService.socket.disconnect();
+                            print('Disconnected');
+                          }
+                          // _mainBloc.add(UpdateStatusDriverEvent(0));
+                        }
+                        isOnline = value;
+                        isInProcessPickup = true;
+                        print(isOnline);
+                      });
+                    },
+                  ),
+                ),
+              ],
+            ),
             body: buildPage(context, state)
           );
         },
@@ -133,6 +192,19 @@ class MapLimoPageState extends State<MapLimoPage> {
 
   Widget googleMap() {
     return GoogleMaps(controller: mapController);
+  }
+
+  changeOnline() {
+    try {
+      isOnline = !isOnline;
+      if (isOnline) {
+        _mapLimoBloc.add(OnlineEvent());
+      } else {
+        _mapLimoBloc.add(OfflineEvent());
+      }
+    } catch (error) {
+      print(error);
+    }
   }
 
   drawMyLocation(LatLng position, double alpha, String markerId) async {

@@ -3,6 +3,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:trungchuyen/models/database/dbhelper.dart';
+import 'package:trungchuyen/models/entity/account.dart';
 import 'package:trungchuyen/models/network/request/login_request.dart';
 import 'package:trungchuyen/models/network/response/login_response.dart';
 import 'package:trungchuyen/models/network/service/network_factory.dart';
@@ -31,13 +32,13 @@ class LoginBloc extends Bloc<LoginEvent,LoginState> with Validators{
   String get hotURL => _hotURL;
   int roleAccount;
   String codeLang = "v";
-
+  List<AccountInfo> listAccountInfo = new List<AccountInfo>();
   LoginBloc(this.context) {
     _networkFactory = NetWorkFactory(context);
     // _googleSignIn = GoogleSignIn();
     // _facebookSignIn = FacebookLogin();
-    _firebaseMessaging = FirebaseMessaging();
-    _firebaseMessaging.getToken().then((token) => _deviceToken = token);
+    // _firebaseMessaging = FirebaseMessaging();
+    // _firebaseMessaging.getToken().then((token) => _deviceToken = token);
   }
   @override
   // TODO: implement initialState
@@ -52,13 +53,20 @@ class LoginBloc extends Bloc<LoginEvent,LoginState> with Validators{
       _accessToken = _prefs.getString(Const.ACCESS_TOKEN) ?? "";
       _refreshToken = _prefs.getString(Const.REFRESH_TOKEN) ?? "";
     }
-
+    if(event is SaveUserNamePassWordEvent){
+      yield LoginLoading();
+      listAccountInfo = await getListAccountInfoFromDb();
+      if(!Utils.isEmpty(listAccountInfo)){
+        yield SaveUserNamePasswordSuccessful(listAccountInfo[0].userName,listAccountInfo[0].pass,);
+      }
+      yield LoginInitial();
+    }
 
     if (event is Login) {
       yield LoginLoading();
       LoginRequestBody request = LoginRequestBody(
-        username: event.username, /// 0989888668
-        password:event.password, /// 0974629615
+        username:event.username, /// 0963004959
+        password:event.password, /// 0976024216
       );
       LoginState state = _handleLogin(await _networkFactory.login(request),event.savePassword,event.username,event.password);
       yield state;
@@ -92,18 +100,11 @@ class LoginBloc extends Bloc<LoginEvent,LoginState> with Validators{
       roleAccount = dataUser.taiKhoan.chucVu;
       _username = dataUser.taiKhoan.hoTen.toString().trim();
       Utils.saveDataLogin(_prefs, dataUser,_accessToken,_refreshToken,username,pass);
+     pushService(savePassword,username,pass);
       return LoginSuccess();
     } catch (e) {
       print(e.toString());
       return LoginFailure(e.toString());
-    }
-  }
-
-  void checkHostIdBloc(String hostId) {
-    String _tempErrHostId = checkHotId(context, hostId);
-    if (_errorHostId != _tempErrHostId) {
-      _errorHostId = _tempErrHostId;
-      add(ValidateHostId(hostId));
     }
   }
 
@@ -123,5 +124,31 @@ class LoginBloc extends Bloc<LoginEvent,LoginState> with Validators{
     }
   }
 
+  void pushService(bool savePassword,String username, String pass) async{
+    if(savePassword == false){
+      AccountInfo _accountInfo = new AccountInfo(
+          username,
+          pass
+      );
+      await db.saveAccount(_accountInfo);
+      listAccountInfo = await getListAccountInfoFromDb();
+      if(!Utils.isEmpty(listAccountInfo)){
+        db.updateAccountInfo(_accountInfo);
+      }
+    }else{
+      AccountInfo _accountInfo = new AccountInfo(
+          '',
+          ''
+      );
+      await db.saveAccount(_accountInfo);
+      listAccountInfo = await getListAccountInfoFromDb();
+      if(!Utils.isEmpty(listAccountInfo)){
+        db.updateAccountInfo(_accountInfo);
+      }
+    }
+  }
+  Future<List<AccountInfo>> getListAccountInfoFromDb() {
+    return db.fetchAllAccountInfo();
+  }
 
 }

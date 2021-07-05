@@ -39,3 +39,25 @@ class CheckPermissionLimoEvent extends MapLimoEvent {
   @override
   String toString() => 'CheckPermissionLimoEvent {}';
 }
+
+class PushLocationOfLimoEvent extends MapLimoEvent {
+
+  final String location;
+
+  PushLocationOfLimoEvent(this.location);
+
+  @override
+  String toString() => 'PushLocationOfLimoEvent {location:$location}';
+}
+
+class OnlineEvent extends MapLimoEvent {
+
+  @override
+  String toString() => 'OnlineEvent {}';
+}
+
+class OfflineEvent extends MapLimoEvent {
+
+  @override
+  String toString() => 'OnlineEvent {}';
+}

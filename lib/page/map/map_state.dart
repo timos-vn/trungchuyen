@@ -65,13 +65,19 @@ class GetListLocationPolylineSuccess extends MapState {
   String toString() => 'GetListLocationPolylineSuccess {}';
 }
 class TransferCustomerToLimoSuccess extends MapState {
+  final String listIDTC;
 
+  TransferCustomerToLimoSuccess(this.listIDTC);
   @override
-  String toString() => 'TransferCustomerToLimoSuccess {}';
+  String toString() => 'TransferCustomerToLimoSuccess {listIDTC: $listIDTC}';
 }
 class PushLocationToLimoSuccess extends MapState {
 
   @override
   String toString() => 'PushLocationToLimoSuccess {}';
+}class UpdateStatusCustomerMapSuccess extends MapState {
+
+  @override
+  String toString() => 'UpdateStatusCustomerMapSuccess {}';
 }
 

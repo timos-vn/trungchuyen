@@ -8,6 +8,7 @@ import 'package:trungchuyen/models/network/response/detail_trips_repose.dart';
 import 'package:trungchuyen/models/network/response/list_of_group_awaiting_customer_response.dart';
 import 'package:trungchuyen/page/detail_trips/detail_trips_page.dart';
 import 'package:trungchuyen/page/main/main_bloc.dart';
+import 'package:trungchuyen/page/main/main_event.dart';
 import 'package:trungchuyen/page/waiting/waiting_bloc.dart';
 import 'package:trungchuyen/page/waiting/waiting_event.dart';
 import 'package:trungchuyen/page/waiting/waiting_sate.dart';
@@ -72,32 +73,45 @@ class WaitingPageState extends State<WaitingPage> {
             _bloc.listOfDetailTrips.forEach((element) {
               Customer customer = new Customer(
                 idTrungChuyen: element.idTrungChuyen,
-                  idTaiXeLimousine : element.idTaiXeLimousine,
-                  hoTenTaiXeLimousine : element.hoTenTaiXeLimousine,
-                  dienThoaiTaiXeLimousine : element.dienThoaiTaiXeLimousine,
-                  tenXeLimousine : element.tenXeLimousine,
-                  bienSoXeLimousine : element.bienSoXeLimousine,
-                  tenKhachHang : element.tenKhachHang,
-                  soDienThoaiKhach :element.soDienThoaiKhach,
-                  diaChiKhachDi :element.diaChiKhachDi,
-                  toaDoDiaChiKhachDi:element.toaDoDiaChiKhachDi,
-                  diaChiKhachDen:element.diaChiKhachDen,
-                  toaDoDiaChiKhachDen:element.toaDoDiaChiKhachDen,
-                  diaChiLimoDi:element.diaChiLimoDi,
-                  toaDoLimoDi:element.toaDoLimoDi,
-                  diaChiLimoDen:element.diaChiLimoDen,
-                  toaDoLimoDen:element.toaDoLimoDen,
-                  loaiKhach:element.loaiKhach,
-                  trangThaiTC: element.trangThaiTC,
-                  soKhach:1,
-                  statusCustomer: element.loaiKhach == 1 ? 2 : 5,
-                  chuyen: _mainBloc.trips,
-                  totalCustomer: _bloc.listOfDetailTrips.length,
-                  indexListCustomer:_mainBloc.indexAwaitingList,
+                idTaiXeLimousine : element.idTaiXeLimousine,
+                hoTenTaiXeLimousine : element.hoTenTaiXeLimousine,
+                dienThoaiTaiXeLimousine : element.dienThoaiTaiXeLimousine,
+                tenXeLimousine : element.tenXeLimousine,
+                bienSoXeLimousine : element.bienSoXeLimousine,
+                tenKhachHang : element.tenKhachHang,
+                soDienThoaiKhach :element.soDienThoaiKhach,
+                diaChiKhachDi :element.diaChiKhachDi,
+                toaDoDiaChiKhachDi:element.toaDoDiaChiKhachDi,
+                diaChiKhachDen:element.diaChiKhachDen,
+                toaDoDiaChiKhachDen:element.toaDoDiaChiKhachDen,
+                diaChiLimoDi:element.diaChiLimoDi,
+                toaDoLimoDi:element.toaDoLimoDi,
+                diaChiLimoDen:element.diaChiLimoDen,
+                toaDoLimoDen:element.toaDoLimoDen,
+                loaiKhach:element.loaiKhach,
+                trangThaiTC: element.trangThaiTC,
+                soKhach:1,
+                statusCustomer: element.loaiKhach == 1 ? 2 : 5,
+                chuyen: _mainBloc.trips,
+                totalCustomer: _bloc.listOfDetailTrips.length,
+                indexListCustomer:_mainBloc.indexAwaitingList,
               );
-              _mainBloc.listCustomer.add(customer);
-               db.addNew(customer);
-
+              var contain =  _mainBloc.listCustomer.where((phone) => phone.soDienThoaiKhach == element.soDienThoaiKhach);
+              if (contain.isEmpty){
+                _mainBloc.listCustomer.add(customer);
+                db.addNew(customer);
+              }else{
+                final customerNews = _mainBloc.listCustomer.firstWhere((item) => item.soDienThoaiKhach == element.soDienThoaiKhach);
+                if (customerNews != null){
+                  customerNews.soKhach = customerNews.soKhach + 1;
+                  String listIdTC = customerNews.idTrungChuyen + ',' + customer.idTrungChuyen;
+                  customerNews.idTrungChuyen = listIdTC;
+                }
+                _mainBloc.listCustomer.remove(customerNews);
+                _mainBloc.listCustomer.add(customerNews);
+                _mainBloc.add(DeleteCustomerFormDB(customer.idTrungChuyen));
+                _mainBloc.add(AddOldCustomerItemList(customerNews));
+              }
               // if(Utils.isEmpty(_mainBloc.listTaiXeLimo)){
               //   _countExitsCustomer++;
               //   element.soKhach = _countExitsCustomer;
@@ -115,7 +129,9 @@ class WaitingPageState extends State<WaitingPage> {
               // }
             });
 
-            _mainBloc.currentNumberCustomerOfList = _bloc.listOfDetailTrips.length;
+
+
+            _mainBloc.currentNumberCustomerOfList = _mainBloc.listCustomer.length;
             // _mainBloc.listOfDetailTrips = _bloc.listOfDetailTrips;
           }
         },

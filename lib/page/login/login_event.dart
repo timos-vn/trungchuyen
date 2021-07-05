@@ -73,3 +73,11 @@ class SaveLanguageEvent extends LoginEvent {
     return 'SaveLanguageEvent{codeLanguage: $codeLanguage,nameLanguage: $nameLanguage }';
   }
 }
+
+class SaveUserNamePassWordEvent extends LoginEvent {
+
+  @override
+  String toString() {
+    return 'SaveUserNamePassWordEvent{}';
+  }
+}

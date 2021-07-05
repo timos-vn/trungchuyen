@@ -7,6 +7,7 @@ import 'package:trungchuyen/models/network/request/push_location_request.dart';
 import 'package:trungchuyen/models/network/request/tranfer_customer_request.dart';
 import 'package:trungchuyen/models/network/request/update_status_customer_request.dart';
 import 'package:trungchuyen/models/network/request/update_token_request.dart';
+import 'package:trungchuyen/page/login/login_page.dart';
 import 'package:trungchuyen/utils/const.dart';
 import 'package:trungchuyen/utils/log.dart';
 import 'package:trungchuyen/utils/utils.dart';
@@ -113,6 +114,14 @@ class NetWorkFactory {
           //showOverlay((context, t) => UpgradePopup(message: data["message"],));
         } else if (data["statusCode"] == 401) {
           try {
+            Utils.showToast(data["message"].toString());
+            try {
+              libGetX.Get.offAll(LoginPage());
+              // MainBloc mainBloc = BlocProvider.of<MainBloc>(context);
+              // mainBloc.add(LogoutMainEvent());
+            } catch (e) {
+              debugPrint(e.toString());
+            }
             // Authen authBloc =
             // BlocProvider.of<AuthenticationBloc>(context);
             // authBloc.add(LoggedOut());
@@ -166,8 +175,9 @@ class NetWorkFactory {
           }
           errorDescription = message ?? "ErrorCode".tr + ': $code';
           if (code == 401) {
-            Utils.showToast(errorDescription);
+            Utils.showToast(errorData["message"].toString());
             try {
+              libGetX.Get.offAll(LoginPage());
               // MainBloc mainBloc = BlocProvider.of<MainBloc>(context);
               // mainBloc.add(LogoutMainEvent());
             } catch (e) {
@@ -262,6 +272,10 @@ class NetWorkFactory {
     return await requestApi(_dio.post('/api/v1/trungchuyen/cap-nhat-toa-do', options: Options(headers: {"Authorization": "Bearer $token"}), data: request.toJson()));
   }
 
+  Future<Object> logOut(String token) async {
+    return await requestApi(_dio.post('/api/v1/taikhoan/dangxuat', options: Options(headers: {"Authorization": "Bearer $token"})));
+  }
+
   Future<Object> getListLocationPolyline(String token,String currentLocation, String customerlocation) async {
     return await requestApi(_dio.get('/api/v1/google-map/direction', options: Options(headers: {"Authorization": "Bearer $token"}), queryParameters: {
       "origin": currentLocation,
@@ -275,6 +289,10 @@ class NetWorkFactory {
       "trangThai": trangThai,
       "ghiChu": note,
     }));
+  }
+
+  Future<Object> getListCustomerConfirmLimo(String token) async {
+    return await requestApi(_dio.get('/api/v1/trungchuyen/dskhach-choxacnhan', options: Options(headers: {"Authorization": "Bearer $token"})));
   }
 
 }

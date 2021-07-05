@@ -11,6 +11,7 @@ import 'package:trungchuyen/models/database/dbhelper.dart';
 import 'package:trungchuyen/models/entity/customer.dart';
 import 'package:trungchuyen/models/network/request/push_location_request.dart';
 import 'package:trungchuyen/models/network/request/tranfer_customer_request.dart';
+import 'package:trungchuyen/models/network/request/update_status_customer_request.dart';
 import 'package:trungchuyen/models/network/response/detail_trips_repose.dart';
 import 'package:trungchuyen/models/network/response/polyline_result_response.dart';
 import 'package:trungchuyen/models/network/service/network_factory.dart';
@@ -33,7 +34,7 @@ class MapBloc extends Bloc<MapEvent,MapState> {
   String get refreshToken => _refreshToken;
   SharedPreferences _prefs;
   SharedPreferences get prefs => _prefs;
-
+  SocketIOService socketIOService;
   List<DetailTripsResponseBody> listOfCustomerTrips = new List<DetailTripsResponseBody>();
 
   ///
@@ -54,6 +55,7 @@ class MapBloc extends Bloc<MapEvent,MapState> {
 
   MapBloc(this.context)  {
     _networkFactory = NetWorkFactory(context);
+    socketIOService = Get.find<SocketIOService>();
   }
 
   // TODO: implement initialState
@@ -70,7 +72,6 @@ class MapBloc extends Bloc<MapEvent,MapState> {
   // Customer getCustomer(int i) {
   //   return listCustomer.elementAt(i);
   // }
-
 
   @override
   Stream<MapState> mapEventToState(MapEvent event) async* {
@@ -137,8 +138,8 @@ class MapBloc extends Bloc<MapEvent,MapState> {
       SocketIOService socketIOService = Get.find();
       if(socketIOService.socket.connected)
         {
-          socketIOService.socket.emit("TAIXE_TRUNGCHUYEN_CAPNHAT_TOADO",event.location);
-          print('TAIXE_TRUNGCHUYEN_CAPNHAT_TOADO => ${event.location.toString()}');
+          socketIOService.socket.emit("TAIXE_CAPNHAT_TOADO",event.location);
+          print('TAIXE_TC_CAPNHAT_TOADO => ${event.location.toString()}');
         }
       // PushLocationRequestBody request = PushLocationRequestBody(
       //   location: event.location
@@ -159,7 +160,7 @@ class MapBloc extends Bloc<MapEvent,MapState> {
         List<String> listKhach = new List<String>();
         List<String> listIdTC = new List<String>();
         String numberCustomer;
-        String listIdTAIXELIMO;
+        // String listIdTAIXELIMO;
         String idTC;
         List<Customer> listTaiXeTC = event.listTaiXeTC;
         listTaiXeTC.forEach((element) {
@@ -168,33 +169,58 @@ class MapBloc extends Bloc<MapEvent,MapState> {
           listIdTC.add(element.idTrungChuyen);
         });
         numberCustomer = listKhach.join('|');
-        listIdTAIXELIMO = listIdTXLimo.join(',');
+        // listIdTAIXELIMO = listIdTXLimo.join(',');
         idTC  = listIdTC.join(',');
-        print(listIdTXLimo);
+
         var objData = {
           'EVENT':'TAIXE_TRUNGCHUYEN_GIAOKHACH_LIMO',
           'numberCustomer' : numberCustomer,
-          'listIdTAIXELIMO':listIdTAIXELIMO,
-          'nameTC': _nameLXTC,
-          'phoneTC': _sdtLXTC,
-          'listIdTC':idTC,
-          'idDriverTC':idUser
+          // 'listIdTAIXELIMO':listIdTAIXELIMO,
+          // 'nameTC': _nameLXTC,
+          // 'phoneTC': _sdtLXTC,
+          // 'listIdTC':idTC,
+          // 'idDriverTC':idUser
         };
         TranferCustomerRequestBody request = TranferCustomerRequestBody(
           title: event.title,
-          body: event.body,
+          body: 'Bạn nhận được $numberCustomer khách từ LXTC $_nameLXTC.',
           data:objData,
           idTaiKhoans: listIdTXLimo
         );
-        MapState state =  _handleTransferCustomerLimo(await _networkFactory.sendNotification(request,_accessToken));
+        MapState state =  _handleTransferCustomerLimo(await _networkFactory.sendNotification(request,_accessToken),idTC);
         yield state;
+    }
+    else if(event is UpdateStatusCustomerMapEvent){
+      yield MapLoading();
+
+      UpdateStatusCustomerRequestBody request = UpdateStatusCustomerRequestBody(
+          id:event.idTrungChuyen.split(','),
+          status: event.status,
+          ghiChu:""
+      );
+      MapState state = _handleUpdateStatusCustomer(await _networkFactory.updateGroupStatusCustomer(request,_accessToken));
+      yield state;
     }
   }
 
-  MapState _handleTransferCustomerLimo(Object data) {
+  MapState _handleUpdateStatusCustomer(Object data) {
     if (data is String) return MapFailure(data);
     try {
-      return TransferCustomerToLimoSuccess();
+      if(socketIOService.socket.connected)
+      {
+        socketIOService.socket.emit("TAIXE_TRUNGCHUYEN_CAPNHAT_TRANGTHAI_KHACH");
+      }
+      return UpdateStatusCustomerMapSuccess();
+    } catch (e) {
+      print(e.toString());
+      return MapFailure(e.toString());
+    }
+  }
+
+  MapState _handleTransferCustomerLimo(Object data,String listIDTC) {
+    if (data is String) return MapFailure(data);
+    try {
+      return TransferCustomerToLimoSuccess(listIDTC);
     } catch (e) {
       print(e.toString());
       return MapFailure(e.toString());
@@ -252,7 +278,7 @@ class MapBloc extends Bloc<MapEvent,MapState> {
         // print('---Tream--- ${currentLocationTC.toString()}');
         ///{\"lat\":20.9763858,\"lng\":105.8175841}
         // print(countPush);
-        if(countPush == 2){
+        if(countPush == 1){
           countPush=0;
           var obj = {
             'lat':currentLocation.latitude,

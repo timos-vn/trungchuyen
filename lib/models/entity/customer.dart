@@ -1,7 +1,7 @@
 import 'package:equatable/equatable.dart';
 
 class Customer extends Equatable {
-  final String idTrungChuyen;
+  String idTrungChuyen;
   final String idTaiXeLimousine;
   final String hoTenTaiXeLimousine;
   final String dienThoaiTaiXeLimousine;
