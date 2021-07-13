@@ -291,9 +291,9 @@ class Utils {
                     child: ClipOval(child: Image.asset(icLogo))),
                 title: Text(
                   title ?? "",
-                  style: TextStyle(fontWeight: FontWeight.bold),
+                  style: TextStyle(fontWeight: FontWeight.bold,color: Colors.black),
                 ),
-                subtitle: Text(text ?? ""),
+                subtitle: Text(text ?? "",style: TextStyle(color: Colors.black),),
                 trailing: IconButton(
                     icon: Icon(Icons.close),
                     onPressed: () {

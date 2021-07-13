@@ -22,14 +22,6 @@ class SetMainState extends MainState {
   }
 }
 
-class UpdateTokenSuccessState extends MainState {
-
-  @override
-  String toString() {
-    return 'UpdateTokenSuccessState{}';
-  }
-}
-
 class MainPageState extends MainState {
   final int position;
 
@@ -192,4 +184,16 @@ class GetListTaiXeLimoSuccess extends MainState {
 
   @override
   String toString() => 'GetListTaiXeLimoSuccess {}';
+}
+class GetListCustomerConfirmLimo extends MainState {
+  @override
+  String toString() => 'GetListCustomerConfirmLimo }';
+}
+class GetListCustomerLimoSuccess extends MainState {
+  @override
+  String toString() => 'GetListCustomerLimoSuccess }';
+}
+class GetListOfDetailTripsTCSuccess extends MainState {
+  @override
+  String toString() => 'GetListOfDetailTripsTCSuccess }';
 }

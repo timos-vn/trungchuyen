@@ -42,8 +42,7 @@ class AccountBloc extends Bloc<AccountEvent,AccountState> {
       yield GetInfoAccountSuccess();
     }
     else if(event is LogOut){
-      yield AccountInitial();
-
+      yield AccountLoading();
       AccountState state = _handleLogOut(await _networkFactory.logOut(_accessToken));
       yield state;
     }

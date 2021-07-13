@@ -2,6 +2,8 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:liquid_pull_to_refresh/liquid_pull_to_refresh.dart';
+import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
+import 'package:trungchuyen/extension/popup_picker.dart';
 import 'package:trungchuyen/models/network/response/list_of_group_awaiting_customer_response.dart';
 import 'package:trungchuyen/models/network/response/list_of_group_limo_customer_response.dart';
 import 'package:trungchuyen/page/detail_trips/detail_trips_page.dart';
@@ -12,6 +14,7 @@ import 'package:trungchuyen/page/list_customer_limo/list_customer_limo_bloc.dart
 import 'package:trungchuyen/page/list_customer_limo/list_customer_limo_state.dart';
 import 'package:trungchuyen/page/main/main_bloc.dart';
 import 'package:trungchuyen/page/main/main_event.dart';
+import 'package:trungchuyen/page/options_input/options_input_pages.dart';
 import 'package:trungchuyen/themes/colors.dart';
 import 'package:trungchuyen/themes/images.dart';
 import 'package:intl/intl.dart';
@@ -32,7 +35,7 @@ class ListCustomerLimoPageState extends State<ListCustomerLimoPage> {
 
   ListCustomerLimoBloc _bloc;
   MainBloc _mainBloc;
-
+  DateTime dateTime;
 
   @override
   void initState() {
@@ -50,10 +53,45 @@ class ListCustomerLimoPageState extends State<ListCustomerLimoPage> {
       backgroundColor: Colors.white,
       appBar: AppBar(
         title: Text(
-          'Lịch Khách',
+          'Lịch Chuyến',
           style: TextStyle(color: Colors.black),
         ),
         backgroundColor: Colors.white,
+        actions: [
+          InkWell(
+            onTap: ()async {
+              final DateTime result = await showDialog<dynamic>(
+                  context: context,
+                  builder: (BuildContext context) {
+                    return DateRangePicker(
+                      dateTime ?? DateTime.now(),
+                      null,
+                      minDate: DateTime.now().subtract(const Duration(days: 10000)),
+                      maxDate:
+                      DateTime.now().add(const Duration(days: 10000)),
+                      displayDate: dateTime ?? DateTime.now(),
+                    );
+                  });
+              if (result != null) {
+                print(result);
+                dateTime = result;
+                _bloc.add(GetListCustomerLimo(dateTime));
+              }},
+            child: Icon(
+                Icons.event
+            ),
+          ),
+          SizedBox(width: 20,),
+          InkWell(
+              onTap: (){
+                if(Utils.isEmpty(dateTime)){
+                  dateTime = DateFormat("yyyy-MM-dd").parse(DateTime.now().toString());
+                }
+                _bloc.add(GetListCustomerLimo(dateTime));
+              },
+              child: Icon(MdiIcons.reload)),
+          SizedBox(width: 20,)
+        ],
       ),
       body:BlocListener<ListCustomerLimoBloc,ListCustomerLimoState>(
         bloc: _bloc,
@@ -63,7 +101,6 @@ class ListCustomerLimoPageState extends State<ListCustomerLimoPage> {
         listener:  (context, state){
           if(state is GetListCustomerLimoSuccess){
            _mainBloc.listCustomerLimo = _bloc.listCustomerLimo;
-            print('Length123');
           }else if(state is GetListOfDetailTripLimoSuccess){
             _mainBloc.listOfDetailTripLimo.clear();
             _mainBloc.listOfDetailTripLimo = _bloc.listOfDetailTripsLimo;
@@ -99,7 +136,6 @@ class ListCustomerLimoPageState extends State<ListCustomerLimoPage> {
             return buildPage(context,state);
           },
         ),
-      //),
     )
     );
   }
@@ -119,7 +155,7 @@ class ListCustomerLimoPageState extends State<ListCustomerLimoPage> {
                   children: <Widget>[
                     Text(
                       _mainBloc.listCustomerLimo.length <= 0 ?
-                      'Bạn có không có Cuốc khách nào!!!' : 'Bạn có ${_mainBloc.listCustomerLimo.length} Cuốc khách',
+                      'Bạn có không Chuyến nào trong ngày hôm nay!!!' : 'Bạn có ${_mainBloc.listCustomerLimo.length} Chuyến trong ngày hôm nay',
                       style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15, color: Colors.white),
                     ),
                   ],
@@ -133,8 +169,12 @@ class ListCustomerLimoPageState extends State<ListCustomerLimoPage> {
               child: LiquidPullToRefresh(
                 showChildOpacityTransition: false,
                 onRefresh: () => Future.delayed(Duration.zero).then(
-                        (_) => _bloc
-                        .add(GetListCustomerLimo(DateFormat("yyyy-MM-dd").parse(DateTime.now().toString())))),
+                        (_) {
+                          if(Utils.isEmpty(dateTime)){
+                            dateTime = DateFormat("yyyy-MM-dd").parse(DateTime.now().toString());
+                          }
+                          _bloc.add(GetListCustomerLimo(dateTime));
+                        }),
                 child: Scrollbar(
                     child: ListView.builder(
                         shrinkWrap: true,
@@ -152,7 +192,7 @@ class ListCustomerLimoPageState extends State<ListCustomerLimoPage> {
         )
             : Container(
           child: Center(
-            child: Text(_mainBloc.testing),
+            child: Text('Chưa có chuyến nào'),
           ),
         ),
         Visibility(
@@ -168,176 +208,136 @@ class ListCustomerLimoPageState extends State<ListCustomerLimoPage> {
   Widget buildListItem(ListOfGroupLimoCustomerResponseBody item,int index) {
     return GestureDetector(
         onTap: () {
-          // if(_mainBloc.listOfDetailTrips.length == 0){
-          //   Utils.showDialogAssign(context: context,titleHintText: 'Bạn có muốn giao khách cho Trung Chuyển?').then((value){
-          //     if(!Utils.isEmpty(value)){
-          //       _mainBloc.trips = item.tenTuyenDuong + "  /  " + item.thoiGianDi + ' - ' + item.ngayChay;
-          //       DateFormat format = DateFormat("dd/MM/yyyy");
-          //       _bloc.add(GetListDetailTripLimo(format.parse(item.ngayChay),item.idTuyenDuong,item.idKhungGio));
-          //       _mainBloc.blocked = true;
-          //       _mainBloc.indexAwaitingList = index;
-          //       Utils.showToast( 'Bắt đầu giao khách !!!');
-          //       print(_mainBloc.timeStart);
-          //     }
-          //     else{
-          //       print('Click huỷ');
-          //     }
-          //   });
-          // } else{
-          //   print('giao nốt người đi thằng ngu');
-          //   Utils.showToast( 'Bạn chưa giao xong khách, vui lòng chờ đợi');
-          // }
+          DateFormat format = DateFormat("dd/MM/yyyy");
+          Navigator.push(context, MaterialPageRoute(builder: (context)=>DetailTripsLimoPage(dateTime: format.parse(item.ngayChay).toString(),idTrips: item.idTuyenDuong,idTime: item.idKhungGio)));
         },
         child: Padding(
           padding: const EdgeInsets.only(left: 10, right: 16, top: 8, bottom: 8),
-          child: Stack(
-            children: [
-              Container(
-                width: double.infinity,
-                decoration: BoxDecoration(
-                  color: (  index == _mainBloc.indexAwaitingList && _mainBloc.blocked == true) ?  Colors.black.withOpacity(0.5) : Theme.of(this.context).scaffoldBackgroundColor,
-                  borderRadius: BorderRadius.circular(0),
-                  boxShadow: [
-                    new BoxShadow(
-                      color: Colors.grey,
-                      blurRadius: 1,
-                    ),
-                  ],
+          child: Container(
+            width: double.infinity,
+            decoration: BoxDecoration(
+              color: Theme.of(this.context).scaffoldBackgroundColor,
+              borderRadius: BorderRadius.circular(0),
+              boxShadow: [
+                new BoxShadow(
+                  color: Colors.grey,
+                  blurRadius: 1,
                 ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: <Widget>[
-                    Container(
-                      padding: const EdgeInsets.all(14),
-                      color: Colors.grey.withOpacity(0.2),
-                      child: Row(
-                        crossAxisAlignment: CrossAxisAlignment.center,
-                        children: <Widget>[
-                          ClipRRect(
-                            borderRadius: BorderRadius.circular(10),
-                            child: Image.asset(
-                              icLogo,
-                              height: 40,
-                              width: 40,
-                            ),
-                          ),
-                          SizedBox(
-                            width: 8,
-                          ),
-                          Text(
-                              item.tenTuyenDuong??'',
-                            style: TextStyle(fontWeight: FontWeight.bold),
-                          ),
-                          Expanded(
-                            child: SizedBox(),
-                          ),
+              ],
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: <Widget>[
+                Container(
+                  padding: const EdgeInsets.all(14),
+                  color: Colors.grey.withOpacity(0.2),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: <Widget>[
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(10),
+                        child: Image.asset(
+                          icLogo,
+                          height: 40,
+                          width: 40,
+                        ),
+                      ),
+                      SizedBox(
+                        width: 8,
+                      ),
+                      Text(
+                          item.tenTuyenDuong??'',
+                        style: TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                      Expanded(
+                        child: SizedBox(),
+                      ),
 
-                        ],
-                      ),
-                    ),
-                    Divider(
-                      height: 0.5,
-                      color: Theme.of(this.context).disabledColor,
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.only(right: 16, left: 16, top: 10, bottom: 10),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: <Widget>[
-                          Text(
-                            'Thông tin chuyến',
-                            style: Theme.of(this.context).textTheme.caption.copyWith(
-                              color: Theme.of(this.context).disabledColor,
-                              fontWeight: FontWeight.normal,
-                            ),
-                          ),
-                          SizedBox(
-                            height: 5,
-                          ),
-                          Text(
-                            //'dateStartingOrFinishing',
-                            '${item.thoiGianDi??''}' + " / " + '${item.ngayChay??''}',
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                            style: Theme.of(this.context).textTheme.subtitle.copyWith(
-                              fontWeight: FontWeight.normal,
-                              color: Theme.of(this.context).textTheme.title.color,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.only(right: 16, left: 16, top: 0, bottom: 0),
-                      child: Divider(
-                        height: 0.5,
-                        color: Theme.of(this.context).disabledColor,
-                      ),
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.only(right: 8, left: 16, top: 10, bottom: 10),
-                      child: Row(
-                        children: [
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: <Widget>[
-                                Text(
-                                  'Số khách',
-                                  style: Theme.of(this.context).textTheme.caption.copyWith(
-                                    color: Theme.of(this.context).disabledColor,
-                                    fontWeight: FontWeight.normal,
-                                  ),
-                                ),
-                                SizedBox(
-                                  height: 5,
-                                ),
-                                Text(
-                                  '${item.soKhach??''}',
-                                  maxLines: 2,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: Theme.of(this.context).textTheme.subtitle.copyWith(
-                                    fontWeight: FontWeight.normal,
-                                    color: Theme.of(this.context).textTheme.title.color,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          GestureDetector(
-                            onTap: () {
-                              print(item.ngayChay);
-                              DateFormat format = DateFormat("dd/MM/yyyy");
-                              Navigator.push(context, MaterialPageRoute(builder: (context)=>DetailTripsLimoPage(dateTime: format.parse(item.ngayChay).toString(),idTrips: item.idTuyenDuong,idTime: item.idKhungGio))); //item.idTuyenDuong.toString()
-                            },
-                            child: Container(
-                              padding: EdgeInsets.all(8),
-                              decoration: BoxDecoration(
-                                color: (  index == _mainBloc.indexAwaitingList && _mainBloc.blocked == true) ? Colors.purple.withOpacity(0.5): Colors.purple,
-                                borderRadius: BorderRadius.all(Radius.circular(16))
-                              ),
-                              child: Text('Xem thêm',style: TextStyle(color: (  index == _mainBloc.indexAwaitingList && _mainBloc.blocked == true) ? Colors.white.withOpacity(0.5) : Colors.white,fontSize: 10),),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              Visibility(
-                visible: index == _mainBloc.indexAwaitingList && _mainBloc.blocked == true,
-                child: Positioned(
-                  top: 0,
-                  left: 0,
-                  right: 0,
-                  bottom: 0,
-                  child: Center(
-                    child: Text('Đang đón',style: TextStyle(color: Colors.white,fontWeight: FontWeight.bold,fontSize: 20),),
+                    ],
                   ),
                 ),
-              )
-            ],
+                Divider(
+                  height: 0.5,
+                  color: Theme.of(this.context).disabledColor,
+                ),
+                Padding(
+                  padding: const EdgeInsets.only(right: 16, left: 16, top: 10, bottom: 10),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: <Widget>[
+                      Text(
+                        'Thông tin chuyến',
+                        style: Theme.of(this.context).textTheme.caption.copyWith(
+                          color: Theme.of(this.context).disabledColor,
+                          fontWeight: FontWeight.normal,
+                        ),
+                      ),
+                      SizedBox(
+                        height: 5,
+                      ),
+                      Text(
+                        //'dateStartingOrFinishing',
+                        '${item.thoiGianDi??''}' + " / " + '${item.ngayChay??''}',
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: Theme.of(this.context).textTheme.subtitle.copyWith(
+                          fontWeight: FontWeight.normal,
+                          color: Theme.of(this.context).textTheme.title.color,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.only(right: 16, left: 16, top: 0, bottom: 0),
+                  child: Divider(
+                    height: 0.5,
+                    color: Theme.of(this.context).disabledColor,
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.only(right: 8, left: 16, top: 10, bottom: 10),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: <Widget>[
+                            Text(
+                              'Số khách',
+                              style: Theme.of(this.context).textTheme.caption.copyWith(
+                                color: Theme.of(this.context).disabledColor,
+                                fontWeight: FontWeight.normal,
+                              ),
+                            ),
+                            SizedBox(
+                              height: 5,
+                            ),
+                            Text(
+                              '${item.soKhach??''}',
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                              style: Theme.of(this.context).textTheme.subtitle.copyWith(
+                                fontWeight: FontWeight.normal,
+                                color: Theme.of(this.context).textTheme.title.color,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      Container(
+                        padding: EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color:  Colors.purple,
+                          borderRadius: BorderRadius.all(Radius.circular(16))
+                        ),
+                        child: Text('Xem thêm',style: TextStyle(color:Colors.white,fontSize: 10),),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
           ),
         ));
   }

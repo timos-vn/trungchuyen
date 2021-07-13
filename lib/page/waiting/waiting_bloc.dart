@@ -1,6 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:trungchuyen/models/database/dbhelper.dart';
 import 'package:trungchuyen/models/network/response/detail_trips_repose.dart';
 import 'package:trungchuyen/models/network/response/list_of_group_awaiting_customer_response.dart';
 import 'package:trungchuyen/models/network/service/network_factory.dart';
@@ -12,7 +13,9 @@ import 'package:trungchuyen/utils/const.dart';
 
 class WaitingBloc extends Bloc<WaitingEvent,WaitingState> {
 
- // MainBloc _mainBloc;
+  // ignore: close_sinks
+  MainBloc _mainBloc;
+  MainBloc get mainBloc => _mainBloc;
   BuildContext context;
   NetWorkFactory _networkFactory;
   String _accessToken;
@@ -24,9 +27,14 @@ class WaitingBloc extends Bloc<WaitingEvent,WaitingState> {
   List<ListOfGroupAwaitingCustomerBody> listOfGroupAwaitingCustomer;
   List<DetailTripsResponseBody> listOfDetailTrips = new List<DetailTripsResponseBody>();
   String test ='K';
+  DatabaseHelper db = DatabaseHelper();
   WaitingBloc(this.context)  {
     _networkFactory = NetWorkFactory(context);
-    // _mainBloc = BlocProvider.of<MainBloc>(context);
+    // try{
+    //   _mainBloc = BlocProvider.of<MainBloc>(context);
+    // }catch(e){
+    //   print(e);
+    // }
   }
 
   // TODO: implement initialState
@@ -51,6 +59,7 @@ class WaitingBloc extends Bloc<WaitingEvent,WaitingState> {
       WaitingState state = _handleGetListOfDetailTrips(await _networkFactory.getDetailTrips(_accessToken,event.date,event.idRoom.toString(),event.idTime.toString(),event.typeCustomer.toString()));
       yield state;
     }
+
   }
 
   WaitingState _handleGetListOfDetailTrips(Object data) {
@@ -70,10 +79,17 @@ class WaitingBloc extends Bloc<WaitingEvent,WaitingState> {
     try {
       ListOfGroupAwaitingCustomer response = ListOfGroupAwaitingCustomer.fromJson(data);
       listOfGroupAwaitingCustomer = response.data;
+      _mainBloc.listOfGroupAwaitingCustomer.clear();
+      _mainBloc.listOfGroupAwaitingCustomer = response.data;
+      print(_mainBloc.listOfGroupAwaitingCustomer.length);
       return GetListOfWaitingCustomerSuccess();
     } catch (e) {
       print(e.toString());
       return WaitingFailure(e.toString());
     }
+  }
+
+  void getMainBloc(BuildContext context) {
+    _mainBloc = BlocProvider.of<MainBloc>(context);
   }
 }

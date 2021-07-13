@@ -257,7 +257,7 @@ class _DetailTripsPageState extends State<DetailTripsPage> {
                       ),
                       Divider(),
                       Text(
-                        'Địa chỉ khách đển: ${item.diaChiKhachDen??''}',
+                        'Địa chỉ khách đến: ${item.diaChiKhachDen??''}',
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
                         style: Theme.of(this.context).textTheme.subtitle.copyWith(

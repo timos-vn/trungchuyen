@@ -1,4 +1,5 @@
 import 'package:equatable/equatable.dart';
+import 'package:trungchuyen/models/entity/customer.dart';
 
 abstract class LimoConfirmEvent extends Equatable {
   @override
@@ -15,10 +16,22 @@ class UpdateStatusCustomerConfirmMapEvent extends LimoConfirmEvent{
   final int status;
   final String idTrungChuyen;
   final String note;
-  UpdateStatusCustomerConfirmMapEvent({this.status,this.idTrungChuyen,this.note});
+  final String idLaiXeTC;
+  UpdateStatusCustomerConfirmMapEvent({this.status,this.idTrungChuyen,this.note,this.idLaiXeTC});
 
   @override
   String toString() {
     return 'UpdateStatusCustomerConfirmMapEvent{status: $status, idTrungChuyen:$idTrungChuyen}';
   }
+}
+class LimoConfirm extends LimoConfirmEvent {
+
+  final String title;
+  final String body;
+  final String listTaiXeTC;
+
+  LimoConfirm(this.title, this.body, this.listTaiXeTC);
+
+  @override
+  String toString() => 'LimoConfirm {title: $title,body:$body, listTaiXeTC:$listTaiXeTC}';
 }

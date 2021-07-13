@@ -27,11 +27,24 @@ class LoginLoading extends LoginState {
 
 class LoginSuccess extends LoginState {
 
+  final String tokenFCM;
+
+  LoginSuccess(this.tokenFCM);
+
   @override
   String toString() {
-    return 'LoginSuccess{}';
+    return 'LoginSuccess{tokenFCM: $tokenFCM}';
   }
 }
+
+class UpdateTokenSuccessState extends LoginState {
+
+  @override
+  String toString() {
+    return 'UpdateTokenSuccessState{}';
+  }
+}
+
 class LoginFailure extends LoginState {
   final String error;
 

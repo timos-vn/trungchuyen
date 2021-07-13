@@ -9,8 +9,8 @@ abstract class ReportLimoEvent extends Equatable {
 
 class GetReportLimoEvent extends ReportLimoEvent {
 
-  final DateTime dateFrom;
-  final DateTime dateTo;
+  final String dateFrom;
+  final String dateTo;
 
   GetReportLimoEvent( this.dateFrom, this.dateTo);
 

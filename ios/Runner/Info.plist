@@ -23,7 +23,9 @@
 	<key>CFBundleVersion</key>
 	<string>$(CURRENT_PROJECT_VERSION)</string>
 	<key>FirebaseAppDelegateProxyEnabled</key>
-	<string>NO</string>
+	<false/>
+	<key>FirebaseScreenReportingEnabled</key>
+	<true/>
 	<key>ITSAppUsesNonExemptEncryption</key>
 	<false/>
 	<key>LSRequiresIPhoneOS</key>
@@ -33,14 +35,14 @@
 		<key>NSAllowsArbitraryLoads</key>
 		<true/>
 	</dict>
-	<key>NSAppleMusicUsageDescription</key>
-	<string>Trung chuyển cần mở âm thanh cho thông báo.</string>
 	<key>NSCalendarsUsageDescription</key>
 	<string>Trung chuyển cần hiển thị lịch để chọn ngày tháng năm và thời gian.</string>
 	<key>NSCameraUsageDescription</key>
 	<string>Trung chuyển cần truy cập camera để chụp ảnh và scanbarcode</string>
 	<key>NSContactsUsageDescription</key>
 	<string>Trung chuyển cần contact tới người dùng.</string>
+	<key>NSLocationAlwaysUsageDescription </key>
+	<string>Trung chuyển cần lấy toạ độ của thiết bị.</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string>Trung chuyển cần truy cập Vị trí của bạn để hỗ trợ cho việc chấm công hiệu quả hơn</string>
 	<key>NSMotionUsageDescription</key>

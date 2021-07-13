@@ -37,6 +37,10 @@ class CustomerLimoConfirmBody {
   String ghiChuDatVe;
   String ghiChuTrungChuyen;
   int loaiKhach;
+  String ngayChay;
+  String thoiGianDi;
+  String idTaiXe;
+  int soKhach;
 
   CustomerLimoConfirmBody(
       {this.idTrungChuyen,
@@ -47,7 +51,11 @@ class CustomerLimoConfirmBody {
         this.tenTuyenDuong,
         this.ghiChuDatVe,
         this.ghiChuTrungChuyen,
-        this.loaiKhach});
+        this.loaiKhach,
+        this.ngayChay,
+        this.thoiGianDi,
+        this.idTaiXe,
+        this.soKhach});
 
   CustomerLimoConfirmBody.fromJson(Map<String, dynamic> json) {
     idTrungChuyen = json['idTrungChuyen'];
@@ -59,6 +67,9 @@ class CustomerLimoConfirmBody {
     ghiChuDatVe = json['ghiChuDatVe'];
     ghiChuTrungChuyen = json['ghiChuTrungChuyen'];
     loaiKhach = json['loaiKhach'];
+    ngayChay = json['ngayChay'];
+    thoiGianDi = json['thoiGianDi'];
+    idTaiXe = json['idTaiXe'];
   }
 
   Map<String, dynamic> toJson() {
@@ -72,6 +83,9 @@ class CustomerLimoConfirmBody {
     data['ghiChuDatVe'] = this.ghiChuDatVe;
     data['ghiChuTrungChuyen'] = this.ghiChuTrungChuyen;
     data['loaiKhach'] = this.loaiKhach;
+    data['ngayChay'] = this.ngayChay;
+    data['thoiGianDi'] = this.thoiGianDi;
+    data['idTaiXe'] = this.idTaiXe;
     return data;
   }
 }

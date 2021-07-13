@@ -110,12 +110,58 @@ class UpdateCustomerList extends MapEvent{
 
 class UpdateStatusCustomerMapEvent extends MapEvent{
   final int status;
-  final String idTrungChuyen;
+  final List<String> idTrungChuyen;
   final String note;
   UpdateStatusCustomerMapEvent({this.status,this.idTrungChuyen,this.note});
 
   @override
   String toString() {
     return 'UpdateStatusCustomerMapEvent{status: $status, idTrungChuyen:$idTrungChuyen}';
+  }
+}
+
+class UpdateTaiXeLimos extends MapEvent{
+
+  final Customer customer;
+
+  UpdateTaiXeLimos(this.customer);
+
+  @override
+  String toString() {
+    // TODO: implement toString
+    return 'UpdateTaiXeLimos{}';
+  }
+}
+
+class GetListTaiXeLimos extends MapEvent{
+
+  @override
+  String toString() {
+    // TODO: implement toString
+    return 'GetListTaiXeLimos{}';
+  }
+}
+
+class DeleteCustomer extends MapEvent{
+  final String idTC;
+  final int index;
+  DeleteCustomer(this.idTC, this.index);
+  @override
+  String toString() {
+    // TODO: implement toString
+    return 'DeleteCustomer{}';
+  }
+}
+
+class AddOldCustomer extends MapEvent{
+
+  final Customer customer;
+
+  AddOldCustomer(this.customer);
+
+  @override
+  String toString() {
+    // TODO: implement toString
+    return 'AddOldCustomer{}';
   }
 }

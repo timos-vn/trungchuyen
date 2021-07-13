@@ -6,6 +6,7 @@ import 'package:material_design_icons_flutter/material_design_icons_flutter.dart
 import 'package:get/get.dart' as libGetX;
 import 'package:trungchuyen/page/account/account_bloc.dart';
 import 'package:trungchuyen/page/account/account_state.dart';
+import 'package:trungchuyen/page/login/login_page.dart';
 import 'package:trungchuyen/page/report/report_page.dart';
 import 'package:trungchuyen/page/report_limo/report_limo_page.dart';
 import 'package:trungchuyen/themes/colors.dart';
@@ -44,7 +45,9 @@ class _AccountPageState extends State<AccountPage> with TickerProviderStateMixin
         body: BlocListener<AccountBloc,AccountState>(
             bloc: _accountBloc,
             listener: (context, state){
-
+              if(state is LogOutSuccess){
+                libGetX.Get.offAll(LoginPage());
+              }
             },
             child: BlocBuilder<AccountBloc,AccountState>(
               bloc: _accountBloc,
@@ -117,9 +120,9 @@ class _AccountPageState extends State<AccountPage> with TickerProviderStateMixin
                             SizedBox(height: 15,),
                             Row(
                               children: [
-                                Icon(MdiIcons.recycle),
+                                Icon(MdiIcons.bellOutline),
                                 SizedBox(width: 10,),
-                                Text('System'.tr),
+                                Text('Thông báo'.tr),
                               ],
                             ),
                             SizedBox(height: 10,),
@@ -170,7 +173,7 @@ class _AccountPageState extends State<AccountPage> with TickerProviderStateMixin
                               children: [
                                 Icon(Icons.library_books),
                                 SizedBox(width: 10,),
-                                Text('MembershipPolicy'.tr),
+                                Text('Membership Policy'.tr),
                               ],
                             ),
                             SizedBox(height: 10,),
@@ -180,7 +183,7 @@ class _AccountPageState extends State<AccountPage> with TickerProviderStateMixin
                               children: [
                                 Icon(MdiIcons.informationOutline),
                                 SizedBox(width: 10,),
-                                Text('About SR'),
+                                Text('Về Trung chuyển HN'),
                               ],
                             ),
                             SizedBox(height: 10,),
@@ -281,11 +284,11 @@ class _AccountPageState extends State<AccountPage> with TickerProviderStateMixin
       FlatButton(
         onPressed: () {
           _accountBloc.add(LogOut());
-          if (Platform.isAndroid) {
-            SystemNavigator.pop();
-          } else if (Platform.isIOS) {
-            exit(0);
-          }
+          // if (Platform.isAndroid) {
+          //   SystemNavigator.pop();
+          // } else if (Platform.isIOS) {
+          //   exit(0);
+          // }
         },
         child: Text('Yes'.tr,
             style: TextStyle(

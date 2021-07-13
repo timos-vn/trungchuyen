@@ -74,15 +74,9 @@ class NetWorkFactory {
       // Do something with response error
       logger.e("DioError: ${error?.message}");
       if (error.response?.statusCode == 401) {
+        Utils.showToast('Hết phiên làm việc');
+        libGetX.Get.offAll(LoginPage());
         RequestOptions options = error.response.request;
-//        // If the token has been updated, repeat directly.
-//        if (csrfToken != options.headers["csrfToken"]) {
-//          options.headers["csrfToken"] = csrfToken;
-//          //repeat
-//          return _dio.request(options.path, options: options);
-//        }
-        // update token and repeat
-        // Lock to block the incoming request until the token updated
         _dio.interceptors.requestLock.lock();
         _dio.interceptors.responseLock.lock();
         return _dio.get("/api/auth/refresh-token").then((response) {
@@ -116,7 +110,7 @@ class NetWorkFactory {
           try {
             Utils.showToast(data["message"].toString());
             try {
-              libGetX.Get.offAll(LoginPage());
+
               // MainBloc mainBloc = BlocProvider.of<MainBloc>(context);
               // mainBloc.add(LogoutMainEvent());
             } catch (e) {
@@ -243,10 +237,10 @@ class NetWorkFactory {
   Future<Object> updateGroupStatusCustomer(UpdateStatusCustomerRequestBody request,String token) async {
     return await requestApi(_dio.post('/api/v1/trungchuyen/capnhat-trangthai-nhom', options: Options(headers: {"Authorization": "Bearer $token"}), data: request.toJson()));
   }
-  Future<Object> getReport(String token,DateTime dateTimeFrom, DateTime dateTimeTo) async {
+  Future<Object> getReport(String token,String dateTimeFrom, String dateTimeTo) async {
     return await requestApi(_dio.get('/api/v1/thongke/taixe-trungchuyen/khach-trung-chuyen/' + dateTimeFrom.toString() + '/' + dateTimeTo.toString(), options: Options(headers: {"Authorization": "Bearer $token"}))); //["Authorization"] = "Bearer " + token
   }
-  Future<Object> getReportLimo(String token,DateTime dateTimeFrom, DateTime dateTimeTo) async {
+  Future<Object> getReportLimo(String token,String dateTimeFrom, String dateTimeTo) async {
     return await requestApi(_dio.get('/api/v1/thongke/taixe-limo/thongkekhach/' + dateTimeFrom.toString() + '/' + dateTimeTo.toString(), options: Options(headers: {"Authorization": "Bearer $token"}))); //["Authorization"] = "Bearer " + token
   }
 

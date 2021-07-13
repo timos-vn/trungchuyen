@@ -1,8 +1,8 @@
 import 'dart:convert';
 import 'dart:io';
 import 'dart:io' show Platform;
+import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
-import 'package:flutter_animarker/flutter_map_marker_animation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_ringtone_player/flutter_ringtone_player.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
@@ -12,7 +12,6 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:get/get.dart';
-import 'package:google_maps_controller/google_maps_controller.dart';
 import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:trungchuyen/models/database/dbhelper.dart';
@@ -24,23 +23,29 @@ import 'package:trungchuyen/models/network/request/update_status_customer_reques
 import 'package:trungchuyen/models/network/request/update_token_request.dart';
 import 'package:trungchuyen/models/network/response/detail_trips_limo_reponse.dart';
 import 'package:trungchuyen/models/network/response/detail_trips_repose.dart';
-import 'package:trungchuyen/models/network/response/list_notification_response.dart';
+import 'package:trungchuyen/models/network/response/list_customer_confirm_response.dart';
 import 'package:trungchuyen/models/network/response/list_of_group_awaiting_customer_response.dart';
 import 'package:trungchuyen/models/network/response/list_of_group_limo_customer_response.dart';
 import 'package:trungchuyen/models/network/service/network_factory.dart';
-import 'package:flutter_animarker/lat_lng_interpolation.dart';
 import 'package:trungchuyen/page/map_limo/map_limo_bloc.dart';
-import 'package:trungchuyen/page/map_limo/map_limo_event.dart';
+import 'package:trungchuyen/page/waiting/waiting_bloc.dart';
+import 'package:trungchuyen/page/waiting/waiting_event.dart';
 import 'package:trungchuyen/service/soket_io_service.dart';
 import 'package:trungchuyen/themes/colors.dart';
 import 'package:trungchuyen/utils/const.dart';
 import 'package:trungchuyen/utils/log.dart';
 import 'package:trungchuyen/utils/utils.dart';
+import '../../test.dart';
 import 'main_event.dart';
 import 'main_state.dart';
 
 
-
+Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
+  print("Background Notification");
+  Utils.showForegroundNotification(contexts, message.notification.title, message.notification.body, onTapNotification: () {
+  },);
+}
+BuildContext contexts;
 class MainBloc extends Bloc<MainEvent, MainState> {
   int userId;
   NetWorkFactory _networkFactory;
@@ -55,20 +60,22 @@ class MainBloc extends Bloc<MainEvent, MainState> {
   List<ListOfGroupAwaitingCustomerBody> listOfGroupAwaitingCustomer = new List<ListOfGroupAwaitingCustomerBody>();
   List<ListOfGroupLimoCustomerResponseBody> listCustomerLimo = new List<ListOfGroupLimoCustomerResponseBody>();
   List<DetailTripsResponseBody> listOfDetailTrips = new List<DetailTripsResponseBody>();
+  List<DetailTripsResponseBody> listOfDetailTripsTC = new List<DetailTripsResponseBody>();
   List<DetailTripsResponseBody> listCustomerToPickUpSuccess = new List<DetailTripsResponseBody>();
-
+  List<CustomerLimoConfirmBody> listCustomerConfirmLimo = new List<CustomerLimoConfirmBody>();
   List<DetailTripsLimoReponseBody> listOfDetailTripLimo = new List<DetailTripsLimoReponseBody>();
 
   List<Customer> listTaiXeLimo = new List<Customer>();
   List<DetailTripsLimoReponseBody> listTaiXeTC = new List<DetailTripsLimoReponseBody>();
 
-
-
+  WaitingBloc _waitingBloc;
   String trips;
   String timeStart;
   String testing = 'A';
   bool blocked;
-  int indexAwaitingList;
+  int idKhungGio;
+  int idVanPhong;
+  int loaiKhach;
   bool isOnline = false;
   bool isInProcessPickup = false;
   int currentNumberCustomerOfList=0;
@@ -83,8 +90,9 @@ class MainBloc extends Bloc<MainEvent, MainState> {
   String get accessToken => _accessToken;
   String _refreshToken;
   String get refreshToken => _refreshToken;
-
-  String _role;
+  bool isLock = false;
+  bool isDeleteAll = false;
+  String role;
   String username;
   Iterable markers;
   String idUser;
@@ -93,6 +101,7 @@ class MainBloc extends Bloc<MainEvent, MainState> {
   List<Customer> listCustomer = new List<Customer>();
   List<NotificationCustomerOfTC> listNotificationCustomer = new List<NotificationCustomerOfTC>();
   List<NotificationOfLimo> listNotificationOfLimo = new List<NotificationOfLimo>();
+  static final _messaging = FirebaseMessaging.instance;
   void setCountAfterRead() {
     countNotifyUnRead = countNotifyUnRead <= 0 ? 0 : countNotifyUnRead - 1;
   }
@@ -105,18 +114,25 @@ class MainBloc extends Bloc<MainEvent, MainState> {
   MainBloc()   {
     socketIOService = Get.find<SocketIOService>();
     firebaseMessaging = FirebaseMessaging();
-    // _firebaseMessaging.deleteInstanceID();
-    firebaseMessaging.getToken().then((token) {
-      print("token");
-      print(token);
-      _deviceToken = token;
-     _pref?.setString(Const.DEVICE_TOKEN, token);
-      add(UpdateTokenDiveEvent(_deviceToken));
-    });
-   _registerNotification();
+    // firebaseMessaging.getToken().then((token) {
+    //   print("token");
+    //   print(token);
+    //
+    //   _deviceToken = token;
+    //  _pref?.setString(Const.DEVICE_TOKEN, token);
+    //
+    // });
+   // _registerNotification();
+    registerUpPushNotification();
+    _listenToPushNotifications();
   }
 
-  init(BuildContext context) {
+  init(BuildContext context) async{
+    // await Firebase.initializeApp().whenComplete(() {
+    //   print('CPL OK');
+    //
+    // });
+    _waitingBloc = WaitingBloc(context);
     _mapLimoBloc = MapLimoBloc(context);
     if (this.context == null) {
       this.context = context;
@@ -124,124 +140,321 @@ class MainBloc extends Bloc<MainEvent, MainState> {
     }
   }
 
+
   @override
   MainState get initialState => InitialMainState();
 
-  void _registerNotification() {
-    if (Platform.isIOS) getIosPermission();
-    firebaseMessaging.configure(
-      // ignore: missing_return
-      onMessage: (Map<String, dynamic> message) {
-        try {
-          FlutterRingtonePlayer.play(
-            android: AndroidSounds.notification,
-            ios: IosSounds.triTone,
-          );
-          // NotificationData data = NotificationData.fromJson(json.decode(
-          //     Platform.isAndroid
-          //         ? message['data']//['payload']
-          //         : message['data']));
+  registerUpPushNotification() {
+    //REGISTER REQUIRED FOR IOS
+    if (Platform.isIOS) {
+      _messaging.requestPermission();
+    }
 
-          if(message['data']['EVENT'] == 'TRUNGCHUYEN_THONGBAO_TAIXE' && _role == '3'){
-            ///[\"76bb398e-107b-41a9-9f67-b2a3bef6345e\",\"120290eb-150e-4116-b54f-ea49f5cb1fa8\",\"a3132c8e-b3d6-4c67-b1a2-0c6244674ec7\"]
-            String item = message['data']['IdTrungChuyen'];
-            List<String> listId = item.replaceAll('[', '').replaceAll(']', '').replaceAll('\"', '').split(',');
-            NotificationCustomerOfTC notificationCustomer = new NotificationCustomerOfTC(
-              idTrungChuyen: item,
-              chuyen: message['data']['Chuyen'],
-              thoiGian: message['data']['ThoiGian'],
-              loaiKhach: message['data']['LoaiKhach']
-            );
-            Utils.showForegroundNotification(context, 'Thông báo', 'Bạn nhận được khách mới.', onTapNotification: () {
-              add(NavigateToNotification());
-            },);
-            add(AddNotificationOfTC(notificationCustomer));
+    _messaging.getToken().then((value) {
+      if (value == null) return;
 
-            if(socketIOService.socket.connected)
-            {
-              socketIOService.socket.emit("TAIXE_TRUNGCHUYEN_CAPNHAT_TRANGTHAI_KHACH");
-            }
-            if( message['data']['LoaiKhach'] == '1'){
-              add(UpdateStatusCustomerEvent(status: 2,idTrungChuyen:listId));
-              print('Update Nhan don');
-            }else{
-              add(UpdateStatusCustomerEvent(status: 5,idTrungChuyen: listId));
-              print('Update Nhan tra');
-            }
-          }
-
-          else if((message['data']['EVENT'] == 'TRUNGCHUYEN_THONGBAO_TAIXE_TDK' || message['data']['EVENT'] == 'TRUNGCHUYEN_THONGBAO_TAIXE_KHACHHUY') && _role == '3'){
-            String item = message['data']['IdTrungChuyen'];
-
-            add(KhachHuyOrDoiTaiXe(item));
-            DateTime parseDate = new DateFormat("yyyy-MM-dd").parse(DateTime.now().toString());
-            add(GetListGroupCustomer(parseDate));
-          }
-
-          else if(message['data']['EVENT'] == 'TAIXE_TRUNGCHUYEN_GIAOKHACH_LIMO' && _role != '3'){
-            if(Platform.isAndroid){
-              String title = message['notification']['title'];
-              String body = message['notification']['body'];
-              Utils.showForegroundNotification(context, title, body, onTapNotification: () {
-                add(NavigateToNotification());
-              },);
-            }
-            else if(Platform.isIOS){
-              String title = message['notification']['title'];
-              String body = message['notification']['body'];
-              // print(title);
-              // print(body);
-              Utils.showForegroundNotification(context, title, body, onTapNotification: () {
-                add(NavigateToNotification());
-              });
-            }
-          }
-
-          else{
-            if(Platform.isAndroid){
-              String title = message['notification']['title'];
-              String body = message['notification']['body'];
-              Utils.showForegroundNotification(context, title, body, onTapNotification: () {
-                add(NavigateToNotification());
-              },);
-            }
-            else if(Platform.isIOS){
-              String title = message['notification']['title'];
-              String body = message['notification']['body'];
-              // print(title);
-              // print(body);
-              Utils.showForegroundNotification(context, title, body, onTapNotification: () {
-                add(NavigateToNotification());
-              });
-            }
-          }
-
-        } catch (e) {
-          logger.e(e.toString());
-        }
-      },
-      // ignore: missing_return
-      onResume: (Map<String, dynamic> message) {
-        logger.d('on resume $message');
-        add(NavigateToNotification());
-      },
-      // ignore: missing_return
-      onLaunch: (Map<String, dynamic> message) {
-        logger.d('on launch $message');
-        add(NavigateToNotification());
-      },
-    );
-    firebaseMessaging.subscribeToTopic(Const.TOPIC);
-  }
-
-  void getIosPermission() {
-    firebaseMessaging.requestNotificationPermissions(
-        IosNotificationSettings(sound: true, badge: true, alert: true));
-    firebaseMessaging.onIosSettingsRegistered
-        .listen((IosNotificationSettings settings) {
-      logger.d("Settings registered: $settings");
+      print('token $value');
     });
   }
+  String event;
+  _listenToPushNotifications() {
+    contexts = context;
+    FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
+
+    FirebaseMessaging.onMessage.listen((RemoteMessage message) {
+      print("onMessage");
+      print(message.data['EVENT']);
+      // if(event != message.data['EVENT']){
+      //   event = message.data['EVENT'];
+      //
+      // }
+      subscribeToTopic(message);
+    });
+
+    FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {
+      subscribeToTopic(message);
+      print('onMessageOpenedApp');
+    });
+  }
+
+  void subscribeToTopic(RemoteMessage message){
+    if(message.data['EVENT'] == 'TRUNGCHUYEN_THONGBAO_TAIXE'){
+      /// trong chuyến vẫn thêm được khách - giống như trong chuyến huỷ được khách
+      ///
+      ///
+      ///
+      String item = message.data['IdTrungChuyen'];
+      List<String> listId = item.replaceAll('[', '').replaceAll(']', '').replaceAll('\"', '').split(',');
+      NotificationCustomerOfTC notificationCustomer = new NotificationCustomerOfTC(
+          idTrungChuyen: item,
+          chuyen: message.data['Chuyen'],
+          thoiGian: message.data['ThoiGian'],
+          loaiKhach: message.data['LoaiKhach']
+      );
+      Utils.showForegroundNotification(context, message.notification.title, message.notification.body, onTapNotification: () {
+        add(NavigateToNotification());
+      },);
+      add(AddNotificationOfTC(notificationCustomer));
+
+      if(socketIOService.socket.connected)
+      {
+        socketIOService.socket.emit("TAIXE_TRUNGCHUYEN_CAPNHAT_TRANGTHAI_KHACH");
+      }
+      if( message.data['LoaiKhach'] == '1'){
+        add(UpdateStatusCustomerEvent(status: 2,idTrungChuyen:listId));
+        print('Update Nhan don');
+      }else{
+        add(UpdateStatusCustomerEvent(status: 5,idTrungChuyen: listId));
+        print('Update Nhan tra');
+      }
+      if(!Utils.isEmpty(listOfGroupAwaitingCustomer)){
+        listOfGroupAwaitingCustomer.clear();
+      }
+      DateTime parseDate = new DateFormat("yyyy-MM-dd").parse(DateTime.now().toString());
+      add(GetListGroupCustomer(parseDate));
+      if(!Utils.isEmpty(listCustomer) && (listCustomer[0].idKhungGio.toString().trim() == message.data['IdKhungGio'].toString().trim() && listCustomer[0].idVanPhong.toString().trim() == message.data['IdVanPhong'].toString().trim())){
+       trips = message.data['ThoiGian'] + ' - ' + message.data['NgayTrungChuyen'];
+       idKhungGio = int.parse(message.data['IdKhungGio']);
+       idVanPhong = int.parse(message.data['IdVanPhong']);
+        DateFormat format = DateFormat("dd/MM/yyyy");
+       add(GetListDetailTripsTC(format.parse(message.data['NgayTrungChuyen']),message.data['IdVanPhong'],message.data['IdKhungGio'],message.data['LoaiKhach']));
+      }
+    }
+    else if((message.data['EVENT'] == 'TRUNGCHUYEN_THONGBAO_TAIXE_TDK' || message.data['EVENT'] == 'TRUNGCHUYEN_THONGBAO_TAIXE_KHACHHUY')){
+      Utils.showForegroundNotification(context, message.notification.title, message.notification.body, onTapNotification: () {
+        add(NavigateToNotification());
+      },);
+      String item = message.data['IdTrungChuyen'];
+      isLock = false;
+      add(KhachHuyOrDoiTaiXe(item));
+      DateTime parseDate = new DateFormat("yyyy-MM-dd").parse(DateTime.now().toString());
+      add(GetListGroupCustomer(parseDate));
+    }
+    else if(message.data['EVENT'] == 'TAIXE_TRUNGCHUYEN_GIAOKHACH_LIMO'){
+
+      Utils.showForegroundNotification(context, message.notification.title, message.notification.body, onTapNotification: () {
+        add(NavigateToNotification());
+      },);
+      add(GetListCustomerConfirm());
+    }
+    else if(message.data['EVENT'] == 'TAIXE_LIMO_XACNHAN'){
+
+      Utils.showForegroundNotification(context, message.notification.title, message.notification.body, onTapNotification: () {
+        add(NavigateToNotification());
+      },);
+      add(GetListCustomerConfirm());
+    }
+    else{
+      String title = message.notification.title;
+      String body = message.notification.body;
+      Utils.showForegroundNotification(context, title, body, onTapNotification: () {
+        add(NavigateToNotification());
+      },);
+    }
+    event = '';
+  }
+///
+//   void _registerNotification() {
+//
+//     print('_registerNotification');
+//     if (Platform.isIOS) getIosPermission();
+//     firebaseMessaging.configure(
+//       // ignore: missing_return
+//       onMessage: (Map<String, dynamic> message) {
+//         print("-------- $message");
+//         print("--------");
+//         print(role);
+//         print(message['EVENT']);
+//         print(message['aps']['alert']['title']);
+//         print(message['aps']['alert']['body']);
+//         print(message['ThoiGian']);
+//         print(message['LoaiKhach']);
+//         print("--------");
+//         try {
+//           FlutterRingtonePlayer.play(
+//             android: AndroidSounds.notification,
+//             ios: IosSounds.triTone,
+//           );
+//           if(Platform.isAndroid){
+//             if(message['data']['EVENT'] == 'TRUNGCHUYEN_THONGBAO_TAIXE'){
+//               /// trong chuyến vẫn thêm được khách - giống như trong chuyến huỷ được khách
+//               ///
+//               ///
+//               ///
+//               String item = message['data']['IdTrungChuyen'];
+//               List<String> listId = item.replaceAll('[', '').replaceAll(']', '').replaceAll('\"', '').split(',');
+//               NotificationCustomerOfTC notificationCustomer = new NotificationCustomerOfTC(
+//                   idTrungChuyen: item,
+//                   chuyen: message['data']['Chuyen'],
+//                   thoiGian: message['data']['ThoiGian'],
+//                   loaiKhach: message['data']['LoaiKhach']
+//               );
+//               String title = message['notification']['title'];
+//               String body = message['notification']['body'];
+//               Utils.showForegroundNotification(context, title, body, onTapNotification: () {
+//                 add(NavigateToNotification());
+//               },);
+//               add(AddNotificationOfTC(notificationCustomer));
+//
+//               if(socketIOService.socket.connected)
+//               {
+//                 socketIOService.socket.emit("TAIXE_TRUNGCHUYEN_CAPNHAT_TRANGTHAI_KHACH");
+//               }
+//               if( message['data']['LoaiKhach'] == '1'){
+//                 add(UpdateStatusCustomerEvent(status: 2,idTrungChuyen:listId));
+//                 print('Update Nhan don');
+//               }else{
+//                 add(UpdateStatusCustomerEvent(status: 5,idTrungChuyen: listId));
+//                 print('Update Nhan tra');
+//               }
+//               listOfGroupAwaitingCustomer.clear();
+//               DateTime parseDate = new DateFormat("yyyy-MM-dd").parse(DateTime.now().toString());
+//               add(GetListGroupCustomer(parseDate));
+//             }
+//             else if((message['data']['EVENT'] == 'TRUNGCHUYEN_THONGBAO_TAIXE_TDK' || message['data']['EVENT'] == 'TRUNGCHUYEN_THONGBAO_TAIXE_KHACHHUY')){
+//               String title = message['notification']['title'];
+//               String body = message['notification']['body'];
+//               Utils.showForegroundNotification(context, title, body, onTapNotification: () {
+//                 add(NavigateToNotification());
+//               },);
+//               String item = message['data']['IdTrungChuyen'];
+//               isLock = false;
+//               add(KhachHuyOrDoiTaiXe(item));
+//               DateTime parseDate = new DateFormat("yyyy-MM-dd").parse(DateTime.now().toString());
+//               add(GetListGroupCustomer(parseDate));
+//             }
+//             else if(message['data']['EVENT'] == 'TAIXE_TRUNGCHUYEN_GIAOKHACH_LIMO'){
+//               String title = message['notification']['title'];
+//               String body = message['notification']['body'];
+//               Utils.showForegroundNotification(context, title, body, onTapNotification: () {
+//                 add(NavigateToNotification());
+//               },);
+//               add(GetListCustomerConfirm());
+//             }
+//             else if(message['data']['EVENT'] == 'TAIXE_LIMO_XACNHAN'){
+//               String title = message['notification']['title'];
+//               String body = message['notification']['body'];
+//               Utils.showForegroundNotification(context, title, body, onTapNotification: () {
+//                 add(NavigateToNotification());
+//               },);
+//               add(GetListCustomerConfirm());
+//             }
+//             else{
+//               if(Platform.isAndroid){
+//                 String title = message['notification']['title'];
+//                 String body = message['notification']['body'];
+//                 Utils.showForegroundNotification(context, title, body, onTapNotification: () {
+//                   add(NavigateToNotification());
+//                 },);
+//               }
+//               else if(Platform.isIOS){
+//                 String title = message['notification'];
+//                 String body = message['notification']['body'];
+//                 print(title);
+//                 print(body);
+//                 Utils.showForegroundNotification(context, title, body, onTapNotification: () {
+//                   add(NavigateToNotification());
+//                 });
+//               }
+//             }
+//           }
+//           else if(Platform.isIOS){
+//             if(message['EVENT'] == 'TRUNGCHUYEN_THONGBAO_TAIXE'){
+//               /// trong chuyến vẫn thêm được khách - giống như trong chuyến huỷ được khách
+//               ///
+//               ///
+//               ///
+//               String item = message['IdTrungChuyen'];
+//               List<String> listId = item.replaceAll('[', '').replaceAll(']', '').replaceAll('\"', '').split(',');
+//               NotificationCustomerOfTC notificationCustomer = new NotificationCustomerOfTC(
+//                   idTrungChuyen: item,
+//                   chuyen: message['Chuyen'],
+//                   thoiGian: message['ThoiGian'],
+//                   loaiKhach: message['LoaiKhach']
+//               );
+//               Utils.showForegroundNotification(context,message['aps']['alert']['title'], message['aps']['alert']['body'], onTapNotification: () {
+//                 add(NavigateToNotification());
+//               },);
+//               add(AddNotificationOfTC(notificationCustomer));
+//               if(socketIOService.socket.connected)
+//               {
+//                 socketIOService.socket.emit("TAIXE_TRUNGCHUYEN_CAPNHAT_TRANGTHAI_KHACH");
+//               }
+//               if( message['LoaiKhach'] == '1'){
+//                 add(UpdateStatusCustomerEvent(status: 2,idTrungChuyen:listId));
+//                 print('Update Nhan don');
+//               }else{
+//                 add(UpdateStatusCustomerEvent(status: 5,idTrungChuyen: listId));
+//                 print('Update Nhan tra');
+//               }
+//               listOfGroupAwaitingCustomer.clear();
+//               DateTime parseDate = new DateFormat("yyyy-MM-dd").parse(DateTime.now().toString());
+//               add(GetListGroupCustomer(parseDate));
+//             }
+//             else if((message['EVENT'] == 'TRUNGCHUYEN_THONGBAO_TAIXE_TDK' || message['EVENT'] == 'TRUNGCHUYEN_THONGBAO_TAIXE_KHACHHUY')){
+//               Utils.showForegroundNotification(context,message['aps']['alert']['title'], message['aps']['alert']['body'], onTapNotification: () {
+//                 add(NavigateToNotification());
+//               },);
+//               String item = message['IdTrungChuyen'];
+//               isLock = false;
+//               add(KhachHuyOrDoiTaiXe(item));
+//               DateTime parseDate = new DateFormat("yyyy-MM-dd").parse(DateTime.now().toString());
+//               add(GetListGroupCustomer(parseDate));
+//             }
+//             else if(message['EVENT'] == 'TAIXE_TRUNGCHUYEN_GIAOKHACH_LIMO'){
+//               String title = message['aps']['alert']['title'];
+//               String body = message['aps']['alert']['body'];
+//               Utils.showForegroundNotification(context, title, body, onTapNotification: () {
+//                 add(NavigateToNotification());
+//               });
+//               add(GetListCustomerConfirm());
+//             }
+//             else if(message['EVENT'] == 'TAIXE_LIMO_XACNHAN'){
+//               String title = message['aps']['alert']['title'];
+//               String body = message['aps']['alert']['body'];
+//               Utils.showForegroundNotification(context, title, body, onTapNotification: () {
+//                 add(NavigateToNotification());
+//               });
+//               add(GetListCustomerConfirm());
+//             }
+//             else{
+//               String title = message['aps']['alert']['title'];
+//               String body = message['aps']['alert']['body'];
+//               print(title);
+//               print(body);
+//               Utils.showForegroundNotification(context, title, body, onTapNotification: () {
+//                 add(NavigateToNotification());
+//               });
+//             }
+//           }
+//         } catch (e) {
+//           logger.e(e.toString());
+//         }
+//       },
+//       // ignore: missing_return
+//       onResume: (Map<String, dynamic> message) {
+//         print('on resume $message');
+//         add(NavigateToNotification());
+//       },
+//       // ignore: missing_return
+//       onLaunch: (Map<String, dynamic> message) {
+//         print('on launch $message');
+//         add(NavigateToNotification());
+//       },
+//     );
+//     print('subscribeToTopic 1');
+//     firebaseMessaging.subscribeToTopic(Const.TOPIC);
+//   }
+///
+//   void getIosPermission() {
+//     print('subscribeToTopic 2');
+//     firebaseMessaging.requestNotificationPermissions(
+//         IosNotificationSettings(sound: true, badge: true, alert: true));
+//     firebaseMessaging.onIosSettingsRegistered
+//         .listen((IosNotificationSettings settings) {
+//       logger.d("Settings registered: $settings");
+//     });
+//   }
 
   void handleTypeNotification(String type) {
     switch (type) {
@@ -257,14 +470,19 @@ class MainBloc extends Bloc<MainEvent, MainState> {
       _accessToken = _pref.getString(Const.ACCESS_TOKEN) ?? "";
       _refreshToken = _pref.getString(Const.REFRESH_TOKEN) ?? "";
       username = _pref.getString(Const.PHONE_NUMBER) ?? "";
-      _role = _pref.getString(Const.CHUC_VU) ?? "";
+      role = _pref.getString(Const.CHUC_VU) ?? "";
       idUser = _pref.getString(Const.USER_ID) ??'';
     }
-
-    if(event is KhachHuyOrDoiTaiXe){
+    else if(event is GetListDetailTripsTC){
+      yield MainLoading();
+      MainState state = _handleGetListOfDetailTrips(await _networkFactory.getDetailTrips(_accessToken,event.date,event.idRoom.toString(),event.idTime.toString(),event.typeCustomer.toString()));
+      yield state;
+    }
+    else if(event is KhachHuyOrDoiTaiXe){
       yield InitialMainState();
       listCustomer = await getListFromDb();
       if (!Utils.isEmpty(listCustomer)) {
+        String deleteIdTC;
         Customer newsCustomer;
         List<String> listId = event.idTC.replaceAll('[', '').replaceAll(']', '').replaceAll('\"', '').split(',');
         String idTCOld;
@@ -277,27 +495,32 @@ class MainBloc extends Bloc<MainEvent, MainState> {
             final customerIDTCNews = listId.firstWhere((item) => item == itemOld, orElse: () => null);
             if (customerIDTCNews != null){
               print('TRUE 2: ${itemOld.toString()}');
-              newsCustomer.idTrungChuyen = listIdTCOld.join(',');
+              List<String> listIdTCNew = listIdTCOld;
+              listIdTCNew.remove(customerIDTCNews);
+              newsCustomer.idTrungChuyen = listIdTCNew.join(',');
               newsCustomer.soKhach = element.soKhach - 1;
               if(newsCustomer.soKhach == 0){
                 print('TRUE 3: ${newsCustomer.soKhach}');
                 blocked = false;
-                indexAwaitingList = null;
-                add(DeleteCustomerHuyOrDoiTaiFormDB(element.idTrungChuyen));
+                isDeleteAll = true;
+                deleteIdTC = element.idTrungChuyen;
               }else{
-                print('TRUE 4: ${newsCustomer.soKhach}');
+                print('TRUE 4: ${newsCustomer.idTrungChuyen}');
                 add(UpdateKhachHuyOrDoiTaiXe(idTCOld,newsCustomer));
               }
             }
           });
         });
+        if(isDeleteAll == true){
+          isDeleteAll = false;
+          add(DeleteCustomerHuyOrDoiTaiFormDB(deleteIdTC));
+        }
         add(GetCustomerItemList());
-        //listCustomer = listCustomerNew;
       }
       yield GetCustomerListSuccess();
     }
 
-    if (event is AddNotificationOfLimo) {
+    else if(event is AddNotificationOfLimo) {
       yield InitialMainState();
       await db.addNotificationLimo(event.notificationOfLimo);
       listNotificationOfLimo = await getListNotificationOfLimoFromDb();
@@ -305,7 +528,7 @@ class MainBloc extends Bloc<MainEvent, MainState> {
       // add(GetCustomerItemList());
     }
 
-    if(event is GetListNotificationOfLimo){
+    else if(event is GetListNotificationOfLimo){
       yield InitialMainState();
       listNotificationOfLimo = await getListNotificationOfLimoFromDb();
       if (!Utils.isEmpty(listNotificationOfLimo)) {
@@ -330,7 +553,7 @@ class MainBloc extends Bloc<MainEvent, MainState> {
       yield GetListNotificationOfLimoSuccess();
     }
 
-    if(event is GetListNotificationCustomerTC){
+    else if(event is GetListNotificationCustomerTC){
       yield InitialMainState();
       listNotificationCustomer = await getListNotificationOfTCFromDb();
       if (!Utils.isEmpty(listNotificationCustomer)) {
@@ -372,7 +595,7 @@ class MainBloc extends Bloc<MainEvent, MainState> {
       yield GetListNotificationCustomerSuccess();
     }
 
-    if (event is AddNotificationOfTC) {
+    else if (event is AddNotificationOfTC) {
       yield InitialMainState();
       await db.addNotificationCustomer(event.notificationCustomerOfTC);
       listNotificationCustomer = await getListNotificationOfTCFromDb();
@@ -380,7 +603,7 @@ class MainBloc extends Bloc<MainEvent, MainState> {
       // add(GetCustomerItemList());
     }
 
-    if (event is AddOldCustomerItemList) {
+    else if (event is AddOldCustomerItemList) {
       yield InitialMainState();
       await db.addNew(event.customer);
       listCustomer = await getListFromDb();
@@ -388,7 +611,7 @@ class MainBloc extends Bloc<MainEvent, MainState> {
       add(GetCustomerItemList());
     }
 
-    if (event is DeleteCustomerFormDB) {
+    else if (event is DeleteCustomerFormDB) {
       yield InitialMainState();
       await db.remove(event.idTC);
       listCustomer = await getListFromDb();
@@ -396,7 +619,7 @@ class MainBloc extends Bloc<MainEvent, MainState> {
       add(GetCustomerItemList());
     }
 
-    if (event is DeleteCustomerHuyOrDoiTaiFormDB) {
+    else if (event is DeleteCustomerHuyOrDoiTaiFormDB) {
       yield InitialMainState();
       await db.remove(event.idTC);
       // listCustomer = await getListFromDb();
@@ -404,14 +627,14 @@ class MainBloc extends Bloc<MainEvent, MainState> {
       // add(GetCustomerItemList());
     }
 
-    if(event is UpdateKhachHuyOrDoiTaiXe){
+    else if(event is UpdateKhachHuyOrDoiTaiXe){
       yield InitialMainState();
       await db.updateCustomerHuyOrDoiTaiXe(event.idTCOld,event.customer);
       //listCustomer = await getListFromDb();
       yield GetCustomerListSuccess();
       // add(GetCustomerItemList());
     }
-    if(event is UpdateCustomerItemList){
+    else if(event is UpdateCustomerItemList){
       yield InitialMainState();
       await db.updateCustomer(event.customer);
       listCustomer = await getListFromDb();
@@ -419,16 +642,16 @@ class MainBloc extends Bloc<MainEvent, MainState> {
       add(GetCustomerItemList());
     }
 
-    if (event is DeleteItem) {
+    else if (event is DeleteItem) {
       yield MainLoading();
       deleteItems(event.index);
       await db.remove(event.idTC);
       listCustomer = await getListFromDb();
       yield GetCustomerListSuccess();
-      add(GetCustomerItemList());
+  //    add(GetCustomerItemList());
     }
 
-    if(event is GetCustomerItemList){
+    else if(event is GetCustomerItemList){
       yield InitialMainState();
       listCustomer = await getListFromDb();
       if (Utils.isEmpty(listCustomer)) {
@@ -438,7 +661,7 @@ class MainBloc extends Bloc<MainEvent, MainState> {
       yield GetCustomerListSuccess();
     }
 
-    if(event is GetListTaiXeLimo){
+    else if(event is GetListTaiXeLimo){
           yield MainLoading();
           listTaiXeLimo = await getListTXLimoFromDb();
           if (Utils.isEmpty(listTaiXeLimo)) {
@@ -447,7 +670,7 @@ class MainBloc extends Bloc<MainEvent, MainState> {
           }
           yield GetListTaiXeLimoSuccess();
         }
-    if(event is UpdateTaiXeLimo){
+    else if(event is UpdateTaiXeLimo){
       yield InitialMainState();
       await db.addDriverLimo(event.customer);
       listTaiXeLimo = await getListTXLimoFromDb();
@@ -455,7 +678,7 @@ class MainBloc extends Bloc<MainEvent, MainState> {
       add(GetListTaiXeLimo());
     }
 
-    if(event is ConfirmWithTXTC){
+    else if(event is ConfirmWithTXTC){
       yield MainLoading();
       var objData = {
         'EVENT':'TAIXE_LIMO_XACNHAN',
@@ -471,12 +694,23 @@ class MainBloc extends Bloc<MainEvent, MainState> {
       yield state;
     }
 
-    if(event is GetLocationEvent){
+    else if(event is GetListCustomerConfirm){
+      yield MainLoading();
+      MainState state = _handleGetListConfirmLimo(await _networkFactory.getListCustomerConfirmLimo(_accessToken));
+      yield state;
+    }
+    else if(event is GetListTripsLimo){
+      yield MainLoading();
+      MainState state = _handleAwaitingCustomer(await _networkFactory.getListCustomerLimo(_accessToken,event.date));
+      yield state;
+    }
+
+    else if(event is GetLocationEvent){
       yield InitialMainState();
 
       yield GetLocationSuccess(event.makerID,event.lat,event.lng);
     }
-    if(event is UpdateStatusCustomerEvent){
+    else if(event is UpdateStatusCustomerEvent){
       yield MainLoading();
       UpdateStatusCustomerRequestBody request = UpdateStatusCustomerRequestBody(
         id:event.idTrungChuyen,
@@ -487,22 +721,15 @@ class MainBloc extends Bloc<MainEvent, MainState> {
       yield state;
     }
 
-    if(event is GetListGroupCustomer){
+    else if(event is GetListGroupCustomer){
       yield MainLoading();
       MainState state = _handleGroupCustomer(await _networkFactory.groupCustomerAWaiting(_accessToken,event.date));
       yield state;
     }
 
-    if(event is UpdateTokenDiveEvent){
-      yield MainLoading();
-      UpdateTokenRequestBody request = UpdateTokenRequestBody(
-        deviceToken: event.deviceToken
-      );
-      MainState state = _handleUpdateToken(await _networkFactory.updateToken(request,_accessToken));
-      yield state;
-    }
 
-    if (event is NavigateBottomNavigation) {
+
+    else if (event is NavigateBottomNavigation) {
       int position = event.position;
       if (state is MainPageState) {
         if (_prePosition == position) return;
@@ -511,15 +738,15 @@ class MainBloc extends Bloc<MainEvent, MainState> {
       yield MainLoading();
       yield MainPageState(position);
     }
-    if (event is NavigateProfile) {
+    else if (event is NavigateProfile) {
       // For background and terminal
       yield MainLoading();
       yield MainProfile();
     }
-    if (event is ChangeTitleAppbarEvent) {
+    else if (event is ChangeTitleAppbarEvent) {
       yield ChangeTitleAppbarSuccess(title: event.title);
     }
-    if (event is GetCountProduct) {
+    else if (event is GetCountProduct) {
       yield InitializeDb();
       await updateCount(event.count);
       yield GetCountNotiSuccess();
@@ -534,12 +761,12 @@ class MainBloc extends Bloc<MainEvent, MainState> {
     //   yield InitializeDb();
     // }
 
-    if (event is NavigateToPay) {
+    else if (event is NavigateToPay) {
       yield MainLoading();
       yield NavigateToPayState();
     }
 
-    if (event is NavigateToNotification) {
+    else if (event is NavigateToNotification) {
       yield MainLoading();
       yield NavigateToNotificationState();
     }
@@ -551,7 +778,7 @@ class MainBloc extends Bloc<MainEvent, MainState> {
     //   if (countNotifyUnRead == null || countNotifyUnRead < 0) countNotifyUnRead = 0;
     //   yield state;
     // }
-      if (event is LogoutMainEvent) {
+      else if (event is LogoutMainEvent) {
         yield MainLoading();
         Utils.removeData(_pref);
         _prePosition = 0;
@@ -561,8 +788,118 @@ class MainBloc extends Bloc<MainEvent, MainState> {
       }
   }
 
+  MainState _handleGetListOfDetailTrips(Object data) {
+    if (data is String) return MainFailure(data);
+    try {///2ef0d92b-fcc0-4982-98ec-3d3a5aaa084a,ddefe5a2-4775-4550-9887-721d6738e0d6
+      ///1906ab8f-f07f-478f-b3d5-0a7578bc445b,2ef0d92b-fcc0-4982-98ec-3d3a5aaa084a,ddefe5a2-4775-4550-9887-721d6738e0d6,21ffd958-210e-4665-b965-8b7741d04d9a
+      listCustomer.clear();
+      DetailTripsResponse response = DetailTripsResponse.fromJson(data);
+      listOfDetailTrips = response.data;
+      db.deleteAll();
+      listOfDetailTrips.forEach((element) {
+        Customer customer = new Customer(
+            idTrungChuyen: element.idTrungChuyen,
+            idTaiXeLimousine : element.idTaiXeLimousine,
+            hoTenTaiXeLimousine : element.hoTenTaiXeLimousine,
+            dienThoaiTaiXeLimousine : element.dienThoaiTaiXeLimousine,
+            tenXeLimousine : element.tenXeLimousine,
+            bienSoXeLimousine : element.bienSoXeLimousine,
+            tenKhachHang : element.tenKhachHang,
+            soDienThoaiKhach :element.soDienThoaiKhach,
+            diaChiKhachDi :element.diaChiKhachDi,
+            toaDoDiaChiKhachDi:element.toaDoDiaChiKhachDi,
+            diaChiKhachDen:element.diaChiKhachDen,
+            toaDoDiaChiKhachDen:element.toaDoDiaChiKhachDen,
+            diaChiLimoDi:element.diaChiLimoDi,
+            toaDoLimoDi:element.toaDoLimoDi,
+            diaChiLimoDen:element.diaChiLimoDen,
+            toaDoLimoDen:element.toaDoLimoDen,
+            loaiKhach:element.loaiKhach,
+            trangThaiTC: element.trangThaiTC,
+            soKhach:1,
+            statusCustomer: element.loaiKhach == 1 ? 2 : 5,
+            chuyen: trips,
+            totalCustomer: listOfDetailTripsTC.length,
+            idKhungGio: idKhungGio,
+            idVanPhong: idVanPhong
+        );
+        var contain =  listCustomer.where((phone) => phone.soDienThoaiKhach == element.soDienThoaiKhach);
+        if (contain.isEmpty){
+          listCustomer.add(customer);
+          db.addNew(customer);
+        }else{
+          final customerNews = listCustomer.firstWhere((item) => item.soDienThoaiKhach == element.soDienThoaiKhach);
+          if (customerNews != null){
+            customerNews.soKhach = customerNews.soKhach + 1;
+            String listIdTC = customerNews.idTrungChuyen + ',' + customer.idTrungChuyen;
+            customerNews.idTrungChuyen = listIdTC;
+          }
+          listCustomer.remove(customerNews);
+          listCustomer.add(customerNews);
+          add(DeleteCustomerFormDB(customer.idTrungChuyen));
+          add(AddOldCustomerItemList(customerNews));
+        }
+      });
+      currentNumberCustomerOfList = listCustomer.length;
+      return GetListOfDetailTripsTCSuccess();
+    } catch (e) {
+      print(e.toString());
+      return MainFailure(e.toString());
+    }
+  }
 
+  MainState _handleAwaitingCustomer(Object data) {
+    if (data is String) return MainFailure(data);
+    try {
+      ListOfGroupLimoCustomerResponse response = ListOfGroupLimoCustomerResponse.fromJson(data);
+      listCustomerLimo = response.data;
+      return GetListCustomerLimoSuccess();
+    } catch (e) {
+      print(e.toString());
+      return MainFailure(e.toString());
+    }
+  }
 
+  MainState _handleGetListConfirmLimo(Object data) {
+    if (data is String) return MainFailure(data);
+    try {
+      CustomerLimoConfirm response = CustomerLimoConfirm.fromJson(data);
+      listCustomerConfirmLimo.clear();
+      response.data.forEach((element) {
+        CustomerLimoConfirmBody customer = new CustomerLimoConfirmBody(
+            idTrungChuyen: element.idTrungChuyen,
+            hoTenTaiXe: element.hoTenTaiXe,
+            dienThoaiTaiXe: element.dienThoaiTaiXe,
+            tenKhachHang: element.tenKhachHang,
+            soDienThoaiKhach: element.soDienThoaiKhach,
+            tenTuyenDuong: element.tenTuyenDuong,
+            ghiChuDatVe: element.ghiChuDatVe,
+            ghiChuTrungChuyen: element.ghiChuTrungChuyen,
+            loaiKhach: element.loaiKhach,
+            ngayChay: element.ngayChay,
+            thoiGianDi: element.thoiGianDi,
+            soKhach: 1
+        );
+        var contain =  listCustomerConfirmLimo.where((phone) => phone.soDienThoaiKhach == element.soDienThoaiKhach);
+        if (contain.isEmpty){
+          listCustomerConfirmLimo.add(customer);
+        }else{
+          final customerNews = listCustomerConfirmLimo.firstWhere((item) => item.soDienThoaiKhach == element.soDienThoaiKhach);
+          if (customerNews != null){
+            customerNews.soKhach = customerNews.soKhach + 1;
+            String listIdTC = customerNews.idTrungChuyen + ',' + customer.idTrungChuyen;
+            customerNews.idTrungChuyen = listIdTC;
+          }
+          listCustomerConfirmLimo.remove(customerNews);
+          listCustomerConfirmLimo.add(customerNews);
+        }
+      });
+      return GetListCustomerConfirmLimo();
+    } catch (e) {
+      print('Check: ${e.toString()}');
+      return MainFailure(e.toString());
+    }
+  }
 
   Future<List<Customer>> getListFromDb() {
     return db.fetchAll();
@@ -609,15 +946,7 @@ class MainBloc extends Bloc<MainEvent, MainState> {
     }
   }
 
-  MainState _handleUpdateToken(Object data) {
-    if (data is String) return MainFailure(data);
-    try {
-      return UpdateTokenSuccessState();
-    } catch (e) {
-      print(e.toString());
-      return MainFailure(e.toString());
-    }
-  }
+
 
   MainState _handleUpdateStatusCustomer(Object data) {
     if (data is String) return MainFailure(data);
@@ -673,7 +1002,7 @@ class MainBloc extends Bloc<MainEvent, MainState> {
                                       alignment: Alignment.centerLeft,
                                       child: Text(
                                         'Giao khách cho Limo',
-                                        style: TextStyle(color: Colors.white, fontSize: 25, fontWeight: FontWeight.bold),
+                                        style: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold),
                                       )),
                                 ),
                               ),
@@ -703,31 +1032,34 @@ class MainBloc extends Bloc<MainEvent, MainState> {
                                               children: [
                                                 Row(
                                                   children: [
+                                                    Text(
+                                                      'Lái xe Limo: ',
+                                                      style: TextStyle(color: Colors.grey),
+                                                    ),
+                                                    Align(
+                                                        alignment: Alignment.centerLeft,
+                                                        child: Text(
+                                                          listTaiXeLimo[index].hoTenTaiXeLimousine?.toString()??"",
+                                                          style: TextStyle(color: Colors.black),overflow: TextOverflow.ellipsis,maxLines: 2,
+                                                        )),
+                                                  ],
+                                                ),
+                                                Row(
+                                                  children: [
                                                     Expanded(
                                                         flex: 1,
                                                         child: Text(
-                                                          'Lái xe Limo: ',
+                                                          'SĐT: ',
                                                           style: TextStyle(color: Colors.grey),
                                                         )),
                                                     Expanded(
                                                         flex: 2,
-                                                        child: Row(
-                                                          children: [
-                                                            Align(
-                                                                alignment: Alignment.centerLeft,
-                                                                child: Text(
-                                                                  listTaiXeLimo[index].hoTenTaiXeLimousine?.toString()??"",
-                                                                  style: TextStyle(color: Colors.black),
-                                                                )),
-                                                            SizedBox(width: 3,),
-                                                            Align(
-                                                                alignment: Alignment.centerLeft,
-                                                                child: Text(
-                                                                  "( ${listTaiXeLimo[index].dienThoaiTaiXeLimousine?.toString()??""} )",
-                                                                  style: TextStyle(color: Colors.grey,fontSize: 10),
-                                                                )),
-                                                          ],
-                                                        )),
+                                                        child: Align(
+                                                            alignment: Alignment.centerLeft,
+                                                            child: Text(
+                                                              "( ${listTaiXeLimo[index].dienThoaiTaiXeLimousine?.toString()??""} )",
+                                                              style: TextStyle(color: Colors.grey,fontSize: 10),
+                                                            )),),
                                                   ],
                                                 ),
                                                 Row(

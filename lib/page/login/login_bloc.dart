@@ -5,6 +5,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:trungchuyen/models/database/dbhelper.dart';
 import 'package:trungchuyen/models/entity/account.dart';
 import 'package:trungchuyen/models/network/request/login_request.dart';
+import 'package:trungchuyen/models/network/request/update_token_request.dart';
 import 'package:trungchuyen/models/network/response/login_response.dart';
 import 'package:trungchuyen/models/network/service/network_factory.dart';
 import 'package:trungchuyen/utils/const.dart';
@@ -35,10 +36,12 @@ class LoginBloc extends Bloc<LoginEvent,LoginState> with Validators{
   List<AccountInfo> listAccountInfo = new List<AccountInfo>();
   LoginBloc(this.context) {
     _networkFactory = NetWorkFactory(context);
-    // _googleSignIn = GoogleSignIn();
-    // _facebookSignIn = FacebookLogin();
-    // _firebaseMessaging = FirebaseMessaging();
-    // _firebaseMessaging.getToken().then((token) => _deviceToken = token);
+    _firebaseMessaging = FirebaseMessaging();
+    _firebaseMessaging.getToken().then((token) {
+      print("token");
+      print(token);
+      _deviceToken = token;
+    });
   }
   @override
   // TODO: implement initialState
@@ -61,7 +64,14 @@ class LoginBloc extends Bloc<LoginEvent,LoginState> with Validators{
       }
       yield LoginInitial();
     }
-
+    else if(event is UpdateTokenDiveEvent){
+      yield LoginLoading();
+      UpdateTokenRequestBody request = UpdateTokenRequestBody(
+          deviceToken: event.deviceToken
+      );
+      LoginState state = _handleUpdateToken(await _networkFactory.updateToken(request,_accessToken));
+      yield state;
+    }
     if (event is Login) {
       yield LoginLoading();
       LoginRequestBody request = LoginRequestBody(
@@ -89,6 +99,17 @@ class LoginBloc extends Bloc<LoginEvent,LoginState> with Validators{
     }
   }
 
+  LoginState _handleUpdateToken(Object data) {
+    if (data is String) return LoginFailure(data);
+    try {
+      print('Update success FCM');
+      return UpdateTokenSuccessState();
+    } catch (e) {
+      print(e.toString());
+      return LoginFailure(e.toString());
+    }
+  }
+
   LoginState _handleLogin(Object data,bool savePassword,String username,String pass) {
     if (data is String) return LoginFailure(data);
     try {
@@ -101,7 +122,7 @@ class LoginBloc extends Bloc<LoginEvent,LoginState> with Validators{
       _username = dataUser.taiKhoan.hoTen.toString().trim();
       Utils.saveDataLogin(_prefs, dataUser,_accessToken,_refreshToken,username,pass);
      pushService(savePassword,username,pass);
-      return LoginSuccess();
+      return LoginSuccess(_deviceToken);
     } catch (e) {
       print(e.toString());
       return LoginFailure(e.toString());
@@ -125,7 +146,7 @@ class LoginBloc extends Bloc<LoginEvent,LoginState> with Validators{
   }
 
   void pushService(bool savePassword,String username, String pass) async{
-    if(savePassword == false){
+    // if(savePassword == false){
       AccountInfo _accountInfo = new AccountInfo(
           username,
           pass
@@ -135,17 +156,17 @@ class LoginBloc extends Bloc<LoginEvent,LoginState> with Validators{
       if(!Utils.isEmpty(listAccountInfo)){
         db.updateAccountInfo(_accountInfo);
       }
-    }else{
-      AccountInfo _accountInfo = new AccountInfo(
-          '',
-          ''
-      );
-      await db.saveAccount(_accountInfo);
-      listAccountInfo = await getListAccountInfoFromDb();
-      if(!Utils.isEmpty(listAccountInfo)){
-        db.updateAccountInfo(_accountInfo);
-      }
-    }
+    // }else{
+    //   AccountInfo _accountInfo = new AccountInfo(
+    //       '',
+    //       ''
+    //   );
+    //   await db.saveAccount(_accountInfo);
+    //   listAccountInfo = await getListAccountInfoFromDb();
+    //   if(!Utils.isEmpty(listAccountInfo)){
+    //     db.updateAccountInfo(_accountInfo);
+    //   }
+    // }
   }
   Future<List<AccountInfo>> getListAccountInfoFromDb() {
     return db.fetchAllAccountInfo();

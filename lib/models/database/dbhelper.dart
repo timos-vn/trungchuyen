@@ -53,7 +53,8 @@ class DatabaseHelper {
        statusCustomer INTEGER,
        chuyen TEXT,
        totalCustomer INTEGER,
-       indexListCustomer INTEGER)
+       idKhungGio INTEGER,
+       idVanPhong INTEGER)
   ''');
     print("DB CustomerPending was created!");
 
@@ -108,7 +109,8 @@ class DatabaseHelper {
        statusCustomer INTEGER,
        chuyen TEXT,
        totalCustomer INTEGER,
-       indexListCustomer INTEGER)
+       idKhungGio INTEGER,
+       idVanPhong INTEGER)
   ''');
     print("DB CustomerPending was created!");
   }
@@ -373,7 +375,7 @@ class DatabaseHelper {
       await client.insert('DriverLimoInfo', customer.toMapForDb(),
           conflictAlgorithm: ConflictAlgorithm.replace);
     else {
-      int sk = oldCustomer.soKhach + 1;
+      int sk = oldCustomer.soKhach + customer.soKhach;
       String listIdTC = oldCustomer.idTrungChuyen + ',' + customer.idTrungChuyen;
       await updateRowDriverLimo(oldCustomer,sk,listIdTC);
     }

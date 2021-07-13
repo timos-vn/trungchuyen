@@ -2,9 +2,11 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:get/get.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:trungchuyen/models/network/request/tranfer_customer_request.dart';
 import 'package:trungchuyen/models/network/request/update_status_customer_request.dart';
 import 'package:trungchuyen/models/network/response/list_customer_confirm_response.dart';
 import 'package:trungchuyen/models/network/service/network_factory.dart';
+import 'package:trungchuyen/page/main/main_bloc.dart';
 import 'package:trungchuyen/service/soket_io_service.dart';
 import 'package:trungchuyen/utils/const.dart';
 
@@ -13,6 +15,9 @@ import 'limo_confirm_state.dart';
 
 class LimoConfirmBloc extends Bloc<LimoConfirmEvent,LimoConfirmState> {
 
+  // ignore: close_sinks
+  MainBloc _mainBloc;
+  MainBloc get mainBloc => _mainBloc;
   BuildContext context;
   NetWorkFactory _networkFactory;
   String _accessToken;
@@ -22,7 +27,7 @@ class LimoConfirmBloc extends Bloc<LimoConfirmEvent,LimoConfirmState> {
   SharedPreferences _prefs;
   SharedPreferences get prefs => _prefs;
   SocketIOService socketIOService;
-  List<CustomerLimoConfirmBody> listCustomerConfirmLimo = new List<CustomerLimoConfirmBody>();
+  List<CustomerLimoConfirmBody> listCustomerConfirmLimos = new List<CustomerLimoConfirmBody>();
   String role;
   LimoConfirmBloc(this.context){
     _networkFactory = NetWorkFactory(context);
@@ -46,12 +51,29 @@ class LimoConfirmBloc extends Bloc<LimoConfirmEvent,LimoConfirmState> {
     }
     if(event is UpdateStatusCustomerConfirmMapEvent){
       yield LimoConfirmLoading();
+
       UpdateStatusCustomerRequestBody request = UpdateStatusCustomerRequestBody(
           id:event.idTrungChuyen.split(','),
           status: event.status,
           ghiChu:""
       );
-      LimoConfirmState state = _handleUpdateStatusCustomer(await _networkFactory.updateGroupStatusCustomer(request,_accessToken));
+      LimoConfirmState state = _handleUpdateStatusCustomer(await _networkFactory.updateGroupStatusCustomer(request,_accessToken),event.idLaiXeTC);
+      yield state;
+    }
+    else if(event is LimoConfirm){
+      yield LimoConfirmLoading();
+      var objData = {
+        'EVENT':'TAIXE_LIMO_XACNHAN',
+      };
+      List<String> idLXTC = new List<String>();
+      idLXTC.add(event.listTaiXeTC);
+      TranferCustomerRequestBody request = TranferCustomerRequestBody(
+          title: event.title,
+          body: event.body,
+          data:objData,
+          idTaiKhoans: idLXTC
+      );
+      LimoConfirmState state =  _handleTransferCustomerLimo(await _networkFactory.sendNotification(request,_accessToken));
       yield state;
     }
   }
@@ -60,7 +82,17 @@ class LimoConfirmBloc extends Bloc<LimoConfirmEvent,LimoConfirmState> {
   // TODO: implement initialState
   LimoConfirmState get initialState => LimoConfirmInitial();
 
-  LimoConfirmState _handleUpdateStatusCustomer(Object data) {
+  LimoConfirmState _handleTransferCustomerLimo(Object data) {
+    if (data is String) return LimoConfirmFailure(data);
+    try {
+      return LimoConfirmSuccess();
+    } catch (e) {
+      print(e.toString());
+      return LimoConfirmFailure(e.toString());
+    }
+  }
+
+  LimoConfirmState _handleUpdateStatusCustomer(Object data,String idLaiXeTC) {
     if (data is String) return LimoConfirmFailure(data);
     try {
       if(socketIOService.socket.connected)
@@ -78,11 +110,45 @@ class LimoConfirmBloc extends Bloc<LimoConfirmEvent,LimoConfirmState> {
     if (data is String) return LimoConfirmFailure(data);
     try {
       CustomerLimoConfirm response = CustomerLimoConfirm.fromJson(data);
-      listCustomerConfirmLimo = response.data;
+      response.data.forEach((element) {
+        CustomerLimoConfirmBody customer = new CustomerLimoConfirmBody(
+            idTrungChuyen: element.idTrungChuyen,
+            hoTenTaiXe: element.hoTenTaiXe,
+            dienThoaiTaiXe: element.dienThoaiTaiXe,
+            tenKhachHang: element.tenKhachHang,
+            soDienThoaiKhach: element.soDienThoaiKhach,
+            tenTuyenDuong: element.tenTuyenDuong,
+            ghiChuDatVe: element.ghiChuDatVe,
+            ghiChuTrungChuyen: element.ghiChuTrungChuyen,
+            loaiKhach: element.loaiKhach,
+            ngayChay: element.ngayChay,
+            thoiGianDi: element.thoiGianDi,
+            idTaiXe: element.idTaiXe,
+            soKhach: 1
+        );
+        var contain =  listCustomerConfirmLimos.where((phone) => phone.soDienThoaiKhach == element.soDienThoaiKhach);
+        if (contain.isEmpty){
+          listCustomerConfirmLimos.add(customer);
+        }else{
+          final customerNews = listCustomerConfirmLimos.firstWhere((item) => item.soDienThoaiKhach == element.soDienThoaiKhach);
+          if (customerNews != null){
+            customerNews.soKhach = customerNews.soKhach + 1;
+            String listIdTC = customerNews.idTrungChuyen + ',' + customer.idTrungChuyen;
+            customerNews.idTrungChuyen = listIdTC;
+          }
+          listCustomerConfirmLimos.remove(customerNews);
+          listCustomerConfirmLimos.add(customerNews);
+        }
+      });
+      _mainBloc.listCustomerConfirmLimo.clear();
+      _mainBloc.listCustomerConfirmLimo = listCustomerConfirmLimos;
       return GetListCustomerConfirmLimoSuccess();
     } catch (e) {
-      print(e.toString());
       return LimoConfirmFailure(e.toString());
     }
+  }
+
+  void getMainBloc(BuildContext context) {
+    _mainBloc = BlocProvider.of<MainBloc>(context);
   }
 }

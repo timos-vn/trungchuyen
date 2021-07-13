@@ -2,9 +2,10 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:liquid_pull_to_refresh/liquid_pull_to_refresh.dart';
+import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
+import 'package:trungchuyen/extension/popup_picker.dart';
 import 'package:trungchuyen/models/database/dbhelper.dart';
 import 'package:trungchuyen/models/entity/customer.dart';
-import 'package:trungchuyen/models/network/response/detail_trips_repose.dart';
 import 'package:trungchuyen/models/network/response/list_of_group_awaiting_customer_response.dart';
 import 'package:trungchuyen/page/detail_trips/detail_trips_page.dart';
 import 'package:trungchuyen/page/main/main_bloc.dart';
@@ -32,30 +33,66 @@ class WaitingPageState extends State<WaitingPage> {
   MainBloc _mainBloc;
   //List<ListOfGroupAwaitingCustomerBody> _listOfGroupAwaitingCustomer = new List();
   DatabaseHelper db = DatabaseHelper();
-
-
+  DateTime dateTime;
   @override
   void initState() {
     // TODO: implement initState
     super.initState();
     _bloc = WaitingBloc(context);
+    _bloc.getMainBloc(context);
     _mainBloc = BlocProvider.of<MainBloc>(context);
     DateTime parseDate = new DateFormat("yyyy-MM-dd").parse(DateTime.now().toString());
     _bloc.add(GetListGroupAwaitingCustomer(parseDate));
-    //_listOfGroupAwaitingCustomer = _mainBloc.listOfGroupAwaitingCustomer;
   }
 
   @override
   Widget build(BuildContext context) {
-    print('check');
+    print('check: ${_mainBloc.listCustomer.length}');
 
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
+
         title: Text(
           'Lịch Khách Chờ',
           style: TextStyle(color: Colors.black),
         ),
+        actions: [
+          InkWell(
+            onTap: ()async {
+              final DateTime result = await showDialog<dynamic>(
+                  context: context,
+                  builder: (BuildContext context) {
+                    return DateRangePicker(
+                      dateTime ?? DateTime.now(),
+                      null,
+                      minDate: DateTime.now().subtract(const Duration(days: 10000)),
+                      maxDate:
+                      DateTime.now().add(const Duration(days: 10000)),
+                      displayDate: dateTime ?? DateTime.now(),
+                    );
+                  });
+              if (result != null) {
+                print(result);
+                dateTime = result;
+                _bloc.add(GetListGroupAwaitingCustomer(dateTime));
+              }},
+            child: Icon(
+                Icons.event,
+              color: Colors.black,
+            ),
+          ),
+          SizedBox(width: 20,),
+          InkWell(
+              onTap: (){
+                if(Utils.isEmpty(dateTime)){
+                  dateTime = DateFormat("yyyy-MM-dd").parse(DateTime.now().toString());
+                }
+                _bloc.add(GetListGroupAwaitingCustomer(dateTime));
+              },
+              child: Icon(MdiIcons.reload,color: Colors.black,)),
+          SizedBox(width: 20,)
+        ],
         backgroundColor: Colors.white,
       ),
       body:BlocListener<WaitingBloc,WaitingState>(
@@ -66,10 +103,7 @@ class WaitingPageState extends State<WaitingPage> {
             print('Length123');
           }
           else if(state is GetListOfDetailTripsOfWaitingPageSuccess){
-            /// add sqfliet
-            ///
             db.deleteAll();
-
             _bloc.listOfDetailTrips.forEach((element) {
               Customer customer = new Customer(
                 idTrungChuyen: element.idTrungChuyen,
@@ -94,7 +128,8 @@ class WaitingPageState extends State<WaitingPage> {
                 statusCustomer: element.loaiKhach == 1 ? 2 : 5,
                 chuyen: _mainBloc.trips,
                 totalCustomer: _bloc.listOfDetailTrips.length,
-                indexListCustomer:_mainBloc.indexAwaitingList,
+                idKhungGio: _mainBloc.idKhungGio,
+                idVanPhong: _mainBloc.idVanPhong,
               );
               var contain =  _mainBloc.listCustomer.where((phone) => phone.soDienThoaiKhach == element.soDienThoaiKhach);
               if (contain.isEmpty){
@@ -112,27 +147,8 @@ class WaitingPageState extends State<WaitingPage> {
                 _mainBloc.add(DeleteCustomerFormDB(customer.idTrungChuyen));
                 _mainBloc.add(AddOldCustomerItemList(customerNews));
               }
-              // if(Utils.isEmpty(_mainBloc.listTaiXeLimo)){
-              //   _countExitsCustomer++;
-              //   element.soKhach = _countExitsCustomer;
-              //   _mainBloc.listTaiXeLimo.add(element);
-              // }
-              // else{
-              //   var contain =  _mainBloc.listTaiXeLimo.where((phone) => phone.dienThoaiTaiXeLimousine == element.dienThoaiTaiXeLimousine);
-              //   if (contain.isEmpty){
-              //     _mainBloc.listTaiXeLimo.add(element);
-              //   }else{
-              //     _countExitsCustomer++;
-              //     final tile = _mainBloc.listTaiXeLimo.firstWhere((item) => item.dienThoaiTaiXeLimousine == element.dienThoaiTaiXeLimousine);
-              //     if (tile != null) tile.soKhach = _countExitsCustomer;
-              //   }
-              // }
             });
-
-
-
             _mainBloc.currentNumberCustomerOfList = _mainBloc.listCustomer.length;
-            // _mainBloc.listOfDetailTrips = _bloc.listOfDetailTrips;
           }
         },
         child: BlocBuilder<WaitingBloc,WaitingState>(
@@ -144,7 +160,6 @@ class WaitingPageState extends State<WaitingPage> {
     )
     );
   }
-
 
   Stack buildPage(BuildContext context,WaitingState state){
     return Stack(
@@ -175,13 +190,17 @@ class WaitingPageState extends State<WaitingPage> {
               child: LiquidPullToRefresh(
                 showChildOpacityTransition: false,
                 onRefresh: () => Future.delayed(Duration.zero).then(
-                        (_) => _bloc
-                        .add(GetListGroupAwaitingCustomer(DateFormat("yyyy-MM-dd").parse(DateTime.now().toString())))),
+                        (_) {
+                          if(Utils.isEmpty(dateTime)){
+                            dateTime = DateFormat("yyyy-MM-dd").parse(DateTime.now().toString());
+                          }
+                          _bloc.add(GetListGroupAwaitingCustomer(dateTime));}),
                 child: Scrollbar(
                     child: ListView.builder(
                         shrinkWrap: true,
                         itemCount: _mainBloc.listOfGroupAwaitingCustomer.length,
                         itemBuilder: (BuildContext context, int index) {
+
                           return buildListItem(_mainBloc.listOfGroupAwaitingCustomer[index],index);
                         })
                 ),
@@ -194,28 +213,7 @@ class WaitingPageState extends State<WaitingPage> {
         )
             : Container(
           child: Center(
-            child: Padding(
-              padding: const EdgeInsets.only(left: 40,right: 40),
-              child: InkWell(
-                onTap: ()=>_bloc.add(GetListGroupAwaitingCustomer(DateFormat("yyyy-MM-dd").parse(DateTime.now().toString()))),
-                child: Container(
-                    height: 35,
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(10),
-                      color: Colors.blueAccent,
-                    ),
-                  child: Center(
-                    child: Text(
-                      'Làm mới danh sách',
-                      style: Theme.of(context).textTheme.button.copyWith(
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-            ),
+            child: Text('Chưa có chuyến nào'),
           ),
         ),
         Visibility(
@@ -234,13 +232,18 @@ class WaitingPageState extends State<WaitingPage> {
           if( _mainBloc.listCustomer.length == 0){
             Utils.showDialogAssign(context: context,titleHintText: 'Bạn sẽ đón nhóm Khách này?').then((value){
               if(!Utils.isEmpty(value)){
-                _mainBloc.trips = item.thoiGianDi + ' - ' + item.ngayChay; //item.tenTuyenDuong + "  /  " +
+                _mainBloc.trips = item.thoiGianDi + ' - ' + item.ngayChay;
                 DateFormat format = DateFormat("dd/MM/yyyy");
                 _bloc.add(GetListDetailTripsOfPageWaiting(format.parse(item.ngayChay),item.idVanPhong,item.idKhungGio,item.loaiKhach));
                 _mainBloc.blocked = true;
-                _mainBloc.indexAwaitingList = index;
+                _mainBloc.idKhungGio = item.idKhungGio;
+                _mainBloc.loaiKhach = item.loaiKhach;
+                _mainBloc.idVanPhong = item.idVanPhong;
                 _mainBloc.currentNumberCustomerOfList = item.soKhach;
                 Utils.showToast( 'Chạy thôi nào bạn ơi !!!');
+                Future.delayed(Duration(seconds: 1), () {
+                  _mainBloc.add(NavigateProfile());
+                });
               }
               else{
                 print('Click huỷ');
@@ -250,7 +253,6 @@ class WaitingPageState extends State<WaitingPage> {
             print('đi đón nốt người đi thằng ngu');
             Utils.showToast( 'Bạn vẫn đang trong tuyến hoặc chưa trả khách xong.');
           }
-
         },
         child: Padding(
           padding: const EdgeInsets.only(left: 10, right: 16, top: 8, bottom: 8),
@@ -259,7 +261,7 @@ class WaitingPageState extends State<WaitingPage> {
               Container(
                 width: double.infinity,
                 decoration: BoxDecoration(
-                  color: (  index == _mainBloc.indexAwaitingList && _mainBloc.blocked == true) ?  Colors.black.withOpacity(0.5) : Theme.of(this.context).scaffoldBackgroundColor,
+                  color: (  item.idKhungGio == _mainBloc.idKhungGio && item.loaiKhach == _mainBloc.loaiKhach && _mainBloc.blocked == true) ?  Colors.black.withOpacity(0.5) : Theme.of(this.context).scaffoldBackgroundColor,
                   borderRadius: BorderRadius.circular(0),
                   boxShadow: [
                     new BoxShadow(
@@ -288,7 +290,7 @@ class WaitingPageState extends State<WaitingPage> {
                           SizedBox(
                             width: 8,
                           ),
-                          Text(//item.tenTuyenDuong??
+                          Text(item.tenVanPhong??
                             '',
                             style: TextStyle(fontWeight: FontWeight.bold),
                           ),
@@ -300,13 +302,13 @@ class WaitingPageState extends State<WaitingPage> {
                             width: 45,
                             padding: EdgeInsets.all(8),
                             decoration: BoxDecoration(
-                                color:  (  index == _mainBloc.indexAwaitingList && _mainBloc.blocked == true) ? (item.loaiKhach == 1 ? Colors.orange.withOpacity(0.5) : Colors.blue.withOpacity(0.5)) : (item.loaiKhach == 1 ? Colors.orange : Colors.blue),
+                                color:   (item.idKhungGio == _mainBloc.idKhungGio && item.loaiKhach == _mainBloc.loaiKhach && _mainBloc.blocked == true) ? (item.loaiKhach == 1 ? Colors.orange.withOpacity(0.5) : Colors.blue.withOpacity(0.5)) : (item.loaiKhach == 1 ? Colors.orange : Colors.blue),
                                 borderRadius: BorderRadius.all(Radius.circular(32))),
                             child: Center(
                               child: Text(
                                '${item.loaiKhach == 1 ? 'Đón' : 'Trả'}',
                                 style: Theme.of(this.context).textTheme.caption.copyWith(
-                                  color:( index == _mainBloc.indexAwaitingList && _mainBloc.blocked == true) ? Colors.white.withOpacity(0.5) :Colors.white,
+                                  color: (item.idKhungGio == _mainBloc.idKhungGio && item.loaiKhach == _mainBloc.loaiKhach && _mainBloc.blocked == true)? Colors.white.withOpacity(0.5) :Colors.white,
                                   fontWeight: FontWeight.bold,
                                 ),
                               ),
@@ -392,10 +394,10 @@ class WaitingPageState extends State<WaitingPage> {
                             child: Container(
                               padding: EdgeInsets.all(8),
                               decoration: BoxDecoration(
-                                color: (  index == _mainBloc.indexAwaitingList && _mainBloc.blocked == true) ? Colors.purple.withOpacity(0.5): Colors.purple,
+                                color: (item.idKhungGio == _mainBloc.idKhungGio && item.loaiKhach == _mainBloc.loaiKhach && _mainBloc.blocked == true) ? Colors.purple.withOpacity(0.5): Colors.purple,
                                 borderRadius: BorderRadius.all(Radius.circular(16))
                               ),
-                              child: Text('Xem thêm',style: TextStyle(color: (  index == _mainBloc.indexAwaitingList && _mainBloc.blocked == true) ? Colors.white.withOpacity(0.5) : Colors.white,fontSize: 10),),
+                              child: Text('Xem thêm',style: TextStyle(color: item.idKhungGio == _mainBloc.idKhungGio && item.loaiKhach == _mainBloc.loaiKhach && _mainBloc.blocked == true ? Colors.white.withOpacity(0.5) : Colors.white,fontSize: 10),),
                             ),
                           ),
                         ],
@@ -405,7 +407,7 @@ class WaitingPageState extends State<WaitingPage> {
                 ),
               ),
               Visibility(
-                visible: index == _mainBloc.indexAwaitingList && _mainBloc.blocked == true,
+                visible:  (item.idKhungGio == _mainBloc.idKhungGio && item.loaiKhach == _mainBloc.loaiKhach && _mainBloc.blocked == true),
                 child: Positioned(
                   top: 0,
                   left: 0,

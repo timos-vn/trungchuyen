@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Trung Chuyển HN</string>
+<!--    <string name="facebook_app_id">2415231795379198</string>-->
+<!--    <string name="fb_login_protocol_scheme">fb2415231795379198</string>-->
+<!--        <string name="facebook_app_id">235159721252583</string>-->
+<!--        <string name="fb_login_protocol_scheme">fb235159721252583</string>-->
+    <string name="default_notification_channel_id">Trung Chuyển HN Channel</string>
+</resources>

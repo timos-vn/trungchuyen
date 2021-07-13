@@ -29,6 +29,9 @@ class GetListOfDetailTripsLimoSuccess extends DetailTripsLimoState {
   String toString() => 'GetListOfDetailTripsLimoSuccess }';
 }
 class ConfirmCustomerLimoSuccess extends DetailTripsLimoState {
+  final int status;
+
+  ConfirmCustomerLimoSuccess(this.status);
   @override
-  String toString() => 'ConfirmCustomerLimoSuccess }';
+  String toString() => 'ConfirmCustomerLimoSuccess';
 }

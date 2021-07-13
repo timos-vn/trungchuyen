@@ -1,3 +1,4 @@
+
 import 'package:flutter/services.dart';
 
 
@@ -7,13 +8,12 @@ class Const {
   /// live : https://api.trungchuyenhn.com
   /// dev : https://apidev.trungchuyenhn.com
   // ignore: non_constant_identifier_names
-  static  String HOST_URL = "https://api.trungchuyenhn.com";
+  static  String HOST_URL = "https://apidev.trungchuyenhn.com";
   // ignore: non_constant_identifier_names
   static  int PORT_URL = 0;
 
   /// DF base URL Dio
   static const String HOST_GOOGLE_MAP_URL = "https://maps.googleapis.com/maps/api/";
-
 
   static const WAITING= 0;
   static const MAP = 1;
@@ -25,7 +25,6 @@ class Const {
   static const String TYPE_ONE = '1';
   static const String TYPE_ALL = '0';
 
-
   static TextInputFormatter FORMAT_DECIMA_NUMBER = BlacklistingTextInputFormatter(RegExp('[\\-|\\ |\\/|\\*|\$|\\#|\\+|\\|]'));
   static const String DATE_FORMAT = "dd/MM/yyyy";
   static const String DATE_TIME_FORMAT_LOCAL = "dd/MM/yyyy HH:mm:ss";
@@ -34,6 +33,7 @@ class Const {
   static const String DATE_SV = "yyyy-MM-dd'T'HH:mm:ss";
   static const String DATE_SV_FORMAT = "yyyy/MM/dd";
   static const String DATE_SV_FORMAT_1 = "MM/dd/yyyy";
+  static const String DATE_SV_FORMAT_2 = "yyyy-MM-dd";
   static const String DATE = "EEE";
   static const String DAY = "dd";
   static const String YEAR = "yyyy";
@@ -55,7 +55,6 @@ class Const {
   static const String USER_NAME = "User name";
   static const String CHUC_VU = "Full name";
   static const String NHA_XE = "Host id";
-
 
   // static const String ROLE = "Role";
   static const String PHONE_NUMBER = "Phone number";

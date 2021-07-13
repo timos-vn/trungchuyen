@@ -9,8 +9,8 @@ abstract class ReportEvent extends Equatable {
 
 class GetReportEvent extends ReportEvent {
 
-  final DateTime dateFrom;
-  final DateTime dateTo;
+  final String dateFrom;
+  final String dateTo;
 
   GetReportEvent( this.dateFrom, this.dateTo);
 

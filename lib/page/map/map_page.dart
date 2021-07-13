@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:animator/animator.dart';
 import 'package:async/async.dart';
 import 'package:dotted_border/dotted_border.dart';
@@ -10,17 +12,22 @@ import 'package:flutter_polyline_points/flutter_polyline_points.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:get/get.dart';
 import 'package:google_maps_controller/google_maps_controller.dart';
+import 'package:intl/intl.dart';
 import 'package:location/location.dart';
 import 'package:snapping_sheet/snapping_sheet.dart';
 import 'package:trungchuyen/extension/default_grabbing.dart';
 import 'package:trungchuyen/models/entity/customer.dart';
 import 'package:trungchuyen/models/network/response/detail_trips_repose.dart';
 import 'package:trungchuyen/models/network/response/polyline_result_response.dart' as pp;
+import 'package:trungchuyen/page/limo_confirm/limo_confirm_bloc.dart';
+import 'package:trungchuyen/page/limo_confirm/limo_confirm_event.dart';
 import 'package:trungchuyen/page/main/main_bloc.dart';
 import 'package:trungchuyen/page/main/main_event.dart';
 import 'package:trungchuyen/page/map/map_bloc.dart';
 import 'package:trungchuyen/page/map/map_state.dart';
 import 'package:trungchuyen/page/reason_cancel/reason_cancel_page.dart';
+import 'package:trungchuyen/page/waiting/waiting_bloc.dart';
+import 'package:trungchuyen/page/waiting/waiting_event.dart';
 import 'package:trungchuyen/service/location_service.dart';
 import 'package:trungchuyen/service/soket_io_service.dart';
 import 'package:trungchuyen/themes/colors.dart';
@@ -46,14 +53,32 @@ class MapPageState extends State<MapPage>{
   bool isOnline = false;
   bool isInProcessPickup = false;
   Polyline myPolyline;
-  MainBloc _mainBloc;
+ MainBloc _mainBloc;
   MapBloc _mapBloc;
+  WaitingBloc _waitingBloc;
   List<DetailTripsResponseBody> _listOfCustomerTrips = new List<DetailTripsResponseBody>();
+
+  StreamGroup<LatLngDelta> subscriptions = StreamGroup<LatLngDelta>();
+  Completer<GoogleMapController> _controller = Completer();
+  Location location = new Location();
+  var scaffoldKey = new GlobalKey<ScaffoldState>();
+  GlobalKey keyMap;
+  LimoConfirmBloc _limoConfirmBloc;
+  bool flat = false;
+  SocketIOService socketIOService;
+
   GoogleMapsController mapController = GoogleMapsController(
     initialCameraPosition: CameraPosition(
       target: LatLng(21.0003347, 105.8233759),
       zoom: 14.4746,
     ),
+    onMapCreated: (GoogleMapController controller){
+      // controller.animateCamera(CameraUpdate.newCameraPosition(_kLake));
+      // controller.moveCamera(CameraUpdate.newLatLng(LatLng(markerLat,markerLng)));
+    },
+    onCameraMove: (CameraPosition cameraPosition){
+      // mapController.animateCamera(cameraUpdate).moveCamera(cameraUpdate)
+    },
     compassEnabled: true,
     myLocationEnabled: true,
     myLocationButtonEnabled: false,
@@ -61,20 +86,13 @@ class MapPageState extends State<MapPage>{
     //rotateGesturesEnabled: true,
   );
 
-  StreamGroup<LatLngDelta> subscriptions = StreamGroup<LatLngDelta>();
-
-  Location location = new Location();
-  var scaffoldKey = new GlobalKey<ScaffoldState>();
-  GlobalKey keyMap;
-  bool isLock = false;
-  bool flat = false;
-  SocketIOService socketIOService;
-
   @override
   void initState() {
     // TODO: implement initState
     socketIOService = Get.find<SocketIOService>();
     _mapBloc = MapBloc(context);
+    _waitingBloc = WaitingBloc(context);
+    _limoConfirmBloc = LimoConfirmBloc(context);
     _mainBloc = BlocProvider.of<MainBloc>(context);
     _mapBloc.add(CheckPermissionEvent());
    // _mainBloc.add(GetListCustomer(_mainBloc.listCustomer));
@@ -91,34 +109,60 @@ class MapPageState extends State<MapPage>{
     mapController.addMarker(Marker(markerId: MarkerId("DriverMarker"), position: position, icon: iconCar, anchor: Offset(0.5, 0.5), rotation: alpha));
   }
 
+  moveCameraPosition(LatLng position){
+    CameraPosition cameraPosition = new CameraPosition(
+        target: LatLng(position.latitude,position.longitude),
+        zoom: 14.4746,
+    );
+    print('123:1234');
+    mapController.animateCamera(CameraUpdate.newCameraPosition(cameraPosition));
+  }
+
   @override
   Widget build(BuildContext context) {
     return BlocListener<MapBloc,MapState>(
       bloc: _mapBloc,
       listener:  (context, state){
         if(state is GetListCustomerSuccess){
-
-        }else if(state is CheckPermissionSuccess){
+          _mainBloc.listCustomer = _mapBloc.listCustomers;
+        }else if(state is GetListTaiXeLimosSuccess){
+          _mainBloc.listTaiXeLimo=_mapBloc.listTaiXeLimos;
+          print( _mainBloc.listTaiXeLimo.length);
+        }
+        else if(state is CheckPermissionSuccess){
           subscriptions.add(_mapBloc.latLngStream.getAnimatedPosition("DriverMarker"));
           subscriptions.stream.listen((LatLngDelta delta) {
+            // moveCameraPosition(LatLng(delta.from.latitude, delta.from.longitude));
             drawMyLocation(LatLng(delta.from.latitude, delta.from.longitude), delta.rotation);
           });
         }
         else if(state is GetListLocationPolylineSuccess){
           drawPolyline(state.lsPoints,);
-        }else if(state is TransferCustomerToLimoSuccess){
-          _mapBloc.add(UpdateStatusCustomerMapEvent(status: 10,idTrungChuyen: state.listIDTC));
-          // _mainBloc.add(UpdateStatusCustomerEvent(status: 10,idTrungChuyen: state.listIDTC,note: ''));
+        }
+        else if(state is TransferCustomerToLimoSuccess){
+          _mainBloc.listOfGroupAwaitingCustomer.clear();
+          _mapBloc.add(UpdateStatusCustomerMapEvent(status: 10,idTrungChuyen: state.listIDTC.split(','),note: ''));
           _mainBloc.showDialogTransferCustomer(context: context);
-        }else if(state is UpdateStatusCustomerMapSuccess){
-              _mainBloc.db.deleteAllDriverLimo();
-              _mainBloc.blocked = false;
-              _mainBloc.db.deleteAll();
-              _mainBloc.soKhachDaDonDuoc = 0;
-              _mainBloc.listTaiXeLimo.clear();
-              _mainBloc.listOfDetailTrips.clear();
-              _mainBloc.listCustomer.clear();
-              Utils.showToast('Chờ Tài xế Limo Xác nhận.');
+
+        }
+        else if(state is UpdateStatusCustomerMapSuccess){
+         if(state.status == 10 || state.status == 8){
+           DateTime parseDate = new DateFormat("yyyy-MM-dd").parse(DateTime.now().toString());
+           _waitingBloc.add(GetListGroupAwaitingCustomer(parseDate));
+           _mainBloc.db.deleteAllDriverLimo();
+           _mainBloc.blocked = false;
+           _mainBloc.db.deleteAll();
+           _mainBloc.soKhachDaDonDuoc = 0;
+           _mainBloc.listTaiXeLimo.clear();
+           _mainBloc.listOfDetailTrips.clear();
+           _mainBloc.listCustomer.clear();
+           if(state.status == 10){
+             Utils.showToast('Chờ Tài xế Limo Xác nhận.');
+           }else{
+             Utils.showToast('Xác nhận thành công');
+           }
+           _limoConfirmBloc.add(GetListCustomerConfirmEvent());
+         }
         }
       },
       child: BlocBuilder<MapBloc,MapState>(
@@ -154,13 +198,15 @@ class MapPageState extends State<MapPage>{
                   ),
                 )
                     :
-                Text(
-                  'Online',
-                  style: Theme.of(context).textTheme.title.copyWith(
-                    fontWeight: FontWeight.bold,
-                    color: Theme.of(context).textTheme.title.color,
+                InkWell(
+                  child: Text(
+                    'Online',
+                    style: Theme.of(context).textTheme.title.copyWith(
+                      fontWeight: FontWeight.bold,
+                      color: Theme.of(context).textTheme.title.color,
+                    ),
+                    textAlign: TextAlign.center,
                   ),
-                  textAlign: TextAlign.center,
                 ),
                 centerTitle: true,
                 actions: [
@@ -175,19 +221,10 @@ class MapPageState extends State<MapPage>{
                         changeOnline();
                         setState(() {
                           if(value == true){
-                            // _mainBloc.add(UpdateStatusDriverEvent(1));
-                            if(_mainBloc.socketIOService.socket.disconnected)
-                            {
-                              _mainBloc.socketIOService.socket.connect();
-                              print('connected');
-                            }
+                            _mapBloc.add(UpdateStatusDriverEvent(1));
                           }else{
-                            if(_mainBloc.socketIOService.socket.connected)
-                            {
-                              _mainBloc.socketIOService.socket.disconnect();
-                              print('Disconnected');
-                            }
-                            // _mainBloc.add(UpdateStatusDriverEvent(0));
+
+                            _mapBloc.add(UpdateStatusDriverEvent(0));
                           }
                           isOnline = value;
                           isInProcessPickup = true;
@@ -248,13 +285,303 @@ class MapPageState extends State<MapPage>{
                     height: double.infinity,
                     width: double.infinity,
                     color: Colors.white,
-                    child: SingleChildScrollView(
+                    child: Utils.isEmpty(_mainBloc.listCustomer)?
+                    Container(
+                      child: Center(child: Align(alignment: Alignment.center,child: InkWell(
+                          onTap: (){
+                            print(_mainBloc.listCustomer.length);
+                          },
+                          child: Text('Hiện tại chưa có khách \n Hoặc \n Sang nhóm khách và chọn khách để đón nhé.')))),
+                    )
+                    :
+                    SingleChildScrollView(
                       //reverse: this.widget.reverse,
                       padding: EdgeInsets.zero,
                       //padding: EdgeInsets.all(20).copyWith(top: 30),
                       controller: scrollController,
-                      child: !Utils.isEmpty(_mainBloc.listCustomer) && _mainBloc.soKhachDaDonDuoc != (Utils.isEmpty(_mainBloc.listCustomer) ? 1 :  _mainBloc.listCustomer[0].totalCustomer)
+                      child:  _mainBloc.soKhachDaDonDuoc == (Utils.isEmpty(_mainBloc.listCustomer) ? 10 :  _mainBloc.listCustomer.length)
                           ?
+                      Padding(
+                        padding: const EdgeInsets.only(left: 10,right: 10,top: 2),
+                        child: Container(
+                          child: Column(
+                            children: [
+                              Table(
+                                border: TableBorder.all(color: Colors.orange),
+                                columnWidths: const <int, TableColumnWidth>{
+                                  0: FixedColumnWidth(120),
+                                  1: FlexColumnWidth(),
+                                },
+                                defaultVerticalAlignment: TableCellVerticalAlignment.middle,
+                                children: [
+                                  TableRow(
+                                    children: [
+                                      TableCell(
+                                        child: Padding(
+                                          padding: const EdgeInsets.all(8.0),
+                                          child: Text( _mapBloc.listCustomers[0].loaiKhach == 1 ?
+                                            'Điểm đến:' : 'Điểm nhận khách:',
+                                            style: TextStyle(fontWeight: FontWeight.bold),
+                                          ),
+                                        ),
+                                      ),
+                                      TableCell(
+                                        child: Padding(
+                                          padding: const EdgeInsets.all(8.0),
+                                          child: Text(_mapBloc.listCustomers[0].loaiKhach == 1 ?
+                                              _mainBloc.listCustomer[0].diaChiLimoDi.toString() : _mainBloc.listCustomer[0].diaChiLimoDen.toString()
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  TableRow(
+                                    children: [
+                                      TableCell(
+                                        child: Padding(
+                                          padding: const EdgeInsets.all(8.0),
+                                          child: Text(
+                                            'Thời gian chạy:',
+                                            style: TextStyle(fontWeight: FontWeight.bold),
+                                          ),
+                                        ),
+                                      ),
+                                      TableCell(
+                                        child: Padding(
+                                          padding: const EdgeInsets.all(8.0),
+                                          child: Text(
+                                            _mainBloc.listCustomer[0].chuyen.toString(),
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ],
+                              ),
+                              SizedBox(height: 20,),
+                              Visibility(
+                                  visible: _mapBloc.listCustomers[0].loaiKhach == 2,
+                                  child: InkWell(
+                                    onTap: (){
+                                      List<String> idTC = new List<String>();
+                                      _mapBloc.listCustomers.forEach((element) {
+                                       idTC.add(element.idTrungChuyen);
+                                      });
+                                      String id = idTC.join(',');
+                                      print(id.split(','));
+                                      _mapBloc.add(UpdateStatusCustomerMapEvent(status: 10,idTrungChuyen: id.split(',')));
+                                    },
+                                    child: Container(
+                                      height: 40.0,
+                                      padding: EdgeInsets.all(4),
+                                      decoration: BoxDecoration(
+                                          borderRadius: BorderRadius.circular(10.0),
+                                          color: Colors.blue
+                                      ),
+                                      child: Center(
+                                        child: Text(
+                                          'Xác nhận trả khách thành công',
+                                          style: TextStyle(fontFamily: fontSub, fontSize: 16, color: white,),
+                                          textAlign: TextAlign.left,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                              ),
+                              Visibility(
+                                visible: _mapBloc.listCustomers[0].loaiKhach == 1,
+                                child: Column(
+                                  children: [
+                                    Padding(
+                                      padding: const EdgeInsets.only(left: 16,right: 16),
+                                      child: Row(
+                                        children: [
+                                          Expanded(
+                                            child: InkWell(
+                                              onTap: (){
+                                                if(Utils.isEmpty(_mainBloc.listTaiXeLimo)){
+                                                  _mapBloc.add(GetListTaiXeLimos());
+                                                }
+                                                else{
+                                                  Utils.showToast('Cập nhật thành công');
+                                                }
+                                              },
+                                              child: Container(
+                                                height: 40.0,
+                                                padding: EdgeInsets.all(4),
+                                                decoration: BoxDecoration(
+                                                    borderRadius: BorderRadius.circular(10.0),
+                                                    color: Colors.blue
+                                                ),
+                                                child: Center(
+                                                  child: Text(
+                                                    'Lấy DS LX Limo',
+                                                    style: TextStyle(fontFamily: fontSub, fontSize: 13, color: white,),
+                                                    textAlign: TextAlign.left,
+                                                  ),
+                                                ),
+                                              ),
+                                            ),
+                                          ),
+                                          SizedBox(width: 10,),
+                                          Expanded(
+                                            child: InkWell(
+                                              onTap: (){
+                                                if(!Utils.isEmpty(_mainBloc.listTaiXeLimo)){
+
+                                                  _mapBloc.add(CustomerTransferToLimo(
+                                                      'Thông báo',
+                                                      '',
+                                                      _mainBloc.listTaiXeLimo
+                                                  ));
+                                                }
+                                                else{
+                                                  Utils.showToast('Vui lòng lấy DS LX Limo');
+                                                }
+                                              },
+                                              child: Container(
+                                                height: 40.0,
+                                                padding: EdgeInsets.all(4),
+                                                decoration: BoxDecoration(
+                                                    borderRadius: BorderRadius.circular(10.0),
+                                                    color: Colors.orange
+                                                ),
+                                                child: Center(
+                                                  child: Text(
+                                                    'Giao khách cho Limo',
+                                                    style: TextStyle(fontFamily: fontSub, fontSize: 13, color: white,),
+                                                    textAlign: TextAlign.left,
+                                                  ),
+                                                ),
+                                              ),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                    SizedBox(height: 20,),
+                                    Row(
+                                      children: [
+                                        Expanded(child: Divider()),
+                                        Text('Danh sách Lái xe Limo cần giao khách',style: TextStyle(color: Colors.grey,fontSize: 11),),
+                                        Expanded(child: Divider()),
+                                      ],
+                                    ),
+                                    SizedBox(height: 20,),
+                                    Container(
+                                        height: 600,
+                                        child: ListView.separated(
+                                            padding: EdgeInsets.zero,
+                                            itemBuilder: (BuildContext context, int index) {
+                                              return Padding(
+                                                padding: const EdgeInsets.only(left: 10, right: 16),
+                                                child: Container(
+                                                  width: double.infinity,
+                                                  decoration: BoxDecoration(
+                                                    color: Theme.of(context).scaffoldBackgroundColor,
+                                                    borderRadius: BorderRadius.circular(0),
+                                                    boxShadow: [
+                                                      new BoxShadow(
+                                                        //color: Theme.of(Get.context).accentColor,
+                                                        blurRadius: 1,
+                                                      ),
+                                                    ],
+                                                  ),
+                                                  child: Column(
+                                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                                    children: <Widget>[
+                                                      Container(
+                                                        padding: const EdgeInsets.all(14),
+                                                        color: Colors.grey.withOpacity(0.2),
+                                                        child: Row(
+                                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                                          children: <Widget>[
+                                                            ClipRRect(
+                                                              borderRadius: BorderRadius.circular(10),
+                                                              child: Image.asset(
+                                                                icLogo,
+                                                                height: 40,
+                                                                width: 40,
+                                                              ),
+                                                            ),
+                                                            SizedBox(
+                                                              width: 8,
+                                                            ),
+                                                            Column(
+                                                              mainAxisAlignment: MainAxisAlignment.start,
+                                                              crossAxisAlignment: CrossAxisAlignment.start,
+                                                              children: [
+                                                                Row(
+                                                                  children: [
+                                                                    Text(
+                                                                      _mainBloc.listTaiXeLimo[index].hoTenTaiXeLimousine?.toString()??'',
+                                                                      style: TextStyle(fontWeight: FontWeight.bold),
+                                                                    ),
+                                                                    SizedBox(
+                                                                      width: 5,
+                                                                    ),
+                                                                    Text(' - ${_mainBloc.listTaiXeLimo[index].soKhach} khách', style: TextStyle(fontSize: 12, color: Colors.grey)),
+                                                                  ],
+                                                                ),
+                                                                SizedBox(
+                                                                  height: 5,
+                                                                ),
+                                                                Text('Số điện thoại: ${_mainBloc.listTaiXeLimo[index].dienThoaiTaiXeLimousine}', style: TextStyle(fontSize: 12, color: Colors.grey)),
+                                                                SizedBox(
+                                                                  height: 5,
+                                                                ),
+                                                                Text('Biển số xe: ${_mainBloc.listTaiXeLimo[index].bienSoXeLimousine}', style: TextStyle(fontSize: 12, color: Colors.grey)),
+                                                              ],
+                                                            ),
+                                                          ],
+                                                        ),
+                                                      ),
+
+                                                      Divider(
+                                                        height: 0.5,
+                                                        color: Theme.of(context).disabledColor,
+                                                      ),
+
+                                                      Padding(
+                                                        padding: const EdgeInsets.only(right: 14, left: 14, top: 15, bottom: 12),
+                                                        child: GestureDetector(
+                                                          onTap: () => launch("tel://${_mainBloc.listTaiXeLimo[index].dienThoaiTaiXeLimousine}"),
+                                                          child: Container(
+                                                            height: 35,
+                                                            decoration: BoxDecoration(
+                                                              borderRadius: BorderRadius.circular(10),
+                                                              color: Colors.blueAccent,
+                                                            ),
+                                                            child: Center(
+                                                              child: Text(
+                                                                'Gọi Lái xe Limo',
+                                                                style: Theme.of(context).textTheme.button.copyWith(
+                                                                  fontWeight: FontWeight.bold,
+                                                                  color: Colors.white,
+                                                                ),
+                                                              ),
+                                                            ),
+                                                          ),
+                                                        ),
+                                                      )
+                                                    ],
+                                                  ),
+                                                ),
+                                              );
+                                            },
+                                            separatorBuilder: (BuildContext context, int index) => Container(
+                                              height: 16,
+                                            ),
+                                            itemCount: _mainBloc.listTaiXeLimo.length)
+                                    )
+                                  ],
+                                ),
+                              )
+                            ],
+                          ),
+                        ),
+                      )
+                      :
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
@@ -265,7 +592,7 @@ class MapPageState extends State<MapPage>{
                                 child: Column(
                                   children: <Widget>[
                                     Container(
-                                      padding: const EdgeInsets.only(left: 14, top: 14, right: 14, bottom: 10),
+                                      padding: const EdgeInsets.only(left: 14, top: 14, right: 14, bottom: 0),
                                       child: Row(
                                         crossAxisAlignment: CrossAxisAlignment.start,
                                         children: <Widget>[
@@ -311,7 +638,7 @@ class MapPageState extends State<MapPage>{
                                                       SizedBox(
                                                         height: 4,
                                                       ),
-                                                      Text("Chuyến: " + _mainBloc.listCustomer[0].chuyen, style: TextStyle(fontSize: 12, color: Colors.grey)),
+                                                      Text("Chuyến: " + _mainBloc.listCustomer[0].chuyen?.toString()??'', style: TextStyle(fontSize: 12, color: Colors.grey)),
                                                       SizedBox(
                                                         height: 5,
                                                       ),
@@ -357,10 +684,10 @@ class MapPageState extends State<MapPage>{
                                         ],
                                       ),
                                     ),
-                                    Divider(
-                                      height: 0.5,
-                                      color: Theme.of(context).disabledColor,
-                                    ),
+                                    // Divider(
+                                    //   height: 0.5,
+                                    //   color: Theme.of(context).disabledColor,
+                                    // ),
                                     // Padding(
                                     //   padding: const EdgeInsets.only(right: 20, left: 14, top: 10, bottom: 10),
                                     //   child: Row(
@@ -456,10 +783,10 @@ class MapPageState extends State<MapPage>{
                                     //     ],
                                     //   ),
                                     // ),
-                                    Divider(
-                                      height: 0.5,
-                                      color: Theme.of(context).disabledColor,
-                                    ),
+                                    // Divider(
+                                    //   height: 0.5,
+                                    //   color: Theme.of(context).disabledColor,
+                                    // ),
                                     // Padding(
                                     //   padding: const EdgeInsets.only(right: 14, left: 14, top: 15, bottom: 12),
                                     //   child: Row(
@@ -485,7 +812,7 @@ class MapPageState extends State<MapPage>{
                                     //                   socketIOService.socket.emit("TAIXE_TRUNGCHUYEN_CAPNHAT_TRANGTHAI_KHACH");
                                     //                 }
                                     //                 _mainBloc.add(DeleteItem(_mainBloc.getCustomer(0).idTrungChuyen, 0));
-                                    //                 _mainBloc.add(UpdateStatusCustomerEvent(status: 9,idTrungChuyen: [_mainBloc.listCustomer[index].idTrungChuyen],note: value));
+                                    //                 _mapBloc.add(UpdateStatusCustomerMapEvent(status: 9,idTrungChuyen: [_mainBloc.listCustomer[index].idTrungChuyen],note: value));
                                     //                 Utils.showToast('Huỷ khách thành công');
                                     //               }
                                     //             });
@@ -551,7 +878,7 @@ class MapPageState extends State<MapPage>{
                                     //                   {
                                     //                     socketIOService.socket.emit("TAIXE_TRUNGCHUYEN_CAPNHAT_TRANGTHAI_KHACH");
                                     //                   }
-                                    //                   _mainBloc.add(UpdateStatusCustomerEvent(status: 3,idTrungChuyen: [_mainBloc.listCustomer[index].idTrungChuyen]));
+                                    //                   _mapBloc.add(UpdateStatusCustomerMapEvent(status: 3,idTrungChuyen: [_mainBloc.listCustomer[index].idTrungChuyen]));
                                     //                   Utils.showToast('Đang đi đón khách');
                                     //                 }else if(_mainBloc.listCustomer[index].statusCustomer == 3){
                                     //                   /// nex Đã đón
@@ -559,7 +886,7 @@ class MapPageState extends State<MapPage>{
                                     //                   {
                                     //                     socketIOService.socket.emit("TAIXE_TRUNGCHUYEN_CAPNHAT_TRANGTHAI_KHACH");
                                     //                   }
-                                    //                   _mainBloc.add(UpdateStatusCustomerEvent(status: 4,idTrungChuyen: [_mainBloc.listCustomer[index].idTrungChuyen]));
+                                    //                   _mapBloc.add(UpdateStatusCustomerMapEvent(status: 4,idTrungChuyen: [_mainBloc.listCustomer[index].idTrungChuyen]));
                                     //                   //statusDon = 2;
                                     //                   Customer customer = new Customer(
                                     //                       idTrungChuyen: _mainBloc.listCustomer[index].idTrungChuyen,
@@ -631,7 +958,7 @@ class MapPageState extends State<MapPage>{
                                     //                   {
                                     //                     socketIOService.socket.emit("TAIXE_TRUNGCHUYEN_CAPNHAT_TRANGTHAI_KHACH");
                                     //                   }
-                                    //                   _mainBloc.add(UpdateStatusCustomerEvent(status: 7,idTrungChuyen: [_mainBloc.listCustomer[index].idTrungChuyen]));
+                                    //                   _mapBloc.add(UpdateStatusCustomerMapEvent(status: 7,idTrungChuyen: [_mainBloc.listCustomer[index].idTrungChuyen]));
                                     //                   Utils.showToast('Đang đi trả khách');
                                     //                 }else if(_mainBloc.listCustomer[index].statusCustomer == 7){
                                     //                   /// Đã trả
@@ -639,7 +966,7 @@ class MapPageState extends State<MapPage>{
                                     //                   {
                                     //                     socketIOService.socket.emit("TAIXE_TRUNGCHUYEN_CAPNHAT_TRANGTHAI_KHACH");
                                     //                   }
-                                    //                   _mainBloc.add(UpdateStatusCustomerEvent(status: 8,idTrungChuyen: [_mainBloc.listCustomer[index].idTrungChuyen]));
+                                    //                   _mapBloc.add(UpdateStatusCustomerMapEvent(status: 8,idTrungChuyen: [_mainBloc.listCustomer[index].idTrungChuyen]));
                                     //                   _mainBloc.add(DeleteItem(_mainBloc.getCustomer(0).idTrungChuyen, 0));
                                     //                   _mainBloc.soKhachDaDonDuoc++;
                                     //                   Utils.showToast('Trả khách thành công');
@@ -685,9 +1012,9 @@ class MapPageState extends State<MapPage>{
                                   ],
                                 ),
                               ),
-                              SizedBox(
-                                height: 35,
-                              ),
+                              // SizedBox(
+                              //   height: 35,
+                              // ),
                             ],
                           ),
                           Container(
@@ -698,12 +1025,12 @@ class MapPageState extends State<MapPage>{
                                 Row(
                                   children: [
                                     Expanded(child: Divider()),
-                                    Text('Danh sách Khách Đón/Trả'),
+                                    Text('Danh sách Khách Đón/Trả',style: TextStyle(color: Colors.grey),),
                                     Expanded(child: Divider()),
                                   ],
                                 ),
                                 SizedBox(
-                                  height: 30,
+                                  height: 10,
                                 ),
                                 Expanded(
                                   child: ListView.separated(
@@ -868,6 +1195,12 @@ class MapPageState extends State<MapPage>{
                                                           ),
                                                         ],
                                                       ),
+                                                      InkWell(
+                                                          onTap: () => launch("tel://${_mainBloc.listCustomer[index].dienThoaiTaiXeLimousine}"),
+                                                          child: Container(
+                                                              padding: EdgeInsets.only(right: 20),
+                                                              child: Icon(Icons.phone_callback_outlined))),
+                                                      // SizedBox(width: 1,),
                                                     ],
                                                   ),
                                                 ),
@@ -906,41 +1239,42 @@ class MapPageState extends State<MapPage>{
                                                         child: GestureDetector(
                                                           child: InkWell(
                                                            onTap:(){
-                                                             isLock = false;
-                                                             Customer customer = new Customer(
-                                                                 idTrungChuyen: _mainBloc.listCustomer[index].idTrungChuyen,
-                                                                 idTaiXeLimousine : _mainBloc.listCustomer[index].idTaiXeLimousine,
-                                                                 hoTenTaiXeLimousine : _mainBloc.listCustomer[index].hoTenTaiXeLimousine,
-                                                                 dienThoaiTaiXeLimousine : _mainBloc.listCustomer[index].dienThoaiTaiXeLimousine,
-                                                                 tenXeLimousine : _mainBloc.listCustomer[index].tenXeLimousine,
-                                                                 bienSoXeLimousine : _mainBloc.listCustomer[index].bienSoXeLimousine,
-                                                                 tenKhachHang : _mainBloc.listCustomer[index].tenKhachHang,
-                                                                 soDienThoaiKhach :_mainBloc.listCustomer[index].soDienThoaiKhach,
-                                                                 diaChiKhachDi :_mainBloc.listCustomer[index].diaChiKhachDi,
-                                                                 toaDoDiaChiKhachDi:_mainBloc.listCustomer[index].toaDoDiaChiKhachDi,
-                                                                 diaChiKhachDen:_mainBloc.listCustomer[index].diaChiKhachDen,
-                                                                 toaDoDiaChiKhachDen:_mainBloc.listCustomer[index].toaDoDiaChiKhachDen,
-                                                                 diaChiLimoDi:_mainBloc.listCustomer[index].diaChiLimoDi,
-                                                                 toaDoLimoDi:_mainBloc.listCustomer[index].toaDoLimoDi,
-                                                                 diaChiLimoDen:_mainBloc.listCustomer[index].diaChiLimoDen,
-                                                                 toaDoLimoDen:_mainBloc.listCustomer[index].toaDoLimoDen,
-                                                                 loaiKhach:_mainBloc.listCustomer[index].loaiKhach,
-                                                                 trangThaiTC: 2,
-                                                                 soKhach:_mainBloc.listCustomer[index].soKhach,
-                                                                 statusCustomer: 2,
-                                                                 chuyen: _mainBloc.listCustomer[index].chuyen,
-                                                                 totalCustomer: _mainBloc.currentNumberCustomerOfList
-                                                             );
-                                                             _mainBloc.add(UpdateCustomerItemList(customer));
-                                                             _mainBloc.add(UpdateStatusCustomerEvent(status: 2,idTrungChuyen: _mainBloc.listCustomer[index].idTrungChuyen.split(',')));
-                                                             if(socketIOService.socket.connected)
-                                                             {
-                                                               socketIOService.socket.emit("TAIXE_TRUNGCHUYEN_CAPNHAT_TRANGTHAI_KHACH");
+                                                             if(_mainBloc.listCustomer[index].statusCustomer == 3 || _mainBloc.listCustomer[index].statusCustomer == 6 ){
+                                                               _mainBloc.isLock = false;
+                                                               Customer customer = new Customer(
+                                                                   idTrungChuyen: _mainBloc.listCustomer[index].idTrungChuyen,
+                                                                   idTaiXeLimousine : _mainBloc.listCustomer[index].idTaiXeLimousine,
+                                                                   hoTenTaiXeLimousine : _mainBloc.listCustomer[index].hoTenTaiXeLimousine,
+                                                                   dienThoaiTaiXeLimousine : _mainBloc.listCustomer[index].dienThoaiTaiXeLimousine,
+                                                                   tenXeLimousine : _mainBloc.listCustomer[index].tenXeLimousine,
+                                                                   bienSoXeLimousine : _mainBloc.listCustomer[index].bienSoXeLimousine,
+                                                                   tenKhachHang : _mainBloc.listCustomer[index].tenKhachHang,
+                                                                   soDienThoaiKhach :_mainBloc.listCustomer[index].soDienThoaiKhach,
+                                                                   diaChiKhachDi :_mainBloc.listCustomer[index].diaChiKhachDi,
+                                                                   toaDoDiaChiKhachDi:_mainBloc.listCustomer[index].toaDoDiaChiKhachDi,
+                                                                   diaChiKhachDen:_mainBloc.listCustomer[index].diaChiKhachDen,
+                                                                   toaDoDiaChiKhachDen:_mainBloc.listCustomer[index].toaDoDiaChiKhachDen,
+                                                                   diaChiLimoDi:_mainBloc.listCustomer[index].diaChiLimoDi,
+                                                                   toaDoLimoDi:_mainBloc.listCustomer[index].toaDoLimoDi,
+                                                                   diaChiLimoDen:_mainBloc.listCustomer[index].diaChiLimoDen,
+                                                                   toaDoLimoDen:_mainBloc.listCustomer[index].toaDoLimoDen,
+                                                                   loaiKhach:_mainBloc.listCustomer[index].loaiKhach,
+                                                                   trangThaiTC: _mainBloc.listCustomer[index].loaiKhach == 1 ? 2 : 5,
+                                                                   soKhach:_mainBloc.listCustomer[index].soKhach,
+                                                                   statusCustomer: _mainBloc.listCustomer[index].loaiKhach == 1 ? 2 : 5,
+                                                                   chuyen: _mainBloc.listCustomer[index].chuyen,
+                                                                   totalCustomer: _mainBloc.currentNumberCustomerOfList,
+                                                                   idKhungGio:  _mainBloc.idKhungGio,
+                                                                   idVanPhong:  _mainBloc.idVanPhong
+                                                               );
+                                                               _mapBloc.add(UpdateCustomerList(customer));
+                                                               _mapBloc.add(UpdateStatusCustomerMapEvent(status: 2,idTrungChuyen: _mainBloc.listCustomer[index].idTrungChuyen.split(',')));
+                                                               mapController.removePolyline(myPolyline);
+                                                               Utils.showToast('Bạn đã tạm dừng đón khách này.');
                                                              }
-                                                             mapController.removePolyline(myPolyline);
-                                                             Utils.showToast('Bạn đã tạm dừng đón khách này.');
                                                            },
-                                                            child: Container(
+                                                            child: (_mainBloc.listCustomer[index].statusCustomer == 3 || _mainBloc.listCustomer[index].statusCustomer == 6 ) ?
+                                                            Container(
                                                               height: 35,
                                                               decoration: BoxDecoration(
                                                                 borderRadius: BorderRadius.circular(10),
@@ -955,7 +1289,7 @@ class MapPageState extends State<MapPage>{
                                                                   ),
                                                                 ),
                                                               ),
-                                                            ),
+                                                            ) : Container(),
                                                           ),
                                                         ),
                                                       ),
@@ -966,12 +1300,15 @@ class MapPageState extends State<MapPage>{
                                                         child: GestureDetector(
                                                           onTap: (){
                                                             /// chuyển trạng thái đang đón khách
+                                                            print(_mainBloc.isLock);
+                                                            print(_mainBloc.listCustomer[index].statusCustomer);
+                                                            print(_mainBloc.listCustomer[index].loaiKhach);
                                                             setState(() {
                                                               // don
                                                               if(_mainBloc.listCustomer[index].loaiKhach == 1){
-                                                                if(_mainBloc.listCustomer[index].statusCustomer == 2 && isLock == false){
+                                                                if(_mainBloc.listCustomer[index].statusCustomer == 2 && _mainBloc.isLock == false){
                                                                   /// next Đang đón
-                                                                  isLock = true;
+                                                                  _mainBloc.isLock = true;
                                                                   Customer customer = new Customer(
                                                                       idTrungChuyen: _mainBloc.listCustomer[index].idTrungChuyen,
                                                                       idTaiXeLimousine : _mainBloc.listCustomer[index].idTaiXeLimousine,
@@ -994,25 +1331,18 @@ class MapPageState extends State<MapPage>{
                                                                       soKhach:_mainBloc.listCustomer[index].soKhach,
                                                                       statusCustomer: 3,
                                                                       chuyen: _mainBloc.listCustomer[index].chuyen,
-                                                                      totalCustomer: _mainBloc.currentNumberCustomerOfList
+                                                                      totalCustomer: _mainBloc.currentNumberCustomerOfList,
+                                                                      idKhungGio:  _mainBloc.idKhungGio,
+                                                                      idVanPhong:  _mainBloc.idVanPhong
                                                                   );
-                                                                  _mainBloc.add(UpdateCustomerItemList(customer));
+                                                                  _mapBloc.add(UpdateCustomerList(customer));
                                                                   _mapBloc.add(GetListLocationPolylineEvent(_mainBloc.listCustomer[index].toaDoDiaChiKhachDi));
-                                                                  _mainBloc.add(UpdateStatusCustomerEvent(status: 3,idTrungChuyen: _mainBloc.listCustomer[index].idTrungChuyen.split(',')));
-                                                                  if(socketIOService.socket.connected)
-                                                                  {
-                                                                    socketIOService.socket.emit("TAIXE_TRUNGCHUYEN_CAPNHAT_TRANGTHAI_KHACH");
-                                                                  }
+                                                                  _mapBloc.add(UpdateStatusCustomerMapEvent(status: 3,idTrungChuyen: _mainBloc.listCustomer[index].idTrungChuyen.split(',')));
                                                                   Utils.showToast('Đang đi đón khách');
                                                                 }
                                                                 else if(_mainBloc.listCustomer[index].statusCustomer == 3){
                                                                   /// nex Đã đón
-                                                                  isLock = false;
-                                                                  _mainBloc.add(UpdateStatusCustomerEvent(status: 4,idTrungChuyen: _mainBloc.listCustomer[index].idTrungChuyen.split(',')));
-                                                                  if(socketIOService.socket.connected)
-                                                                  {
-                                                                    socketIOService.socket.emit("TAIXE_TRUNGCHUYEN_CAPNHAT_TRANGTHAI_KHACH");
-                                                                  }
+                                                                  _mainBloc.isLock = false;
                                                                   Customer customer = new Customer(
                                                                       idTrungChuyen: _mainBloc.listCustomer[index].idTrungChuyen,
                                                                       idTaiXeLimousine : _mainBloc.listCustomer[index].idTaiXeLimousine,
@@ -1035,25 +1365,62 @@ class MapPageState extends State<MapPage>{
                                                                       soKhach:_mainBloc.listCustomer[index].soKhach,
                                                                       statusCustomer: 4, /// thanh cong
                                                                       chuyen: _mainBloc.listCustomer[index].chuyen,
-                                                                      totalCustomer: _mainBloc.currentNumberCustomerOfList
+                                                                      totalCustomer: _mainBloc.currentNumberCustomerOfList,
+                                                                      idKhungGio:  _mainBloc.idKhungGio,
+                                                                      idVanPhong:  _mainBloc.idVanPhong
                                                                   );
-                                                                  _mainBloc.add(DeleteItem(customer.idTrungChuyen,0));
-                                                                  _mainBloc.add(AddOldCustomerItemList(customer));
-                                                                  _mainBloc.add(UpdateTaiXeLimo(customer));
+                                                                  _mapBloc.add(DeleteCustomer(customer.idTrungChuyen,0));
+                                                                  _mapBloc.add(AddOldCustomer(customer));
+                                                                  _mapBloc.add(UpdateTaiXeLimos(customer));
                                                                   _mainBloc.soKhachDaDonDuoc++;
+                                                                  _mapBloc.add(UpdateStatusCustomerMapEvent(status: 4,idTrungChuyen: _mainBloc.listCustomer[index].idTrungChuyen.split(',')));
                                                                   Utils.showToast('Đón khách thành công - chuyển sang khách tiếp theo');
                                                                   mapController.removePolyline(myPolyline);
                                                                 }
-                                                                else if(isLock == true && _mainBloc.listCustomer[index].statusCustomer == 2){
+                                                                else if(_mainBloc.isLock == true && _mainBloc.listCustomer[index].statusCustomer == 2){
                                                                   Utils.showToast('Bạn cần tạm dừng khách đang đón để chuyển sang khách mới.');
                                                                 }
                                                               }
                                                               //tra
                                                               else{
                                                                 /// bắn notification xác nhận - nhận được khách từ tài xế Limo
-                                                                if( _mainBloc.listCustomer[index].statusCustomer == 5 && isLock == false){
+                                                                if( _mainBloc.listCustomer[index].statusCustomer == 5 && _mainBloc.isLock == false){
                                                                   //statusTra = 7;/// nex Đang trả
-                                                                  isLock = true;
+                                                                  _mainBloc.isLock = true;
+                                                                  Customer customer = new Customer(
+                                                                      idTrungChuyen: _mainBloc.listCustomer[index].idTrungChuyen,
+                                                                      idTaiXeLimousine : _mainBloc.listCustomer[index].idTaiXeLimousine,
+                                                                      hoTenTaiXeLimousine : _mainBloc.listCustomer[index].hoTenTaiXeLimousine,
+                                                                      dienThoaiTaiXeLimousine : _mainBloc.listCustomer[index].dienThoaiTaiXeLimousine,
+                                                                      tenXeLimousine : _mainBloc.listCustomer[index].tenXeLimousine,
+                                                                      bienSoXeLimousine : _mainBloc.listCustomer[index].bienSoXeLimousine,
+                                                                      tenKhachHang : _mainBloc.listCustomer[index].tenKhachHang,
+                                                                      soDienThoaiKhach :_mainBloc.listCustomer[index].soDienThoaiKhach,
+                                                                      diaChiKhachDi :_mainBloc.listCustomer[index].diaChiKhachDi,
+                                                                      toaDoDiaChiKhachDi:_mainBloc.listCustomer[index].toaDoDiaChiKhachDi,
+                                                                      diaChiKhachDen:_mainBloc.listCustomer[index].diaChiKhachDen,
+                                                                      toaDoDiaChiKhachDen:_mainBloc.listCustomer[index].toaDoDiaChiKhachDen,
+                                                                      diaChiLimoDi:_mainBloc.listCustomer[index].diaChiLimoDi,
+                                                                      toaDoLimoDi:_mainBloc.listCustomer[index].toaDoLimoDi,
+                                                                      diaChiLimoDen:_mainBloc.listCustomer[index].diaChiLimoDen,
+                                                                      toaDoLimoDen:_mainBloc.listCustomer[index].toaDoLimoDen,
+                                                                      loaiKhach:_mainBloc.listCustomer[index].loaiKhach,
+                                                                      trangThaiTC: 6,
+                                                                      soKhach:_mainBloc.listCustomer[index].soKhach,
+                                                                      statusCustomer: 6,
+                                                                      chuyen: _mainBloc.listCustomer[index].chuyen,
+                                                                      totalCustomer: _mainBloc.currentNumberCustomerOfList,
+                                                                      idKhungGio:  _mainBloc.idKhungGio,
+                                                                      idVanPhong:  _mainBloc.idVanPhong
+                                                                  );
+                                                                  _mapBloc.add(UpdateCustomerList(customer));
+                                                                  _mapBloc.add(UpdateStatusCustomerMapEvent(status: 6,idTrungChuyen: _mainBloc.listCustomer[index].idTrungChuyen.split(',')));
+
+                                                                  Utils.showToast('Đang đi trả khách');
+                                                                }
+                                                                else if(_mainBloc.listCustomer[index].statusCustomer == 6){
+                                                                  /// Đã trả
+                                                                  _mainBloc.isLock = false;
                                                                   Customer customer = new Customer(
                                                                       idTrungChuyen: _mainBloc.listCustomer[index].idTrungChuyen,
                                                                       idTaiXeLimousine : _mainBloc.listCustomer[index].idTaiXeLimousine,
@@ -1076,29 +1443,17 @@ class MapPageState extends State<MapPage>{
                                                                       soKhach:_mainBloc.listCustomer[index].soKhach,
                                                                       statusCustomer: 7,
                                                                       chuyen: _mainBloc.listCustomer[index].chuyen,
-                                                                      totalCustomer: _mainBloc.currentNumberCustomerOfList
+                                                                      totalCustomer: _mainBloc.currentNumberCustomerOfList,
+                                                                      idKhungGio:  _mainBloc.idKhungGio,
+                                                                      idVanPhong:  _mainBloc.idVanPhong
                                                                   );
-                                                                  _mainBloc.add(UpdateCustomerItemList(customer));
-                                                                  _mainBloc.add(UpdateStatusCustomerEvent(status: 7,idTrungChuyen: _mainBloc.listCustomer[index].idTrungChuyen.split(',')));
-                                                                  if(socketIOService.socket.connected)
-                                                                  {
-                                                                    socketIOService.socket.emit("TAIXE_TRUNGCHUYEN_CAPNHAT_TRANGTHAI_KHACH");
-                                                                  }
-                                                                  Utils.showToast('Đang đi trả khách');
-                                                                }
-                                                                else if(_mainBloc.listCustomer[index].statusCustomer == 7){
-                                                                  /// Đã trả
-                                                                  isLock = false;
-                                                                  if(socketIOService.socket.connected)
-                                                                  {
-                                                                    socketIOService.socket.emit("TAIXE_TRUNGCHUYEN_CAPNHAT_TRANGTHAI_KHACH");
-                                                                  }
-                                                                  _mainBloc.add(UpdateStatusCustomerEvent(status: 8,idTrungChuyen: _mainBloc.listCustomer[index].idTrungChuyen.split(',')));
-                                                                  _mainBloc.add(DeleteItem(_mainBloc.getCustomer(0).idTrungChuyen, 0));
+                                                                  _mapBloc.add(UpdateCustomerList(customer));
+                                                                  _mapBloc.add(UpdateStatusCustomerMapEvent(status: 7,idTrungChuyen: _mainBloc.listCustomer[index].idTrungChuyen.split(',')));
+                                                                  //_mapBloc.add(DeleteCustomer(_mapBloc.getCustomer(0).idTrungChuyen, 0));
                                                                   _mainBloc.soKhachDaDonDuoc++;
                                                                   Utils.showToast('Trả khách thành công');
                                                                 }
-                                                                else if(isLock == true && _mainBloc.listCustomer[index].statusCustomer == 6){
+                                                                else if(_mainBloc.isLock == true && _mainBloc.listCustomer[index].statusCustomer == 6){
                                                                   Utils.showToast('Bạn cần tạm dừng khách đang trả để chuyển sang khách mới.');
                                                                 }
                                                               }
@@ -1113,7 +1468,7 @@ class MapPageState extends State<MapPage>{
                                                                   ?
                                                               (_mainBloc.listCustomer[index].statusCustomer == 2 ? Colors.orange : (_mainBloc.listCustomer[index].statusCustomer == 3 ? Colors.blueAccent : _mainBloc.listCustomer[index].statusCustomer == 4 ? Colors.orange : Colors.orange))
                                                                   :
-                                                              (_mainBloc.listCustomer[index].statusCustomer == 6 ? Colors.orange : (_mainBloc.listCustomer[index].statusCustomer == 7 ? Colors.blueAccent : _mainBloc.listCustomer[index].statusCustomer == 8 ? Colors.orange : Colors.orange)),
+                                                              (_mainBloc.listCustomer[index].statusCustomer == 5 ? Colors.orange : (_mainBloc.listCustomer[index].statusCustomer == 6 ? Colors.blueAccent : _mainBloc.listCustomer[index].statusCustomer == 8 ? Colors.orange : Colors.orange)),
                                                             ),
                                                             child: Center(
                                                               child: Text(
@@ -1121,11 +1476,11 @@ class MapPageState extends State<MapPage>{
                                                                     ?
                                                                 (_mainBloc.listCustomer[index].statusCustomer == 2 ? 'Đón khách' : (_mainBloc.listCustomer[index].statusCustomer != 2 ? 'Xác nhận' : ''))// _mainBloc.listCustomer[index].statusCustomer == 4 ? 'Đã đón' :
                                                                     :
-                                                                (_mainBloc.listCustomer[index].statusCustomer == 6 ? 'Nhận khách' : (_mainBloc.listCustomer[index].statusCustomer != 7 ? 'Xác nhận'  : ''))//: _mainBloc.listCustomer[index].statusCustomer == 8 ? 'Đã trả'
+                                                                (_mainBloc.listCustomer[index].statusCustomer == 5 ? 'Nhận khách' : (_mainBloc.listCustomer[index].statusCustomer != 5 ? 'Xác nhận'  : ''))//: _mainBloc.listCustomer[index].statusCustomer == 8 ? 'Đã trả'
                                                                 ,
                                                                 style: Theme.of(context).textTheme.button.copyWith(
                                                                   fontWeight: FontWeight.bold,
-                                                                  color:(_mainBloc.listCustomer[index].statusCustomer == 2 || _mainBloc.listCustomer[index].statusCustomer == 6) ? Colors.black : Colors.white,
+                                                                  color:(_mainBloc.listCustomer[index].statusCustomer == 2 || _mainBloc.listCustomer[index].statusCustomer == 5) ? Colors.black : Colors.white,
                                                                 ),
                                                               ),
                                                             ),
@@ -1150,254 +1505,6 @@ class MapPageState extends State<MapPage>{
                           )
                         ],
                       )
-                          : _mainBloc.soKhachDaDonDuoc == (Utils.isEmpty(_mainBloc.listCustomer) ? 10 :  _mainBloc.listCustomer.length)
-                          ?
-                      Padding(
-                        padding: const EdgeInsets.only(left: 10,right: 10,top: 2),
-                        child: Container(
-                          child: Column(
-                            children: [
-                              Table(
-                                border: TableBorder.all(color: Colors.orange),
-                                columnWidths: const <int, TableColumnWidth>{
-                                  0: FixedColumnWidth(120),
-                                  1: FlexColumnWidth(),
-                                },
-                                defaultVerticalAlignment: TableCellVerticalAlignment.middle,
-                                children: [
-                                  TableRow(
-                                    children: [
-                                      TableCell(
-                                        child: Padding(
-                                          padding: const EdgeInsets.all(8.0),
-                                          child: Text(
-                                            'Điểm đến:',
-                                            style: TextStyle(fontWeight: FontWeight.bold),
-                                          ),
-                                        ),
-                                      ),
-                                      TableCell(
-                                        child: Padding(
-                                          padding: const EdgeInsets.all(8.0),
-                                          child: Text(_mainBloc.listCustomer[0].diaChiLimoDi.toString()),
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                  TableRow(
-                                    children: [
-                                      TableCell(
-                                        child: Padding(
-                                          padding: const EdgeInsets.all(8.0),
-                                          child: Text(
-                                            'Thời gian chạy:',
-                                            style: TextStyle(fontWeight: FontWeight.bold),
-                                          ),
-                                        ),
-                                      ),
-                                      TableCell(
-                                        child: Padding(
-                                          padding: const EdgeInsets.all(8.0),
-                                          child: Text(
-                                            _mainBloc.listCustomer[0].chuyen.toString(),
-                                          ),
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ],
-                              ),
-                              SizedBox(height: 20,),
-                              Padding(
-                                padding: const EdgeInsets.only(left: 16,right: 16),
-                                child: Row(
-                                  children: [
-                                    Expanded(
-                                      child: InkWell(
-                                        onTap: (){
-                                          _mainBloc.add(GetListTXLimo());
-                                        },
-                                        child: Container(
-                                          height: 40.0,
-                                          padding: EdgeInsets.all(4),
-                                          decoration: BoxDecoration(
-                                              borderRadius: BorderRadius.circular(10.0),
-                                              color: Colors.blue
-                                          ),
-                                          child: Center(
-                                            child: Text(
-                                              'Lấy DS LX Limo',
-                                              style: TextStyle(fontFamily: fontSub, fontSize: 16, color: white,),
-                                              textAlign: TextAlign.left,
-                                            ),
-                                          ),
-                                        ),
-                                      ),
-                                    ),
-                                    SizedBox(width: 10,),
-                                    Expanded(
-                                      child: InkWell(
-                                        onTap: (){
-                                          if(!Utils.isEmpty(_mainBloc.listTaiXeLimo)){
-                                            _mapBloc.add(CustomerTransferToLimo(
-                                                'Thông báo',
-                                                '',
-                                                _mainBloc.listTaiXeLimo
-                                            ));
-                                          }
-                                          else{
-                                            Utils.showToast('Vui lòng lấy DS LX Limo');
-                                          }
-                                        },
-                                        child: Container(
-                                          height: 40.0,
-                                          padding: EdgeInsets.all(4),
-                                          decoration: BoxDecoration(
-                                              borderRadius: BorderRadius.circular(10.0),
-                                              color: Colors.orange
-                                          ),
-                                          child: Center(
-                                            child: Text(
-                                              'Giao khách cho Limo',
-                                              style: TextStyle(fontFamily: fontSub, fontSize: 16, color: white,),
-                                              textAlign: TextAlign.left,
-                                            ),
-                                          ),
-                                        ),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              SizedBox(height: 20,),
-                              Row(
-                                children: [
-                                  Expanded(child: Divider()),
-                                  Text('Danh sách Lái xe Limo cần giao khách',style: TextStyle(color: Colors.grey,fontSize: 11),),
-                                  Expanded(child: Divider()),
-                                ],
-                              ),
-                              SizedBox(height: 20,),
-                              Container(
-                                  height: 300,
-                                  child: ListView.separated(
-                                      padding: EdgeInsets.zero,
-                                      itemBuilder: (BuildContext context, int index) {
-                                        return Padding(
-                                          padding: const EdgeInsets.only(left: 10, right: 16),
-                                          child: Container(
-                                            width: double.infinity,
-                                            decoration: BoxDecoration(
-                                              color: Theme.of(context).scaffoldBackgroundColor,
-                                              borderRadius: BorderRadius.circular(0),
-                                              boxShadow: [
-                                                new BoxShadow(
-                                                  //color: Theme.of(Get.context).accentColor,
-                                                  blurRadius: 1,
-                                                ),
-                                              ],
-                                            ),
-                                            child: Column(
-                                              crossAxisAlignment: CrossAxisAlignment.start,
-                                              children: <Widget>[
-                                                Container(
-                                                  padding: const EdgeInsets.all(14),
-                                                  color: Colors.grey.withOpacity(0.2),
-                                                  child: Row(
-                                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                                    children: <Widget>[
-                                                      ClipRRect(
-                                                        borderRadius: BorderRadius.circular(10),
-                                                        child: Image.asset(
-                                                          icLogo,
-                                                          height: 40,
-                                                          width: 40,
-                                                        ),
-                                                      ),
-                                                      SizedBox(
-                                                        width: 8,
-                                                      ),
-                                                      Column(
-                                                        mainAxisAlignment: MainAxisAlignment.start,
-                                                        crossAxisAlignment: CrossAxisAlignment.start,
-                                                        children: [
-                                                          Row(
-                                                            children: [
-                                                              Text(
-                                                                _mainBloc.listTaiXeLimo[index].hoTenTaiXeLimousine?.toString()??'',
-                                                                style: TextStyle(fontWeight: FontWeight.bold),
-                                                              ),
-                                                              SizedBox(
-                                                                width: 5,
-                                                              ),
-                                                              Text(' - ${_mainBloc.listTaiXeLimo[index].soKhach} khách', style: TextStyle(fontSize: 12, color: Colors.grey)),
-                                                            ],
-                                                          ),
-                                                          SizedBox(
-                                                            height: 5,
-                                                          ),
-                                                          Text('Số điện thoại: ${_mainBloc.listTaiXeLimo[index].dienThoaiTaiXeLimousine}', style: TextStyle(fontSize: 12, color: Colors.grey)),
-                                                          SizedBox(
-                                                            height: 5,
-                                                          ),
-                                                          Text('Biển số xe: ${_mainBloc.listTaiXeLimo[index].bienSoXeLimousine}', style: TextStyle(fontSize: 12, color: Colors.grey)),
-                                                        ],
-                                                      ),
-                                                    ],
-                                                  ),
-                                                ),
-
-                                                Divider(
-                                                  height: 0.5,
-                                                  color: Theme.of(context).disabledColor,
-                                                ),
-
-                                                Padding(
-                                                  padding: const EdgeInsets.only(right: 14, left: 14, top: 15, bottom: 12),
-                                                  child: GestureDetector(
-                                                    onTap: () => launch("tel://${_mainBloc.listTaiXeLimo[index].dienThoaiTaiXeLimousine}"),
-                                                    child: Container(
-                                                      height: 35,
-                                                      decoration: BoxDecoration(
-                                                        borderRadius: BorderRadius.circular(10),
-                                                        color: Colors.blueAccent,
-                                                      ),
-                                                      child: Center(
-                                                        child: Text(
-                                                          'Gọi Lái xe Limo',
-                                                          style: Theme.of(context).textTheme.button.copyWith(
-                                                            fontWeight: FontWeight.bold,
-                                                            color: Colors.white,
-                                                          ),
-                                                        ),
-                                                      ),
-                                                    ),
-                                                  ),
-                                                )
-                                              ],
-                                            ),
-                                          ),
-                                        );
-                                      },
-                                      separatorBuilder: (BuildContext context, int index) => Container(
-                                        height: 16,
-                                      ),
-                                      itemCount: _mainBloc.listTaiXeLimo.length)
-                              )
-                            ],
-                          ),
-                        ),
-                      )
-                          :
-                      Container(
-                        child: Center(child: Align(alignment: Alignment.center,child: InkWell(
-                            onTap: (){
-
-                              print(_mainBloc.currentNumberCustomerOfList);
-                              print(_mainBloc.soKhachDaDonDuoc);print(_mainBloc.listCustomer);
-                            },
-                            child: Text('Hiện tại chưa có khách \n Hoặc \n Sang nhóm khách và chọn khách để đón nhé.')))),
-                      ),
                     ),
                   )
                 ),
@@ -1467,6 +1574,8 @@ class MapPageState extends State<MapPage>{
       ),
     );
   }
+
+
 
   Widget offLineMode() {
     return Animator(

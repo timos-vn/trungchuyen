@@ -12,6 +12,7 @@ import 'package:trungchuyen/models/network/response/detail_trips_repose.dart';
 import 'package:trungchuyen/page/account/account_bloc.dart';
 import 'package:trungchuyen/page/account/account_page.dart';
 import 'package:trungchuyen/page/limo_confirm/limo_confirm_bloc.dart';
+import 'package:trungchuyen/page/limo_confirm/limo_confirm_event.dart';
 import 'package:trungchuyen/page/limo_confirm/limo_confirm_page.dart';
 import 'package:trungchuyen/page/list_customer_limo/list_customer_limo_bloc.dart';
 import 'package:trungchuyen/page/list_customer_limo/list_customer_limo_page.dart';
@@ -43,7 +44,8 @@ import 'main_state.dart';
 
 class MainPage extends StatefulWidget {
   final int roleAccount;
-  const MainPage({Key key,this.roleAccount}) : super(key: key);
+  final String tokenFCM;
+  const MainPage({Key key,this.roleAccount,this.tokenFCM}) : super(key: key);
 
 
   @override
@@ -80,6 +82,7 @@ class _MainPageState extends State<MainPage> with WidgetsBindingObserver{
   final GlobalKey<MapLimoPageState> _mapLimoPageKey = GlobalKey();
   final GlobalKey<WaitingPageState> _waitingPageKey = GlobalKey();
   final GlobalKey<ListCustomerLimoPageState> _listCustomerLimoKey = GlobalKey();
+  final GlobalKey<LimoConfirmPageState> _limoConfirmKey = GlobalKey();
 
   Future<List<NotificationCustomerOfTC>> getListFromDbNotificationCustomer() {
     return _mainBloc.db.fetchAllNotificationCustomer();
@@ -101,20 +104,23 @@ class _MainPageState extends State<MainPage> with WidgetsBindingObserver{
   }
 
   Future<List<Customer>> getListCustomer() async {
-    // _mainBloc.listOfDetailTrips.clear();
-    // _mainBloc.listCustomerToPickUpSuccess.clear();
     _mainBloc.listCustomer = await getListFromDb();
     if (!Utils.isEmpty(_mainBloc.listCustomer)) {
-      _mainBloc.indexAwaitingList = _mainBloc.listCustomer[0].indexListCustomer;
+      _mainBloc.idKhungGio = _mainBloc.listCustomer[0].idKhungGio;
+      _mainBloc.loaiKhach = _mainBloc.listCustomer[0].loaiKhach;
       _mainBloc.blocked = true;
       _mainBloc.listCustomer.forEach((element) {
-        if(element.statusCustomer == 4){
-          _mainBloc.soKhachDaDonDuoc++;
+        if(element.statusCustomer == 4 || element.statusCustomer == 8){
+          _mainBloc.soKhachDaDonDuoc =  _mainBloc.soKhachDaDonDuoc + 1;
         }
+      //  _mainBloc.add(KhachHuyOrDoiTaiXe(element.idTrungChuyen));
       });
+      print('LENGHT: ${_mainBloc.soKhachDaDonDuoc}');
       return _mainBloc.listCustomer ;
     }else{
       print('nullll');
+      // _mainBloc.db.deleteAll();
+      // _mainBloc.add(GetListTaiXeLimo());
       return null;
     }
   }
@@ -143,33 +149,23 @@ class _MainPageState extends State<MainPage> with WidgetsBindingObserver{
     _mainBloc = MainBloc();
     _mapBloc = MapBloc(context);
     _waitingBloc = WaitingBloc(context);
-    // _reportBloc = ReportBloc(context);
     _accountBloc = AccountBloc(context);
     _listCustomerLimoBloc = ListCustomerLimoBloc(context);
     _mapLimoBloc = MapLimoBloc(context);
-    // _reportLimoBloc = ReportLimoBloc(context);
     _limoConfirmBloc = LimoConfirmBloc(context);
     _currentTabKey = firstTabNavKey;
-
     if(widget.roleAccount == 3){
       getListCustomer();
       getListTaiXeLimo();
-      //_mainBloc.add(GetListNotificationCustomerTC());
     }
     else if(widget.roleAccount == 7){
       _mainBloc.add(GetListNotificationOfLimo());
     }
     WidgetsBinding.instance.addObserver(
-        LifecycleEventHandler(resumeCallBack: () async => setState(() {})),
+        LifecycleEventHandler(resumeCallBack: (){
+
+        }),
     );
-    // if(widget.roleAccount == 3){
-    //
-    // }else{
-    //   if(_mainBloc.socketIOService.socket.disconnected)
-    //   {
-    //     _mainBloc.socketIOService.socket.connect();
-    //   }
-    // }
     super.initState();
   }
 
@@ -287,13 +283,26 @@ class _MainPageState extends State<MainPage> with WidgetsBindingObserver{
                   _lastIndexToShop = Const.WAITING;
                   _currentIndex = _lastIndexToShop;
                   _currentTabKey = firstTabNavKey;
-                  _mainBloc.add(GetCountNoti());
-                  //_mainBloc.countSMS = null;
+                }else if(state is GetListOfGroupCustomerSuccess){
+                  _waitingPageKey?.currentState?.setState(() {
+                    _mainBloc.listOfGroupAwaitingCustomer = _mainBloc.listOfGroupAwaitingCustomer;
 
+                  });
+                }else if(state is GetListCustomerConfirmLimo){
+                  _limoConfirmKey?.currentState?.setState(() {
+                    _mainBloc.listCustomerConfirmLimo = _mainBloc.listCustomerConfirmLimo;
+                  });
+                }else if(state is GetListCustomerLimoSuccess){
+                  _listCustomerLimoKey?.currentState?.setState(() {
+                    _mainBloc.listCustomerLimo = _mainBloc.listCustomerLimo;
+                  });
+                }else if(state is GetListOfDetailTripsTCSuccess){
+                  _mapPageKey?.currentState?.setState(() {
+                    _mainBloc.listCustomer = _mainBloc.listCustomer;
+                  });
                 }
                 else if (state is NavigateToNotificationState) {}
                 else if(state is GetLocationSuccess){
-
                   // _mapLimoPageKey?.currentState?.setState(() {
                   //   if(_mapLimoBloc.lsMarkerId.where((id) => id==state.makerID).length==0)
                   //   {
@@ -320,19 +329,21 @@ class _MainPageState extends State<MainPage> with WidgetsBindingObserver{
                     if (_currentIndex == Const.WAITING) {
                       if(widget.roleAccount == 3){
                         DateTime parseDate = new DateFormat("yyyy-MM-dd").parse(DateTime.now().toString());
-                        _waitingBloc.add(GetListGroupAwaitingCustomer(parseDate));
+                        _mainBloc.add(GetListGroupCustomer(parseDate));
+                      }else if(widget.roleAccount == 7){
+                        DateTime parseDate = new DateFormat("yyyy-MM-dd").parse(DateTime.now().toString());
+                        _mainBloc.add(GetListTripsLimo(parseDate));
                       }
                     }
                     if (_currentIndex == Const.CONFIRM) {
-
+                      _mainBloc.add(GetListCustomerConfirm());
                     }
                     if (_currentIndex == Const.ACCOUNT) {
-
                     }
                   }
                   if (state is MainProfile) {
-                    _currentIndex = Const.ACCOUNT;
-                    _currentTabKey = fourthTabNavKey;
+                    _currentIndex = Const.MAP;
+                    _currentTabKey = secondTabNavKey;
                   }
                   _mainBloc.init(context);
                   return Stack(children: <Widget>[
@@ -347,30 +358,17 @@ class _MainPageState extends State<MainPage> with WidgetsBindingObserver{
                             switch (pos) {
                               case 0:
                                 _currentTabKey = firstTabNavKey;
-                                if(widget.roleAccount == 3){
-                                  _waitingPageKey?.currentState?.setState(() {
-                                    _mainBloc.testing = "B ${testcase++}";
-                                    _mainBloc.listOfGroupAwaitingCustomer = _mainBloc.listOfGroupAwaitingCustomer;
-
-                                  });
-                                }else{
-                                  _listCustomerLimoKey?.currentState?.setState(() {
-                                    _mainBloc.testing = "B ${testcase++}";
-                                    _mainBloc.listCustomerLimo = _mainBloc.listCustomerLimo;
-                                  });
-                                }
                                 break;
                               case 1:
                                 _currentTabKey = secondTabNavKey;
                                 if(widget.roleAccount == 3){
                                   _mapPageKey?.currentState?.setState(() {
-                                    _mainBloc.testing = "B";
                                     _mainBloc.listCustomer = _mainBloc.listCustomer;
                                   });
                                 }
                                 break;
                               case 2:
-                                _lastIndexToShop = _currentIndex;
+                                // _lastIndexToShop = _currentIndex;
                                 _currentTabKey = thirdTabNavKey;
                                 break;
                               case 3:
@@ -401,7 +399,7 @@ class _MainPageState extends State<MainPage> with WidgetsBindingObserver{
                               break;
                             case 2:
                               key = thirdTabNavKey;
-                              newWidget = LimoConfirmPage();//widget.roleAccount == 3 ? ReportPage() : ReportLimoPage();
+                              newWidget = LimoConfirmPage(key: _limoConfirmKey,);//widget.roleAccount == 3 ? ReportPage() : ReportLimoPage();
                               break;
                             case 3:
                               key = fourthTabNavKey;
@@ -432,11 +430,11 @@ class _MainPageState extends State<MainPage> with WidgetsBindingObserver{
     return [
       BottomNavigationBarItem(
         icon: Icon(
-          Icons.person_add_alt_1_outlined,
+          MdiIcons.carWash,
           color: _currentIndex == Const.WAITING ? orange : grey,
         ),
         title: Text(
-          'Khách'.tr,
+          'Chuyến'.tr,
           style: TextStyle(color: _currentIndex == Const.WAITING ? orange : grey, fontSize: 10),
         ),
       ),

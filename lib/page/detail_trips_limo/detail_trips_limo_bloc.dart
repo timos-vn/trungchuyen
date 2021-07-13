@@ -44,7 +44,7 @@ class DetailTripsLimoBloc extends Bloc<DetailTripsLimoEvent,DetailTripsLimoState
     }
     else if(event is ConfirmCustomerLimoEvent){
       yield DetailTripsLimoLoading();
-      DetailTripsLimoState state = _handleConfirmCustomerLimo(await _networkFactory.confirmCustomerLimo(_accessToken,event.idDatVe,event.trangThai,event.note));
+      DetailTripsLimoState state = _handleConfirmCustomerLimo(await _networkFactory.confirmCustomerLimo(_accessToken,event.idDatVe,event.trangThai,event.note),event.trangThai);
       yield state;
     }
   }
@@ -61,10 +61,10 @@ class DetailTripsLimoBloc extends Bloc<DetailTripsLimoEvent,DetailTripsLimoState
     }
   }
 
-  DetailTripsLimoState _handleConfirmCustomerLimo(Object data) {
+  DetailTripsLimoState _handleConfirmCustomerLimo(Object data, int status) {
     if (data is String) return DetailTripsLimoFailure(data);
     try {
-      return ConfirmCustomerLimoSuccess();
+      return ConfirmCustomerLimoSuccess(status);
     } catch (e) {
       print(e.toString());
       return DetailTripsLimoFailure(e.toString());

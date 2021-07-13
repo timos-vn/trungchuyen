@@ -1,13 +1,17 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:get/get.dart';
 import 'package:intl/intl.dart';
 import 'package:liquid_pull_to_refresh/liquid_pull_to_refresh.dart';
 import 'package:table_calendar/table_calendar.dart';
+import 'package:trungchuyen/page/options_input/options_input_pages.dart';
 import 'package:trungchuyen/page/report/report_bloc.dart';
 import 'package:trungchuyen/page/report/report_event.dart';
 import 'package:trungchuyen/page/report/report_state.dart';
 import 'package:trungchuyen/themes/images.dart';
+import 'package:trungchuyen/utils/const.dart';
+import 'package:trungchuyen/utils/utils.dart';
 
 class ReportPage extends StatefulWidget {
   @override
@@ -19,10 +23,11 @@ class _ReportPageState extends State<ReportPage> {
   ReportBloc _bloc;
   void onDaySelected(DateTime day, List events, List holidays) {
     print('CALLBACK: ${DateFormat("yyyy-MM-dd").parse(day.toString())}');
-    _bloc.add(GetReportEvent(DateFormat("yyyy-MM-dd").parse(day.toString()),DateFormat("yyyy-MM-dd").parse(day.toString())));
+    _bloc.add(GetReportEvent(DateFormat("yyyy-MM-dd").parse(day.toString()).toString(),DateFormat("yyyy-MM-dd").parse(day.toString()).toString()));
   }
   CalendarController calendarController;
   int countTotalCustomer = 0;
+  String toDate,fromDate;
 
   @override
   void initState() {
@@ -30,7 +35,7 @@ class _ReportPageState extends State<ReportPage> {
     super.initState();
     _bloc = ReportBloc(context);
     calendarController = CalendarController();
-    _bloc.add(GetReportEvent(DateFormat("yyyy-MM-dd").parse(DateTime.now().toString()),DateFormat("yyyy-MM-dd").parse(DateTime.now().toString())));
+    _bloc.add(GetReportEvent(DateFormat("yyyy-MM-dd").parse(DateTime.now().toString()).toString(),DateFormat("yyyy-MM-dd").parse(DateTime.now().toString()).toString()));
   }
 
   @override
@@ -57,10 +62,21 @@ class _ReportPageState extends State<ReportPage> {
           centerTitle: true,
           actions: [
             GestureDetector(
-                // onTap: ()=> showDialog(
-                //     context: context,
-                //     builder: (context) => FilterCustomerPage()),
-                child: Icon(Icons.filter_alt_outlined)),
+                onTap: ()=> showDialog(
+                    context: context,
+                    builder: (context) => OptionsInputPage()).then(
+                        (value){
+                      if(!Utils.isEmpty(value)){
+                        if(!Utils.isEmpty(value[0]?.toString()) || !Utils.isEmpty(value[1]?.toString())){
+                          fromDate = value[0]?.toString();
+                          toDate = value[1]?.toString();
+                          _bloc.add(GetReportEvent(fromDate,toDate));
+                        }else{
+                          print('Cancel');
+                        }
+                      }
+                    }),
+                child: Icon(Icons.filter_alt_outlined,color: Colors.black,)),
             SizedBox(width: 16,),
           ],
           title: Text(
@@ -206,13 +222,26 @@ class _ReportPageState extends State<ReportPage> {
                       Expanded(child: Divider()),
                     ],
                   ),
+                  SizedBox(height: 4,),
+                  Row(
+                    children: [
+                      Expanded(child: Container()),
+                      !Utils.isEmpty(fromDate) ?
+                     Text('Từ ngày: ${fromDate?.toString()} - Đến ngày: ${toDate?.toString()}',style: TextStyle(color: Colors.grey,fontSize: 10),) : Container(),
+                      Expanded(child: Container()),
+                    ],
+                  ),
                   SizedBox(height: 10,),
                   Expanded(
                     child: LiquidPullToRefresh(
                       showChildOpacityTransition: false,
                       onRefresh: () => Future.delayed(Duration.zero).then(
-                              (_) => _bloc
-                              .add(GetReportEvent(DateFormat("yyyy-MM-dd").parse(DateTime.now().toString()),DateFormat("yyyy-MM-dd").parse(DateTime.now().toString())))),
+                              (_) {
+                                if(Utils.isEmpty(fromDate) || Utils.isEmpty(toDate)){
+                                  _bloc.add(GetReportEvent(DateFormat("yyyy-MM-dd").parse(DateTime.now().toString()).toString(),DateFormat("yyyy-MM-dd").parse(DateTime.now().toString()).toString()));
+                                }
+                                _bloc.add(GetReportEvent(fromDate,toDate));
+                              }),
                       child: Scrollbar(
                         child: ListView.builder(
                             shrinkWrap: true,
@@ -299,12 +328,12 @@ class _ReportPageState extends State<ReportPage> {
                                                   width: 40,
                                                   padding: EdgeInsets.all(8),
                                                   decoration: BoxDecoration(
-                                                      color: Colors.orange,
+                                                      color: _bloc.listReport[index].loaiKhach == 1 ? Colors.orange :  Colors.blue ,
                                                       borderRadius: BorderRadius.all(Radius.circular(32))
                                                   ),
                                                   child: Center(
                                                     child: Text(
-                                                      index % _bloc.listReport[index].loaiKhach == 1 ? 'Trả' : 'Đón',
+                                                      _bloc.listReport[index].loaiKhach == 1 ? 'Đón' : 'Trả',
                                                       style:TextStyle(
                                                         color: Colors.white,
                                                         fontWeight: FontWeight.normal,
@@ -320,38 +349,7 @@ class _ReportPageState extends State<ReportPage> {
                                             height: 0.5,
                                             color: Colors.grey,
                                           ),
-                                          // Padding(
-                                          //   padding: const EdgeInsets.only(right: 16, left: 16, top: 10, bottom: 10),
-                                          //   child: Column(
-                                          //     crossAxisAlignment: CrossAxisAlignment.start,
-                                          //     children: <Widget>[
-                                          //       Text(
-                                          //         'Thông tin khách hàng',
-                                          //         style: Theme.of(Get.context).textTheme.caption.copyWith(
-                                          //           color: Theme.of(Get.context).disabledColor,
-                                          //           fontWeight: FontWeight.normal,
-                                          //         ),
-                                          //       ),
-                                          //       SizedBox(height: 5,),
-                                          //       Text(
-                                          //         'Khách ${index.toString()}' + ' - ' + '0962983437',
-                                          //         maxLines: 2,
-                                          //         overflow: TextOverflow.ellipsis,
-                                          //         style: Theme.of(Get.context).textTheme.subtitle.copyWith(
-                                          //           fontWeight: FontWeight.normal,
-                                          //           color: Theme.of(Get.context).textTheme.title.color,
-                                          //         ),
-                                          //       ),
-                                          //     ],
-                                          //   ),
-                                          // ),
-                                          // Padding(
-                                          //   padding: const EdgeInsets.only(right: 16, left: 16, top: 0, bottom: 0),
-                                          //   child: Divider(
-                                          //     height: 0.5,
-                                          //     color: Theme.of(Get.context).disabledColor,
-                                          //   ),
-                                          // ),
+
                                           Padding(
                                             padding: const EdgeInsets.only(right: 16, left: 16, top: 10, bottom: 10),
                                             child: Column(
@@ -377,7 +375,38 @@ class _ReportPageState extends State<ReportPage> {
                                               ],
                                             ),
                                           ),
-
+                                          Padding(
+                                            padding: const EdgeInsets.only(right: 16, left: 16, top: 0, bottom: 0),
+                                            child: Divider(
+                                              height: 0.5,
+                                              color: Theme.of(Get.context).disabledColor,
+                                            ),
+                                          ),
+                                          Padding(
+                                            padding: const EdgeInsets.only(right: 16, left: 16, top: 10, bottom: 10),
+                                            child: Column(
+                                              crossAxisAlignment: CrossAxisAlignment.start,
+                                              children: <Widget>[
+                                                Text(
+                                                  'Thông tin Limo',
+                                                  style: Theme.of(Get.context).textTheme.caption.copyWith(
+                                                    color: Theme.of(Get.context).disabledColor,
+                                                    fontWeight: FontWeight.normal,
+                                                  ),
+                                                ),
+                                                SizedBox(height: 5,),
+                                                Text(
+                                                  '${ _bloc.listReport[index].hoTenTaiXeLimousine.toString()}' + ' - ' + '${ _bloc.listReport[index].dienThoaiTaiXeLimousine.toString()}',
+                                                  maxLines: 2,
+                                                  overflow: TextOverflow.ellipsis,
+                                                  style: Theme.of(Get.context).textTheme.subtitle.copyWith(
+                                                    fontWeight: FontWeight.normal,
+                                                    color: Theme.of(Get.context).textTheme.title.color,
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                          ),
                                         ],
                                       ),
                                     ),

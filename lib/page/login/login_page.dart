@@ -87,13 +87,8 @@ class _LoginPageState extends State<LoginPage> {
                 Get.put(SocketIOService());
                 ///0 : Offline
                 ///1 : Online
-                // if(_loginBloc.roleAccount == 3){
-                //   // _loginBloc.add(UpdateStatusDriverEvent(0));
-                // }else{
-                //   // _loginBloc.add(UpdateStatusDriverEvent(1));
-                //
-                // }
-                Navigator.push(context, (MaterialPageRoute(builder: (context)=>MainPage(roleAccount: _loginBloc.roleAccount,))));
+                _loginBloc.add(UpdateTokenDiveEvent(state.tokenFCM));
+                Navigator.push(context, (MaterialPageRoute(builder: (context)=>MainPage(roleAccount: _loginBloc.roleAccount,tokenFCM: state.tokenFCM,))));
               }
               else if (state is LoginFailure) {
                 Utils.showNotifySnackBar(context,state.error.toString());

@@ -33,3 +33,8 @@ class UpdateStatusCustomerConfirmSuccess extends LimoConfirmState {
   @override
   String toString() => 'UpdateStatusCustomerConfirmSuccess {}';
 }
+class LimoConfirmSuccess extends LimoConfirmState {
+
+  @override
+  String toString() => 'LimoConfirmSuccess {}';
+}

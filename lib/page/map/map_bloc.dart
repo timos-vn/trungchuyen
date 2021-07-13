@@ -38,7 +38,7 @@ class MapBloc extends Bloc<MapEvent,MapState> {
   List<DetailTripsResponseBody> listOfCustomerTrips = new List<DetailTripsResponseBody>();
 
   ///
-
+  List<Customer> listCustomers = new List<Customer>();
   Location location = new Location();
   bool serviceEnabled;
   String currentLocationTC;
@@ -52,6 +52,7 @@ class MapBloc extends Bloc<MapEvent,MapState> {
   final db = DatabaseHelper();
   String test1 = 'O';
   String idUser;
+  List<Customer> listTaiXeLimos = new List<Customer>();
 
   MapBloc(this.context)  {
     _networkFactory = NetWorkFactory(context);
@@ -85,38 +86,73 @@ class MapBloc extends Bloc<MapEvent,MapState> {
       idUser = _prefs.getString(Const.USER_ID) ??'';
     }
 
-    // if(event is GetCustomerList){
-    //   yield MapLoading();
-    //   listCustomer = await getListFromDb();
-    //   if (Utils.isEmpty(listCustomer)) {
-    //     yield GetListCustomerSuccess();
-    //     return;
-    //   }
-    //   yield GetListCustomerSuccess();
-    // }
+    if(event is GetCustomerList){
+      yield MapLoading();
+      listCustomers = await getListFromDb();
+      if (!Utils.isEmpty(listCustomers)) {
+        yield GetListCustomerSuccess();
+        return;
+      }
+      yield GetListCustomerSuccess();
+    }
 
-    // if (event is Delete) {
-    //   yield MapLoading();
-    //   deleteItems(event.index);
-    //   await db.remove(event.idTC);
-    //   listCustomer = await getListFromDb();
-    //   yield GetCustomerListSuccess();
-    //   add(GetCustomerList());
-    // }
+    if (event is AddOldCustomer) {
+      yield MapInitial();
+      await db.addNew(event.customer);
+      listCustomers = await getListFromDb();
+      yield GetListCustomerSuccess();
+    }
 
-    // if(event is UpdateCustomerList){
-    //   yield MapLoading();
-    //   await db.update(event.customer);
-    //   listCustomer = await getListFromDb();
-    //   yield GetCustomerListSuccess();
-    //   add(GetCustomerList());
-    // }
+    if (event is DeleteCustomer) {
+      yield MapLoading();
+      _deleteItems(event.index);
+      await db.remove(event.idTC);
+      listCustomers = await getListFromDb();
+      yield GetListCustomerSuccess();
+      //    add(GetCustomerItemList());
+    }
 
+    if(event is UpdateCustomerList){
+      yield MapInitial();
+      await db.updateCustomer(event.customer);
+      listCustomers = await getListFromDb();
+      yield GetListCustomerSuccess();
+    }
+
+    if(event is UpdateTaiXeLimos){
+      yield MapInitial();
+      await db.addDriverLimo(event.customer);
+      listTaiXeLimos = await getListTXLimoFromDb();
+      yield GetListTaiXeLimosSuccess();
+    }
+
+    if(event is GetListTaiXeLimos){
+      yield MapLoading();
+      listTaiXeLimos = await getListTXLimoFromDb();
+      if (Utils.isEmpty(listTaiXeLimos)) {
+        yield GetListTaiXeLimosSuccess();
+        return;
+      }
+      yield GetListTaiXeLimosSuccess();
+    }
 
     if(event is UpdateStatusDriverEvent){
       yield MapLoading();
-      MapState state = _handleUpdateStatusDriver(await _networkFactory.updateStatusDriver(_accessToken, event.statusDriver));
-      yield state;
+      if(event.statusDriver == 0){
+        if(socketIOService.socket.connected)
+        {
+          socketIOService.socket.disconnect();
+          print('Disconnected');
+        }
+      }else if(event.statusDriver == 1){
+        if(socketIOService.socket.disconnected)
+        {
+          socketIOService.socket.connect();
+          print('connected');
+        }
+      }
+      // MapState state = _handleUpdateStatusDriver(await _networkFactory.updateStatusDriver(_accessToken, event.statusDriver));
+      yield UpdateStatusDriverState();
     }
     if(event is CheckPermissionEvent){
       yield MapInitial();
@@ -141,14 +177,9 @@ class MapBloc extends Bloc<MapEvent,MapState> {
           socketIOService.socket.emit("TAIXE_CAPNHAT_TOADO",event.location);
           print('TAIXE_TC_CAPNHAT_TOADO => ${event.location.toString()}');
         }
-      // PushLocationRequestBody request = PushLocationRequestBody(
-      //   location: event.location
-      // );
-      // MapState state = _handlePushLocationToLimo(await _networkFactory.pushLocationToLimo(request,_accessToken));
       yield PushLocationToLimoSuccess();
     }
     if(event is GetListLocationPolylineEvent){
-      ///{\"lat\":20.9902775,\"lng\":105.8014063}
       yield MapLoading();
       String _location = event.customerLocation.replaceAll('{', '').replaceAll('}', '').replaceAll("\"","").replaceAll('lat', '').replaceAll('lng', '').replaceAll(':', '');
       MapState state = _handleGetListLocationPolyline(await _networkFactory.getListLocationPolyline(_accessToken,latLngLocation,_location));
@@ -190,27 +221,29 @@ class MapBloc extends Bloc<MapEvent,MapState> {
         MapState state =  _handleTransferCustomerLimo(await _networkFactory.sendNotification(request,_accessToken),idTC);
         yield state;
     }
+
     else if(event is UpdateStatusCustomerMapEvent){
       yield MapLoading();
 
       UpdateStatusCustomerRequestBody request = UpdateStatusCustomerRequestBody(
-          id:event.idTrungChuyen.split(','),
+          id:event.idTrungChuyen,
           status: event.status,
-          ghiChu:""
+          ghiChu: event.note
       );
-      MapState state = _handleUpdateStatusCustomer(await _networkFactory.updateGroupStatusCustomer(request,_accessToken));
+      MapState state = _handleUpdateStatusCustomer(await _networkFactory.updateGroupStatusCustomer(request,_accessToken),event.status);
       yield state;
+      // add(GetCustomerList());
     }
   }
 
-  MapState _handleUpdateStatusCustomer(Object data) {
+  MapState _handleUpdateStatusCustomer(Object data, int status) {
     if (data is String) return MapFailure(data);
     try {
       if(socketIOService.socket.connected)
       {
         socketIOService.socket.emit("TAIXE_TRUNGCHUYEN_CAPNHAT_TRANGTHAI_KHACH");
       }
-      return UpdateStatusCustomerMapSuccess();
+      return UpdateStatusCustomerMapSuccess(status);
     } catch (e) {
       print(e.toString());
       return MapFailure(e.toString());
@@ -278,6 +311,9 @@ class MapBloc extends Bloc<MapEvent,MapState> {
         // print('---Tream--- ${currentLocationTC.toString()}');
         ///{\"lat\":20.9763858,\"lng\":105.8175841}
         // print(countPush);
+        if(countPush == 5){
+
+        }
         if(countPush == 1){
           countPush=0;
           var obj = {
@@ -329,5 +365,21 @@ class MapBloc extends Bloc<MapEvent,MapState> {
       }
     }
     return false;
+  }
+
+  Future<List<Customer>> getListFromDb() {
+    return db.fetchAll();
+  }
+
+  Future<List<Customer>> getListTXLimoFromDb() {
+    return db.fetchAllDriverLimo();
+  }
+
+  void _deleteItems(int index) {
+    listCustomers.removeAt(index);
+  }
+
+  Customer getCustomer(int i) {
+    return listCustomers.elementAt(i);
   }
 }

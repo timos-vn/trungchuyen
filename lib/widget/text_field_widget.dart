@@ -104,7 +104,21 @@ class _TextFieldWidgetState extends State<TextFieldWidget> {
                       size: 20,
                     )),
           suffixIcon: !widget.isPassword
-              ? widget.suffix == null ? null : Icon(widget.suffix,color: grey,size: 20,)
+              ? widget.suffix == null ?
+                widget.controller.text.length > 0 ?
+                GestureDetector(
+                  onTap: () {
+                    setState(() {
+                      widget.controller.text ='';
+                    });
+                  },
+                  child:Icon(
+                    Icons.cancel,
+                    semanticLabel: 'delete',
+                    color: blue,
+                  ),
+                ): null
+              : Icon(widget.suffix,color: grey,size: 20,)
               : GestureDetector(
                   onTap: () {
                     setState(() {
@@ -117,7 +131,7 @@ class _TextFieldWidgetState extends State<TextFieldWidget> {
                         _obscureText ? 'show password' : 'hide password',
                     color: blue,
                   ),
-                ),
+                ) ,
           labelStyle:
               TextStyle(color: widget.isEnable ? grey : !Utils.isEmpty(widget.color) ? widget.color : grey, fontSize: 13),
           hintStyle: TextStyle(

@@ -77,7 +77,16 @@ class PushLocationToLimoSuccess extends MapState {
   String toString() => 'PushLocationToLimoSuccess {}';
 }class UpdateStatusCustomerMapSuccess extends MapState {
 
+  final int status;
+
+  UpdateStatusCustomerMapSuccess(this.status);
+
   @override
   String toString() => 'UpdateStatusCustomerMapSuccess {}';
 }
 
+class GetListTaiXeLimosSuccess extends MapState {
+
+  @override
+  String toString() => 'GetListTaiXeLimosSuccess {}';
+}

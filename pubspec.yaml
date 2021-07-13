@@ -2,7 +2,7 @@ name: trungchuyen
 description: A new Flutter application.
 
 publish_to: 'none' # Remove this line if you wish to publish to pub.dev
-version: 1.0.2+4
+version: 1.0.4+6
 
 environment:
   sdk: ">=2.7.0 <3.0.0"
@@ -51,8 +51,10 @@ dependencies:
   pin_code_text_field: ^1.8.0
   #  flutter_datetime_picker: ^1.5.0
   syncfusion_flutter_datepicker: ^18.4.30-beta
-  firebase_auth: ^0.18.1
-  firebase_messaging: ^7.0.1
+#  firebase_auth: ^0.18.1
+  #8.0.0-dev.12
+  firebase_core : ^0.7.0
+  firebase_messaging: ^8.0.0-dev.12
   url_launcher: any
   snapping_sheet: ^3.0.0+2
   flutter_spinkit: ^4.1.2

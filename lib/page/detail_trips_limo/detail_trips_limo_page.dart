@@ -61,6 +61,11 @@ class _DetailTripsLimoPageState extends State<DetailTripsLimoPage> {
               print('ok');
             }
             else if(state is ConfirmCustomerLimoSuccess){
+              if(state.status == 3){
+                Utils.showToast('Huỷ khách thành công');
+              }else if(state.status == 5){
+                Utils.showToast('Nhận khách thành công');
+              }
               _bloc.add(GetListDetailTripsLimo(widget.dateTime,widget.idTrips,widget.idTime));
             }
           },
@@ -137,25 +142,45 @@ class _DetailTripsLimoPageState extends State<DetailTripsLimoPage> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: <Widget>[
-                      ClipRRect(
-                        borderRadius: BorderRadius.circular(10),
-                        child: Image.asset(
-                          icLogo,
-                          height: 40,
-                          width: 40,
-                        ),
-                      ),
-
+                     Row(
+                       children: [
+                         ClipRRect(
+                           borderRadius: BorderRadius.circular(10),
+                           child: Image.asset(
+                             icLogo,
+                             height: 40,
+                             width: 40,
+                           ),
+                         ),
+                         SizedBox(width: 6,),
+                         Visibility(
+                           visible:item.khachTrungChuyen == 1 ,
+                           child: GestureDetector(
+                             onTap: () => launch("tel://${item.dienThoaiTaiXeTrungChuyen}"),
+                             child: Container(
+                               child: Column(
+                                 mainAxisAlignment: MainAxisAlignment.start,
+                                 crossAxisAlignment: CrossAxisAlignment.start,
+                                 children: [
+                                   Text(item.hoTenTaiXeTrungChuyen?.toString()??''),
+                                   SizedBox(height: 4,),
+                                   Text(item.dienThoaiTaiXeTrungChuyen?.toString()??'',style: TextStyle(color: Colors.blue,fontSize: 11),),
+                                 ],
+                               ),
+                             ),
+                           ),
+                         ),
+                       ],
+                     ),
                       Container(
-
                         padding: EdgeInsets.all(8),
                         decoration: BoxDecoration(
                           color: Colors.white,
                           borderRadius: BorderRadius.all(Radius.circular(16))
                         ),
                         child: Center(
-                          child: Text(
-                            '${item.khachTrungChuyen == 1 ? 'Khách Trung chuyển' : ((item.trangThaiVe == 1 || item.trangThaiVe == 2) ? 'Chờ Xác Nhận' : (item.trangThaiVe == 3 ? 'Khách Huỷ' : 'Hoàn Thành'))}',
+                          child: Text(item.khachTrungChuyen == 1 ?
+                            "Khách Trung chuyển" : "Khách thường",
                             style: Theme.of(this.context).textTheme.caption.copyWith(
                               color: Colors.pink,
                               fontWeight: FontWeight.bold,
@@ -182,22 +207,67 @@ class _DetailTripsLimoPageState extends State<DetailTripsLimoPage> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: <Widget>[
-                      Text(
-                        'Thông tin khách',
-                        style: Theme.of(this.context).textTheme.caption.copyWith(
-                          color: Theme.of(this.context).disabledColor,
-                          fontWeight: FontWeight.normal,
-                        ),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            'Thông tin khách',
+                            style: Theme.of(this.context).textTheme.caption.copyWith(
+                              color: Theme.of(this.context).disabledColor,
+                              fontWeight: FontWeight.normal,
+                            ),
+                          ),
+                          Container(
+                            padding: EdgeInsets.all(8),
+                            decoration: BoxDecoration(
+                                color: Colors.black.withOpacity(0.5),
+                                borderRadius: BorderRadius.all(Radius.circular(16))
+                            ),
+                            child: Center(
+                              child: //
+                              item.khachTrungChuyen == 1 ? Text(
+                                '${(item.trangThaiTC == 10
+                                    ? 'Chờ Limo Xác Nhận'
+                                    :
+                                (item.trangThaiTC == 9 ? 'Khách Huỷ'
+                                    :
+                                item.trangThaiTC == 11 ? 'Hoàn Thành'
+                                    :
+                                (item.trangThaiTC == 2 || item.trangThaiTC == 3) ? 'Đang đón'
+                                    :
+                               'Đang xử lý')
+                                )}',
+                                style: Theme.of(this.context).textTheme.caption.copyWith(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ) :
+                              Text(
+                                '${(item.trangThaiVe == 1 || item.trangThaiVe == 2
+                                    ? 'Chờ Limo Xác Nhận'
+                                    :
+                                (item.trangThaiVe == 3
+                                    ? 'Khách Huỷ'
+                                    :
+                                item.trangThaiVe == 4 ? 'Chờ Admin xử lý' :
+                                'Hoàn Thành')
+                                )}',
+                                style: Theme.of(this.context).textTheme.caption.copyWith(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
                       Divider(),
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              SizedBox(
-                                height: 5,
-                              ),
                               Text(
                                 '${item.tenKhachHang??''}',
                                 maxLines: 2,
@@ -234,7 +304,7 @@ class _DetailTripsLimoPageState extends State<DetailTripsLimoPage> {
                       ),
                       Divider(),
                       Text(
-                        'Địa chỉ khách đển: ${item.diaChiKhachDen??''}',
+                        'Địa chỉ khách đến: ${item.diaChiKhachDen??''}',
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
                         style: Theme.of(this.context).textTheme.subtitle.copyWith(
@@ -264,7 +334,7 @@ class _DetailTripsLimoPageState extends State<DetailTripsLimoPage> {
                       ),
                       SizedBox(height:10,),
                       Visibility(
-                        visible: item.khachTrungChuyen == 0 && ( item.trangThaiVe != 3 || item.trangThaiVe != 5), /// == 0 Khong TC
+                        visible: item.khachTrungChuyen == 0 && ( item.trangThaiVe != 3 && item.trangThaiVe != 5), /// == 0 Khong TC
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           crossAxisAlignment: CrossAxisAlignment.center,
@@ -281,9 +351,7 @@ class _DetailTripsLimoPageState extends State<DetailTripsLimoPage> {
                                       );
                                     }).then((value){
                                   if(!Utils.isEmpty(value)){
-
                                    _bloc.add(ConfirmCustomerLimoEvent(item.idDatVe, 3,value));
-                                    Utils.showToast('Huỷ khách thành công');
                                   }
                                 });
                               },
@@ -314,9 +382,7 @@ class _DetailTripsLimoPageState extends State<DetailTripsLimoPage> {
                                       );
                                     }).then((value){
                                   _bloc.add(ConfirmCustomerLimoEvent(item.idDatVe, 5,value));
-                                  Utils.showToast('Nhận khách thành công');
                                 });
-
                               },
                               child: Container(
                                 width: 148.0,

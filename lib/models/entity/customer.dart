@@ -23,7 +23,8 @@ class Customer extends Equatable {
   int statusCustomer;
   String chuyen;
   int totalCustomer;
-  int indexListCustomer;
+  int idKhungGio;
+  int idVanPhong;
 
 
   Customer(
@@ -46,7 +47,7 @@ class Customer extends Equatable {
     this.loaiKhach,
     this.trangThaiTC,
     this.soKhach,
-    this.statusCustomer,this.chuyen,this.totalCustomer,this.indexListCustomer}
+    this.statusCustomer,this.chuyen,this.totalCustomer,this.idKhungGio,this.idVanPhong}
       );
 
   Customer.fromDb(Map<String, dynamic> map)
@@ -70,7 +71,9 @@ class Customer extends Equatable {
         loaiKhach = map['loaiKhach'],
         trangThaiTC = map['trangThaiTC'],
         soKhach = map['soKhach'],
-        statusCustomer = map['statusCustomer'],chuyen = map['chuyen'],totalCustomer = map['totalCustomer'],indexListCustomer = map['indexListCustomer'];
+        statusCustomer = map['statusCustomer'],chuyen = map['chuyen'],totalCustomer = map['totalCustomer'],
+        idKhungGio = map['idKhungGio'],
+        idVanPhong = map['idVanPhong'];
 
   Map<String, dynamic> toMapForDb() {
     var map = Map<String, dynamic>();
@@ -93,7 +96,10 @@ class Customer extends Equatable {
     map['loaiKhach'] = loaiKhach;
     map['trangThaiTC'] = trangThaiTC;
     map['soKhach'] = soKhach;
-    map['statusCustomer'] = statusCustomer;map['chuyen'] = chuyen;map['totalCustomer'] = totalCustomer;map['indexListCustomer'] = indexListCustomer;
+    map['statusCustomer'] = statusCustomer;
+    map['chuyen'] = chuyen;
+    map['totalCustomer'] = totalCustomer;
+    map['idKhungGio'] = idKhungGio;map['idVanPhong'] = idVanPhong;
     return map;
   }
 
@@ -119,6 +125,7 @@ class Customer extends Equatable {
     trangThaiTC,
     soKhach,
     chuyen,
-    indexListCustomer
+    idKhungGio,
+    idVanPhong
   ];
 }

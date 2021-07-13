@@ -37,6 +37,7 @@ class ListOfGroupAwaitingCustomerBody {
   String thoiGianDen;
   int loaiKhach;
   int soKhach;
+  String tenVanPhong;
 
   ListOfGroupAwaitingCustomerBody(
       {this.ngayChay,
@@ -46,7 +47,8 @@ class ListOfGroupAwaitingCustomerBody {
         this.thoiGianDi,
         this.thoiGianDen,
         this.loaiKhach,
-        this.soKhach});
+        this.soKhach,
+      this.tenVanPhong});
 
   ListOfGroupAwaitingCustomerBody.fromJson(Map<String, dynamic> json) {
     ngayChay = json['ngayChay'];
@@ -57,6 +59,7 @@ class ListOfGroupAwaitingCustomerBody {
     thoiGianDen = json['thoiGianDen'];
     loaiKhach = json['loaiKhach'];
     soKhach = json['soKhach'];
+    tenVanPhong = json['tenVanPhong'];
   }
 
   Map<String, dynamic> toJson() {
@@ -68,7 +71,7 @@ class ListOfGroupAwaitingCustomerBody {
     data['thoiGianDi'] = this.thoiGianDi;
     data['thoiGianDen'] = this.thoiGianDen;
     data['loaiKhach'] = this.loaiKhach;
-    data['soKhach'] = this.soKhach;
+    data['soKhach'] = this.soKhach;data['tenVanPhong'] = this.tenVanPhong;
     return data;
   }
 }

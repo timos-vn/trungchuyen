@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:bloc/bloc.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -16,10 +17,9 @@ import 'package:trungchuyen/utils/translations.dart';
 import 'package:trungchuyen/utils/utils.dart';
 import 'package:wakelock/wakelock.dart';
 
-
-
-void main() {
+void main()async {
   WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp();
   runZoned(() {
     runApp(MyApp());
   });
@@ -31,7 +31,7 @@ class MyApp extends StatefulWidget  {
 }
 
 class _MyAppState extends State<MyApp> {
-
+  final key = ValueKey('my overlay');
   @override
   void initState() {
     // TODO: implement initState
@@ -48,7 +48,8 @@ class _MyAppState extends State<MyApp> {
 
     SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle(statusBarIconBrightness: Brightness.dark, statusBarColor: Colors.white));
 
-    return OverlaySupport(
+    return OverlaySupport.global(
+      key: key,
       child: GetMaterialApp(
         title: 'Trung Chuyển',
         debugShowCheckedModeBanner: false,

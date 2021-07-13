@@ -81,18 +81,6 @@ class GetPermissionEvent extends MainEvent {
   }
 }
 
-class UpdateTokenDiveEvent extends MainEvent {
-
-  final String deviceToken;
-
-  UpdateTokenDiveEvent(this.deviceToken);
-
-  @override
-  String toString() {
-    return 'UpdateTokenDiveEvent{deviceToken: $deviceToken}';
-  }
-}
-
 class GetCountNoti extends MainEvent{
   final bool isRefresh;
 
@@ -233,7 +221,9 @@ class UpdateTaiXeLimo extends MainEvent{
     // TODO: implement toString
     return 'UpdateTaiXeLimo{}';
   }
-}class AddNotificationOfLimo extends MainEvent{
+}
+
+class AddNotificationOfLimo extends MainEvent{
 
   final NotificationOfLimo notificationOfLimo;
 
@@ -277,14 +267,7 @@ class GetCustomerItemList extends MainEvent{
   }
 }
 
-class GetListTXLimo extends MainEvent{
 
-  @override
-  String toString() {
-    // TODO: implement toString
-    return 'GetListTXLimo{}';
-  }
-}
 class GetListTaiXeLimo extends MainEvent{
 
   @override
@@ -292,7 +275,8 @@ class GetListTaiXeLimo extends MainEvent{
     // TODO: implement toString
     return 'GetListTaiXeLimo{}';
   }
-}class GetListNotificationOfLimo extends MainEvent{
+}
+class GetListNotificationOfLimo extends MainEvent{
 
   @override
   String toString() {
@@ -335,6 +319,19 @@ class KhachHuyOrDoiTaiXe extends MainEvent{
     return 'KhachHuyOrDoiTaiXe{}';
   }
 }
+class ThemKhachMoiKhiTrongChuyen extends MainEvent{
+  final String idTC;
+  final String idTime;
+  final String idVanPhong;
+
+  ThemKhachMoiKhiTrongChuyen(this.idTC, this.idTime, this.idVanPhong);
+
+  @override
+  String toString() {
+    // TODO: implement toString
+    return 'ThemKhachMoiKhiTrongChuyen{}';
+  }
+}
 
 class UpdateKhachHuyOrDoiTaiXe extends MainEvent{
   final String idTCOld;
@@ -356,4 +353,32 @@ class GetListGroupCustomerTC extends MainEvent {
 
   @override
   String toString() => 'GetListGroupCustomerTC {date: $date }';
+}
+
+class GetListCustomerConfirm extends MainEvent {
+
+  @override
+  String toString() => 'GetListCustomerConfirm {}';
+}
+class GetListTripsLimo extends MainEvent {
+
+  final DateTime date;
+
+  GetListTripsLimo(this.date,);
+
+  @override
+  String toString() => 'GetListTripsLimo {date: $date }';
+}
+
+class GetListDetailTripsTC extends MainEvent {
+
+  final DateTime date;
+  final String idRoom;
+  final String idTime;
+  final String typeCustomer;
+
+  GetListDetailTripsTC(this.date,this.idRoom,this.idTime,this.typeCustomer);
+
+  @override
+  String toString() => 'GetListDetailTripsTC {date: $date }';
 }

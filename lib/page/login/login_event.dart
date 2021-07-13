@@ -81,3 +81,15 @@ class SaveUserNamePassWordEvent extends LoginEvent {
     return 'SaveUserNamePassWordEvent{}';
   }
 }
+
+class UpdateTokenDiveEvent extends LoginEvent {
+
+  final String deviceToken;
+
+  UpdateTokenDiveEvent(this.deviceToken);
+
+  @override
+  String toString() {
+    return 'UpdateTokenDiveEvent{deviceToken: $deviceToken}';
+  }
+}

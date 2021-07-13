@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>CLIENT_ID</key>
+	<string>781711991063-k9d5lfh2ed504338965n9412o8n7kmn7.apps.googleusercontent.com</string>
+	<key>REVERSED_CLIENT_ID</key>
+	<string>com.googleusercontent.apps.781711991063-k9d5lfh2ed504338965n9412o8n7kmn7</string>
+	<key>ANDROID_CLIENT_ID</key>
+	<string>781711991063-vvs9pa3nbvfbedn5o9873tvd7cpaj3s8.apps.googleusercontent.com</string>
+	<key>API_KEY</key>
+	<string>AIzaSyBUFb0C5cS9jFJ89dcOueHP9qr1whkybg8</string>
+	<key>GCM_SENDER_ID</key>
+	<string>781711991063</string>
+	<key>PLIST_VERSION</key>
+	<string>1</string>
+	<key>BUNDLE_ID</key>
+	<string>takecare.hn.trungchuyen</string>
+	<key>PROJECT_ID</key>
+	<string>transshipment-e988f</string>
+	<key>STORAGE_BUCKET</key>
+	<string>transshipment-e988f.appspot.com</string>
+	<key>IS_ADS_ENABLED</key>
+	<false></false>
+	<key>IS_ANALYTICS_ENABLED</key>
+	<false></false>
+	<key>IS_APPINVITE_ENABLED</key>
+	<true></true>
+	<key>IS_GCM_ENABLED</key>
+	<true></true>
+	<key>IS_SIGNIN_ENABLED</key>
+	<true></true>
+	<key>GOOGLE_APP_ID</key>
+	<string>1:781711991063:ios:54f862b74663bc68b59752</string>
+</dict>
+</plist>

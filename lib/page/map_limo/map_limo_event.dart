@@ -61,3 +61,12 @@ class OfflineEvent extends MapLimoEvent {
   @override
   String toString() => 'OnlineEvent {}';
 }
+
+class GetListTXLimo extends MapLimoEvent{
+
+  @override
+  String toString() {
+    // TODO: implement toString
+    return 'GetListTXLimo{}';
+  }
+}
