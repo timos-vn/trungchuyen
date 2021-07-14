@@ -7,6 +7,8 @@ import 'package:get/get.dart' as libGetX;
 import 'package:trungchuyen/page/account/account_bloc.dart';
 import 'package:trungchuyen/page/account/account_state.dart';
 import 'package:trungchuyen/page/login/login_page.dart';
+import 'package:trungchuyen/page/main/main_bloc.dart';
+import 'package:trungchuyen/page/map/map_bloc.dart';
 import 'package:trungchuyen/page/report/report_page.dart';
 import 'package:trungchuyen/page/report_limo/report_limo_page.dart';
 import 'package:trungchuyen/themes/colors.dart';
@@ -20,9 +22,8 @@ import 'account_event.dart';
 
 
 class AccountPage extends StatefulWidget {
-  final int point;
 
-  const AccountPage({Key key, this.point}) : super(key: key);
+  const AccountPage({Key key}) : super(key: key);
   @override
   _AccountPageState createState() => _AccountPageState();
 }
@@ -30,12 +31,15 @@ class AccountPage extends StatefulWidget {
 class _AccountPageState extends State<AccountPage> with TickerProviderStateMixin {
 
   AccountBloc _accountBloc;
+  MainBloc _mainBloc;
 
   @override
   void initState() {
     // TODO: implement initState
     _accountBloc = AccountBloc(context);
+    _mainBloc = BlocProvider.of<MainBloc>(context);
     _accountBloc.add(GetInfoAccount());
+
     super.initState();
   }
 
@@ -120,9 +124,34 @@ class _AccountPageState extends State<AccountPage> with TickerProviderStateMixin
                             SizedBox(height: 15,),
                             Row(
                               children: [
-                                Icon(MdiIcons.bellOutline),
-                                SizedBox(width: 10,),
-                                Text('Thông báo'.tr),
+                               Row(
+                                 children: [
+                                   Icon(MdiIcons.bellOutline),
+                                   SizedBox(width: 10,),
+                                   Text('Thông báo'.tr),
+                                 ],
+                               ),
+                                Container(
+                                  alignment: Alignment.center,
+                                  padding: EdgeInsets.all(2),
+                                  decoration: BoxDecoration(
+                                    color: blue,
+                                    borderRadius: BorderRadius.circular(9),
+                                  ),
+                                  constraints: BoxConstraints(
+                                    minWidth: 17,
+                                    minHeight: 17,
+                                  ),
+                                  child: Text(_mainBloc.countApproval > 0
+                                      ? _mainBloc.countApproval.toString()
+                                      : "0",
+                                    style: TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 10,
+                                    ),
+                                    textAlign: TextAlign.center,
+                                  ),
+                                ),
                               ],
                             ),
                             SizedBox(height: 10,),

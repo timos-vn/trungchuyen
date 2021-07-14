@@ -53,7 +53,7 @@ class MapPageState extends State<MapPage>{
   bool isOnline = false;
   bool isInProcessPickup = false;
   Polyline myPolyline;
- MainBloc _mainBloc;
+  MainBloc _mainBloc;
   MapBloc _mapBloc;
   WaitingBloc _waitingBloc;
   List<DetailTripsResponseBody> _listOfCustomerTrips = new List<DetailTripsResponseBody>();

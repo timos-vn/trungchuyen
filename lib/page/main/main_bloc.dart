@@ -158,16 +158,12 @@ class MainBloc extends Bloc<MainEvent, MainState> {
   }
   String event;
   _listenToPushNotifications() {
+    FirebaseMessaging.instance.setForegroundNotificationPresentationOptions(badge: true, alert: true, sound: true);
     contexts = context;
     FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
 
     FirebaseMessaging.onMessage.listen((RemoteMessage message) {
       print("onMessage");
-      print(message.data['EVENT']);
-      // if(event != message.data['EVENT']){
-      //   event = message.data['EVENT'];
-      //
-      // }
       subscribeToTopic(message);
     });
 
@@ -175,6 +171,7 @@ class MainBloc extends Bloc<MainEvent, MainState> {
       subscribeToTopic(message);
       print('onMessageOpenedApp');
     });
+
   }
 
   void subscribeToTopic(RemoteMessage message){
@@ -219,6 +216,15 @@ class MainBloc extends Bloc<MainEvent, MainState> {
         DateFormat format = DateFormat("dd/MM/yyyy");
        add(GetListDetailTripsTC(format.parse(message.data['NgayTrungChuyen']),message.data['IdVanPhong'],message.data['IdKhungGio'],message.data['LoaiKhach']));
       }
+    }
+    else if(message.data['EVENT'] == 'LIMO_THONGBAO_TAIXE'){
+      String title = message.notification.title;
+      String body = message.notification.body;
+      Utils.showForegroundNotification(context, title, body, onTapNotification: () {
+        add(NavigateToNotification());
+      },);
+      DateTime parseDate = new DateFormat("yyyy-MM-dd").parse(DateTime.now().toString());
+      add(GetListTripsLimo(parseDate));
     }
     else if((message.data['EVENT'] == 'TRUNGCHUYEN_THONGBAO_TAIXE_TDK' || message.data['EVENT'] == 'TRUNGCHUYEN_THONGBAO_TAIXE_KHACHHUY')){
       Utils.showForegroundNotification(context, message.notification.title, message.notification.body, onTapNotification: () {
@@ -481,43 +487,64 @@ class MainBloc extends Bloc<MainEvent, MainState> {
     else if(event is KhachHuyOrDoiTaiXe){
       yield InitialMainState();
       listCustomer = await getListFromDb();
+      Customer oldCustomer = Customer();
+      List<String> listIdTCNew = new List<String>();
       if (!Utils.isEmpty(listCustomer)) {
         String deleteIdTC;
         Customer newsCustomer;
         List<String> listId = event.idTC.replaceAll('[', '').replaceAll(']', '').replaceAll('\"', '').split(',');
         String idTCOld;
+        int counter = 0;
         listCustomer.forEach((element) {
+          counter = listCustomer.length;
           newsCustomer = element;
           List<String> listIdTCOld = element.idTrungChuyen.split(',');
           idTCOld = element.idTrungChuyen;
+          listIdTCNew.addAll(listIdTCOld);
+         try{
+           listIdTCOld.forEach((itemOld) {
+             final customerIDTCNews = listId.firstWhere((item) => item == itemOld, orElse: () => null);
+             if (customerIDTCNews != null){
+               print('TRUE 2: ${itemOld.toString()}');
 
-          listIdTCOld.forEach((itemOld) {
-            final customerIDTCNews = listId.firstWhere((item) => item == itemOld, orElse: () => null);
-            if (customerIDTCNews != null){
-              print('TRUE 2: ${itemOld.toString()}');
-              List<String> listIdTCNew = listIdTCOld;
-              listIdTCNew.remove(customerIDTCNews);
-              newsCustomer.idTrungChuyen = listIdTCNew.join(',');
-              newsCustomer.soKhach = element.soKhach - 1;
-              if(newsCustomer.soKhach == 0){
-                print('TRUE 3: ${newsCustomer.soKhach}');
-                blocked = false;
-                isDeleteAll = true;
-                deleteIdTC = element.idTrungChuyen;
-              }else{
-                print('TRUE 4: ${newsCustomer.idTrungChuyen}');
-                add(UpdateKhachHuyOrDoiTaiXe(idTCOld,newsCustomer));
-              }
-            }
-          });
+               newsCustomer.soKhach = element.soKhach - 1;
+               if(counter >0){
+                 counter--;
+               }
+               if(newsCustomer.soKhach == 0){
+                 print('TRUE 3: ${newsCustomer.soKhach}');
+                 if(counter == 0){
+                   blocked = false;
+                 }
+                 // isDeleteAll = true;
+                 add(DeleteCustomerHuyOrDoiTaiFormDB(customerIDTCNews));
+                 // deleteIdTC = idTCOld;
+               }else{
+                 print('TRUE 4: ${newsCustomer.idTrungChuyen}');
+                 if(newsCustomer.idTrungChuyen.split(',').length == 1){
+                   listIdTCNew.remove(customerIDTCNews);
+                   newsCustomer.idTrungChuyen = listIdTCNew.join(',');
+                   blocked = false;
+                   add(DeleteCustomerHuyOrDoiTaiFormDB(idTCOld));
+                 }else{
+                   listIdTCNew.remove(customerIDTCNews);
+                   newsCustomer.idTrungChuyen = listIdTCNew.join(',');
+                   add(UpdateKhachHuyOrDoiTaiXe(idTCOld,newsCustomer));
+                 }
+               }
+             }
+           });
+         }catch(e){
+           print(e);
+         }
         });
         if(isDeleteAll == true){
           isDeleteAll = false;
-          add(DeleteCustomerHuyOrDoiTaiFormDB(deleteIdTC));
+
         }
         add(GetCustomerItemList());
       }
-      yield GetCustomerListSuccess();
+      yield GetListOfDetailTripsTCSuccess();
     }
 
     else if(event is AddNotificationOfLimo) {
@@ -622,7 +649,7 @@ class MainBloc extends Bloc<MainEvent, MainState> {
     else if (event is DeleteCustomerHuyOrDoiTaiFormDB) {
       yield InitialMainState();
       await db.remove(event.idTC);
-      // listCustomer = await getListFromDb();
+      listCustomer = await getListFromDb();
       yield GetCustomerListSuccess();
       // add(GetCustomerItemList());
     }
@@ -631,7 +658,7 @@ class MainBloc extends Bloc<MainEvent, MainState> {
       yield InitialMainState();
       await db.updateCustomerHuyOrDoiTaiXe(event.idTCOld,event.customer);
       //listCustomer = await getListFromDb();
-      yield GetCustomerListSuccess();
+      yield GetListOfDetailTripsTCSuccess();
       // add(GetCustomerItemList());
     }
     else if(event is UpdateCustomerItemList){
@@ -655,10 +682,10 @@ class MainBloc extends Bloc<MainEvent, MainState> {
       yield InitialMainState();
       listCustomer = await getListFromDb();
       if (Utils.isEmpty(listCustomer)) {
-        yield GetCustomerListSuccess();
+        yield GetListOfDetailTripsTCSuccess();
         return;
       }
-      yield GetCustomerListSuccess();
+      yield GetListOfDetailTripsTCSuccess();
     }
 
     else if(event is GetListTaiXeLimo){
@@ -788,11 +815,14 @@ class MainBloc extends Bloc<MainEvent, MainState> {
       }
   }
 
+
+
   MainState _handleGetListOfDetailTrips(Object data) {
     if (data is String) return MainFailure(data);
     try {///2ef0d92b-fcc0-4982-98ec-3d3a5aaa084a,ddefe5a2-4775-4550-9887-721d6738e0d6
       ///1906ab8f-f07f-478f-b3d5-0a7578bc445b,2ef0d92b-fcc0-4982-98ec-3d3a5aaa084a,ddefe5a2-4775-4550-9887-721d6738e0d6,21ffd958-210e-4665-b965-8b7741d04d9a
       listCustomer.clear();
+      soKhachDaDonDuoc = 0;
       DetailTripsResponse response = DetailTripsResponse.fromJson(data);
       listOfDetailTrips = response.data;
       db.deleteAll();
@@ -817,12 +847,15 @@ class MainBloc extends Bloc<MainEvent, MainState> {
             loaiKhach:element.loaiKhach,
             trangThaiTC: element.trangThaiTC,
             soKhach:1,
-            statusCustomer: element.loaiKhach == 1 ? 2 : 5,
+            statusCustomer: element.trangThaiTC,
             chuyen: trips,
             totalCustomer: listOfDetailTripsTC.length,
             idKhungGio: idKhungGio,
             idVanPhong: idVanPhong
         );
+        if(element.trangThaiTC == 4){
+          soKhachDaDonDuoc = soKhachDaDonDuoc +1;
+        }
         var contain =  listCustomer.where((phone) => phone.soDienThoaiKhach == element.soDienThoaiKhach);
         if (contain.isEmpty){
           listCustomer.add(customer);

@@ -66,9 +66,8 @@ class WaitingPageState extends State<WaitingPage> {
                     return DateRangePicker(
                       dateTime ?? DateTime.now(),
                       null,
-                      minDate: DateTime.now().subtract(const Duration(days: 10000)),
-                      maxDate:
-                      DateTime.now().add(const Duration(days: 10000)),
+                      minDate: DateTime.now(),
+                      maxDate: DateTime.now().add(const Duration(days: 10000)),
                       displayDate: dateTime ?? DateTime.now(),
                     );
                   });
@@ -227,6 +226,7 @@ class WaitingPageState extends State<WaitingPage> {
   }
 
   Widget buildListItem(ListOfGroupAwaitingCustomerBody item,int index) {
+    print(_mainBloc.idVanPhong);
     return GestureDetector(
         onTap: () {
           if( _mainBloc.listCustomer.length == 0){
@@ -261,7 +261,7 @@ class WaitingPageState extends State<WaitingPage> {
               Container(
                 width: double.infinity,
                 decoration: BoxDecoration(
-                  color: (  item.idKhungGio == _mainBloc.idKhungGio && item.loaiKhach == _mainBloc.loaiKhach && _mainBloc.blocked == true) ?  Colors.black.withOpacity(0.5) : Theme.of(this.context).scaffoldBackgroundColor,
+                  color: (item.idKhungGio == _mainBloc.idKhungGio && item.loaiKhach == _mainBloc.loaiKhach && _mainBloc.blocked == true && item.idVanPhong == _mainBloc.idVanPhong) ?  Colors.black.withOpacity(0.5) : Theme.of(this.context).scaffoldBackgroundColor,
                   borderRadius: BorderRadius.circular(0),
                   boxShadow: [
                     new BoxShadow(
@@ -302,13 +302,13 @@ class WaitingPageState extends State<WaitingPage> {
                             width: 45,
                             padding: EdgeInsets.all(8),
                             decoration: BoxDecoration(
-                                color:   (item.idKhungGio == _mainBloc.idKhungGio && item.loaiKhach == _mainBloc.loaiKhach && _mainBloc.blocked == true) ? (item.loaiKhach == 1 ? Colors.orange.withOpacity(0.5) : Colors.blue.withOpacity(0.5)) : (item.loaiKhach == 1 ? Colors.orange : Colors.blue),
+                                color:   (item.idKhungGio == _mainBloc.idKhungGio && item.loaiKhach == _mainBloc.loaiKhach && _mainBloc.blocked == true&& item.idVanPhong == _mainBloc.idVanPhong) ? (item.loaiKhach == 1 ? Colors.orange.withOpacity(0.5) : Colors.blue.withOpacity(0.5)) : (item.loaiKhach == 1 ? Colors.orange : Colors.blue),
                                 borderRadius: BorderRadius.all(Radius.circular(32))),
                             child: Center(
                               child: Text(
                                '${item.loaiKhach == 1 ? 'Đón' : 'Trả'}',
                                 style: Theme.of(this.context).textTheme.caption.copyWith(
-                                  color: (item.idKhungGio == _mainBloc.idKhungGio && item.loaiKhach == _mainBloc.loaiKhach && _mainBloc.blocked == true)? Colors.white.withOpacity(0.5) :Colors.white,
+                                  color: (item.idKhungGio == _mainBloc.idKhungGio && item.loaiKhach == _mainBloc.loaiKhach && _mainBloc.blocked == true&& item.idVanPhong == _mainBloc.idVanPhong)? Colors.white.withOpacity(0.5) :Colors.white,
                                   fontWeight: FontWeight.bold,
                                 ),
                               ),
@@ -394,10 +394,10 @@ class WaitingPageState extends State<WaitingPage> {
                             child: Container(
                               padding: EdgeInsets.all(8),
                               decoration: BoxDecoration(
-                                color: (item.idKhungGio == _mainBloc.idKhungGio && item.loaiKhach == _mainBloc.loaiKhach && _mainBloc.blocked == true) ? Colors.purple.withOpacity(0.5): Colors.purple,
+                                color: (item.idKhungGio == _mainBloc.idKhungGio && item.loaiKhach == _mainBloc.loaiKhach && _mainBloc.blocked == true&& item.idVanPhong == _mainBloc.idVanPhong) ? Colors.purple.withOpacity(0.5): Colors.purple,
                                 borderRadius: BorderRadius.all(Radius.circular(16))
                               ),
-                              child: Text('Xem thêm',style: TextStyle(color: item.idKhungGio == _mainBloc.idKhungGio && item.loaiKhach == _mainBloc.loaiKhach && _mainBloc.blocked == true ? Colors.white.withOpacity(0.5) : Colors.white,fontSize: 10),),
+                              child: Text('Xem thêm',style: TextStyle(color: (item.idKhungGio == _mainBloc.idKhungGio && item.loaiKhach == _mainBloc.loaiKhach && _mainBloc.blocked == true && item.idVanPhong == _mainBloc.idVanPhong) ? Colors.white.withOpacity(0.5) : Colors.white,fontSize: 10),),
                             ),
                           ),
                         ],
@@ -407,7 +407,7 @@ class WaitingPageState extends State<WaitingPage> {
                 ),
               ),
               Visibility(
-                visible:  (item.idKhungGio == _mainBloc.idKhungGio && item.loaiKhach == _mainBloc.loaiKhach && _mainBloc.blocked == true),
+                visible:  (item.idKhungGio == _mainBloc.idKhungGio && item.loaiKhach == _mainBloc.loaiKhach && _mainBloc.blocked == true&& item.idVanPhong == _mainBloc.idVanPhong),
                 child: Positioned(
                   top: 0,
                   left: 0,

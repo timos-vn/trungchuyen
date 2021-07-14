@@ -29,8 +29,8 @@ class NetWorkFactory {
       host = "http://" + host;
       print('Check host=> ' + host);
     }
-    print('test connection');
-    print("$host:$port");
+    // print('test connection');
+    // print("$host:$port");
     _dio = Dio(BaseOptions(
       baseUrl: "$host${port!=0?":$port":""}",
       receiveTimeout: 60000,
@@ -289,4 +289,25 @@ class NetWorkFactory {
     return await requestApi(_dio.get('/api/v1/trungchuyen/dskhach-choxacnhan', options: Options(headers: {"Authorization": "Bearer $token"})));
   }
 
+  Future<Object> getListNotification(String token,int pageIndex,String idTaiKhoan,int pageSize) async {
+    return await requestApi(_dio.get('/api/v1/thongbao', options: Options(headers: {"Authorization": "Bearer $token"}), queryParameters: {
+      "idTaiKhoan": idTaiKhoan,
+      "PageIndex": pageIndex,
+      "pageSize": pageSize,
+    })); //["Authorization"] = "Bearer " + token
+  }
+
+  Future<Object> updateAllNotification(String token,String idTaiKhoan) async {
+    return await requestApi(_dio.put('/api/v1/thongbao/read-all', options: Options(headers: {"Authorization": "Bearer $token"}), queryParameters: {
+      "idTaiKhoan": idTaiKhoan,
+    })); //["Authorization"] = "Bearer " + token
+  }
+
+  Future<Object> updateNotification(String token,String idNotification) async {
+    return await requestApi(_dio.put('/api/v1/thongbao/' + idNotification, options: Options(headers: {"Authorization": "Bearer $token"}))); //["Authorization"] = "Bearer " + token
+  }
+
+  Future<Object> deleteNotification(String token,String idNotification) async {
+    return await requestApi(_dio.delete('/api/v1/thongbao/' + idNotification, options: Options(headers: {"Authorization": "Bearer $token"}))); //["Authorization"] = "Bearer " + token
+  }
 }

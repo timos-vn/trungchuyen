@@ -107,6 +107,7 @@ class _MainPageState extends State<MainPage> with WidgetsBindingObserver{
     _mainBloc.listCustomer = await getListFromDb();
     if (!Utils.isEmpty(_mainBloc.listCustomer)) {
       _mainBloc.idKhungGio = _mainBloc.listCustomer[0].idKhungGio;
+      _mainBloc.idVanPhong = _mainBloc.listCustomer[0].idVanPhong;
       _mainBloc.loaiKhach = _mainBloc.listCustomer[0].loaiKhach;
       _mainBloc.blocked = true;
       _mainBloc.listCustomer.forEach((element) {
@@ -283,16 +284,19 @@ class _MainPageState extends State<MainPage> with WidgetsBindingObserver{
                   _lastIndexToShop = Const.WAITING;
                   _currentIndex = _lastIndexToShop;
                   _currentTabKey = firstTabNavKey;
-                }else if(state is GetListOfGroupCustomerSuccess){
+                }
+                else if(state is GetListOfGroupCustomerSuccess){
                   _waitingPageKey?.currentState?.setState(() {
                     _mainBloc.listOfGroupAwaitingCustomer = _mainBloc.listOfGroupAwaitingCustomer;
 
                   });
-                }else if(state is GetListCustomerConfirmLimo){
+                }
+                else if(state is GetListCustomerConfirmLimo){
                   _limoConfirmKey?.currentState?.setState(() {
                     _mainBloc.listCustomerConfirmLimo = _mainBloc.listCustomerConfirmLimo;
                   });
-                }else if(state is GetListCustomerLimoSuccess){
+                }
+                else if(state is GetListCustomerLimoSuccess){
                   _listCustomerLimoKey?.currentState?.setState(() {
                     _mainBloc.listCustomerLimo = _mainBloc.listCustomerLimo;
                   });
@@ -300,6 +304,8 @@ class _MainPageState extends State<MainPage> with WidgetsBindingObserver{
                   _mapPageKey?.currentState?.setState(() {
                     _mainBloc.listCustomer = _mainBloc.listCustomer;
                   });
+                }else if(state is GetCustomerListSuccess){
+
                 }
                 else if (state is NavigateToNotificationState) {}
                 else if(state is GetLocationSuccess){
@@ -342,6 +348,9 @@ class _MainPageState extends State<MainPage> with WidgetsBindingObserver{
                     }
                   }
                   if (state is MainProfile) {
+                    _mapPageKey?.currentState?.setState(() {
+                      _mainBloc.listCustomer = _mainBloc.listCustomer;
+                    });
                     _currentIndex = Const.MAP;
                     _currentTabKey = secondTabNavKey;
                   }
