@@ -69,13 +69,13 @@ class _NotificationPageState extends State<NotificationPage> {
           return Scaffold(
             appBar: new AppBar(
               centerTitle: true,
-              backgroundColor: Colors.orange,
+              backgroundColor: Colors.white,
               title: Text(
                 'Notification'.tr,
-                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20, fontFamily: fontApp, color: white),
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20, fontFamily: fontApp, color: Colors.black),
               ),
               leading: new IconButton(
-                icon: new Icon(Icons.arrow_back, color: Colors.white),
+                icon: new Icon(Icons.arrow_back, color: Colors.black),
                 onPressed: () async {
                   Navigator.of(context).pop();
                 },
@@ -84,7 +84,7 @@ class _NotificationPageState extends State<NotificationPage> {
                 Padding(
                   padding: const EdgeInsets.only(right: 5),
                   child: IconButton(
-                      icon: Icon(Icons.delete_forever,color: Colors.white,),
+                      icon: Icon(Icons.delete_forever,color: Colors.black,),
                     onPressed: () async {
                       //_bloc.add(UpdateAllNotificationEvent(ite));
                     },
@@ -93,7 +93,7 @@ class _NotificationPageState extends State<NotificationPage> {
                 Padding(
                   padding: const EdgeInsets.only(right: 10),
                   child: IconButton(
-                      icon: Icon(Icons.mark_chat_read,color: Colors.white,),
+                      icon: Icon(Icons.mark_chat_read,color: Colors.black,),
                     onPressed: () => _bloc.add(UpdateAllNotificationEvent()),
                   ),
                 )
@@ -163,11 +163,10 @@ class _NotificationPageState extends State<NotificationPage> {
         ],
       ),
     );
-
   }
 
   Widget buildListTile(NotificationDataResponse item) => Container(
-    color: item.status == 1 ? white : grey_100,
+    color: item.daDoc == true ? white : grey_100,
     child: ListTile(
       onTap: ()=>_bloc.add(UpdateNotificationEvent(item.id)),
       contentPadding: EdgeInsets.symmetric(
@@ -182,19 +181,19 @@ class _NotificationPageState extends State<NotificationPage> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            item.title,
+            item.tieuDe,
             style: TextStyle(color: black,
                 fontWeight:
-                item.status == 1 ? FontWeight.normal : FontWeight.bold),
+                item.daDoc == true ? FontWeight.normal : FontWeight.bold),
             overflow: TextOverflow.fade,
           ),
           const SizedBox(height: 4),
-          Text(item.body)
+          Text(item.noiDung)
         ],
       ),
       trailing:Text(
         Utils.parseStringDateToString(
-            item?.time,
+            item?.ngayTao,
             Const.DATE_SV,
             Const.DATE_FORMAT_1) ??
             "",

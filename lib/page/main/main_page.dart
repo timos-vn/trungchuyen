@@ -180,7 +180,7 @@ class _MainPageState extends State<MainPage> with WidgetsBindingObserver{
   void didChangeAppLifecycleState(AppLifecycleState state) {
     super.didChangeAppLifecycleState(state);
     if(state == AppLifecycleState.resumed){
-      Utils.showToast('Bạn đã Online');
+      // Utils.showToast('Bạn đã Online');
       if(_mainBloc.socketIOService.socket.disconnected)
       {
         _mainBloc.socketIOService.socket.connect();

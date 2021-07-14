@@ -9,6 +9,9 @@ import 'package:trungchuyen/page/account/account_state.dart';
 import 'package:trungchuyen/page/login/login_page.dart';
 import 'package:trungchuyen/page/main/main_bloc.dart';
 import 'package:trungchuyen/page/map/map_bloc.dart';
+import 'package:trungchuyen/page/notification/notification_page.dart';
+import 'package:trungchuyen/page/profile/my_profile.dart';
+import 'package:trungchuyen/page/profile/profile.dart';
 import 'package:trungchuyen/page/report/report_page.dart';
 import 'package:trungchuyen/page/report_limo/report_limo_page.dart';
 import 'package:trungchuyen/themes/colors.dart';
@@ -71,11 +74,11 @@ class _AccountPageState extends State<AccountPage> with TickerProviderStateMixin
           child: Column(
             children: [
               Padding(
-                padding: const EdgeInsets.only(top: 40,left: 16,right: 16),
+                padding: const EdgeInsets.only(top: 55,left: 16,right: 16),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Text('Account'.tr,style: TextStyle(color: Colors.orange,fontWeight: FontWeight.bold,fontSize: 18),),
+                    Text('Account'.tr,style: TextStyle(color: Colors.black,fontWeight: FontWeight.bold,fontSize: 18),),
                   ],
                 ),
               ),
@@ -106,53 +109,63 @@ class _AccountPageState extends State<AccountPage> with TickerProviderStateMixin
                         padding: const EdgeInsets.only(left: 16,right: 16,top: 90),
                         child: Column(
                           children: [
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Row(
-                                  children: [
-                                    Icon(MdiIcons.accountOutline),
-                                    SizedBox(width: 10,),
-                                    Text('AccountInformation'.tr),
-                                  ],
-                                ),
-                                Text('Code User: 66886868',style: TextStyle(color: Colors.grey,fontSize: 12),),
-                              ],
+                            InkWell(
+                              onTap: ()=> Navigator.push(context, MaterialPageRoute(builder: (context)=>Profile(userName: _accountBloc.userName,phone: _accountBloc.phone,))),
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Row(
+                                    children: [
+                                      Icon(MdiIcons.accountOutline),
+                                      SizedBox(width: 10,),
+                                      Text('AccountInformation'.tr),
+                                    ],
+                                  ),
+                                  Text('Code User: 66886868',style: TextStyle(color: Colors.grey,fontSize: 12),),
+                                ],
+                              ),
                             ),
                             SizedBox(height: 10,),
                             Separator(color: Colors.grey),
                             SizedBox(height: 15,),
-                            Row(
-                              children: [
-                               Row(
-                                 children: [
-                                   Icon(MdiIcons.bellOutline),
-                                   SizedBox(width: 10,),
-                                   Text('Thông báo'.tr),
-                                 ],
-                               ),
-                                Container(
-                                  alignment: Alignment.center,
-                                  padding: EdgeInsets.all(2),
-                                  decoration: BoxDecoration(
-                                    color: blue,
-                                    borderRadius: BorderRadius.circular(9),
-                                  ),
-                                  constraints: BoxConstraints(
-                                    minWidth: 17,
-                                    minHeight: 17,
-                                  ),
-                                  child: Text(_mainBloc.countApproval > 0
-                                      ? _mainBloc.countApproval.toString()
-                                      : "0",
-                                    style: TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 10,
+                            InkWell(
+                              onTap: ()=> Navigator.push(context, MaterialPageRoute(builder: (context)=>NotificationPage())),
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: [
+                                 Row(
+                                   children: [
+                                     Icon(MdiIcons.bellOutline),
+                                     SizedBox(width: 10,),
+                                     Text('Thông báo'.tr),
+                                   ],
+                                 ),
+                                  Padding(
+                                    padding: const EdgeInsets.only(right: 8),
+                                    child: Container(
+                                      alignment: Alignment.center,
+                                      padding: EdgeInsets.all(4),
+                                      decoration: BoxDecoration(
+                                        color: blue,
+                                        borderRadius: BorderRadius.circular(9),
+                                      ),
+                                      constraints: BoxConstraints(
+                                        minWidth: 17,
+                                        minHeight: 17,
+                                      ),
+                                      child: Text(_mainBloc.countApproval > 0
+                                          ? _mainBloc.countApproval.toString()
+                                          : "0",
+                                        style: TextStyle(
+                                          color: Colors.white,
+                                          fontSize: 10,
+                                        ),
+                                        textAlign: TextAlign.center,
+                                      ),
                                     ),
-                                    textAlign: TextAlign.center,
                                   ),
-                                ),
-                              ],
+                                ],
+                              ),
                             ),
                             SizedBox(height: 10,),
                             Separator(color: Colors.grey),
@@ -181,18 +194,6 @@ class _AccountPageState extends State<AccountPage> with TickerProviderStateMixin
                                     Text('Report'.tr),
                                   ],
                                 ),
-                              ),
-                            ),
-                            SizedBox(height: 10,),
-                            Separator(color: Colors.grey),
-                            SizedBox(height: 15,),
-                            InkWell(
-                              child: Row(
-                                children: [
-                                  Icon(MdiIcons.googleCirclesGroup),
-                                  SizedBox(width: 10,),
-                                  Text('Groups'),
-                                ],
                               ),
                             ),
                             SizedBox(height: 10,),
@@ -274,9 +275,9 @@ class _AccountPageState extends State<AccountPage> with TickerProviderStateMixin
                                     ),
                                     child: Row(
                                       children: [
-                                        Icon(MdiIcons.disqus,color: Colors.black,size: 18,),
+                                        Icon(MdiIcons.disqus,color: Colors.green,size: 18,),
                                         SizedBox(width: 3,),
-                                        Text('400',style: TextStyle(fontSize: 12,color: Colors.black),),
+                                        Text('000',style: TextStyle(fontSize: 12,color: Colors.green),),
                                       ],
                                     ),
                                   )

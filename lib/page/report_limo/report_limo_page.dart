@@ -320,16 +320,15 @@ class _ReportLimoPageState extends State<ReportLimoPage> {
                                                   child: SizedBox(),
                                                 ),
                                                 Container(
-                                                  height: 40,
-                                                  width: 40,
+                                                  height: 45,
+                                                  width: 45,
                                                   padding: EdgeInsets.all(8),
                                                   decoration: BoxDecoration(
-                                                      color: Colors.orange,
+                                                      color:_bloc.listReport[index].loaiKhach == 1 ? Colors.blue  : Colors.grey,
                                                       borderRadius: BorderRadius.all(Radius.circular(32))
                                                   ),
                                                   child: Center(
-                                                    child: Text(
-                                                      index % _bloc.listReport[index].loaiKhach == 1 ? 'Trả' : 'Đón',
+                                                    child: Text(_bloc.listReport[index].loaiKhach == 1 ? 'Trả' : 'Đón',
                                                       style:TextStyle(
                                                         color: Colors.white,
                                                         fontWeight: FontWeight.normal,

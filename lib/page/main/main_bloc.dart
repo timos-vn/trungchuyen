@@ -156,7 +156,6 @@ class MainBloc extends Bloc<MainEvent, MainState> {
       print('token $value');
     });
   }
-  String event;
   _listenToPushNotifications() {
     FirebaseMessaging.instance.setForegroundNotificationPresentationOptions(badge: true, alert: true, sound: true);
     contexts = context;
@@ -220,11 +219,19 @@ class MainBloc extends Bloc<MainEvent, MainState> {
     else if(message.data['EVENT'] == 'LIMO_THONGBAO_TAIXE'){
       String title = message.notification.title;
       String body = message.notification.body;
-      Utils.showForegroundNotification(context, title, body, onTapNotification: () {
-        add(NavigateToNotification());
-      },);
+      Utils.showForegroundNotification(context, title, body, onTapNotification: () {},);
       DateTime parseDate = new DateFormat("yyyy-MM-dd").parse(DateTime.now().toString());
       add(GetListTripsLimo(parseDate));
+    }
+    else if(message.data['EVENT' == 'LIMO_THONGBAO_TAIXETC']){
+      if(!Utils.isEmpty(listOfGroupAwaitingCustomer)){
+        listOfGroupAwaitingCustomer.clear();
+      }
+      DateTime parseDate = new DateFormat("yyyy-MM-dd").parse(DateTime.now().toString());
+      add(GetListGroupCustomer(parseDate));
+      if(!Utils.isEmpty(listCustomer)){
+
+      }
     }
     else if((message.data['EVENT'] == 'TRUNGCHUYEN_THONGBAO_TAIXE_TDK' || message.data['EVENT'] == 'TRUNGCHUYEN_THONGBAO_TAIXE_KHACHHUY')){
       Utils.showForegroundNotification(context, message.notification.title, message.notification.body, onTapNotification: () {
@@ -257,7 +264,6 @@ class MainBloc extends Bloc<MainEvent, MainState> {
         add(NavigateToNotification());
       },);
     }
-    event = '';
   }
 ///
 //   void _registerNotification() {
