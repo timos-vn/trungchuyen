@@ -90,8 +90,8 @@ class _LoginPageState extends State<LoginPage> {
                 _loginBloc.add(UpdateTokenDiveEvent(state.tokenFCM));
                 Navigator.push(context, (MaterialPageRoute(builder: (context)=>MainPage(roleAccount: _loginBloc.roleAccount,tokenFCM: state.tokenFCM,))));
               }
-              else if (state is LoginFailure) {
-                //Utils.showNotifySnackBar(context,state.error.toString());
+              else if (state is UpdateTokenSuccessState) {
+
               }
               else if(state is ChangeLanguageSuccess){
                 _selectedLang = state.nameLng;

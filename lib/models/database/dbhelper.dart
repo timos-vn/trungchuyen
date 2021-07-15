@@ -54,7 +54,8 @@ class DatabaseHelper {
        chuyen TEXT,
        totalCustomer INTEGER,
        idKhungGio INTEGER,
-       idVanPhong INTEGER)
+       idVanPhong INTEGER,
+       ngayTC TEXT)
   ''');
     print("DB CustomerPending was created!");
 
@@ -110,7 +111,8 @@ class DatabaseHelper {
        chuyen TEXT,
        totalCustomer INTEGER,
        idKhungGio INTEGER,
-       idVanPhong INTEGER)
+       idVanPhong INTEGER,
+       ngayTC TEXT)
   ''');
     print("DB CustomerPending was created!");
   }

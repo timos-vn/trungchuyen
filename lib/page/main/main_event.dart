@@ -81,13 +81,13 @@ class GetPermissionEvent extends MainEvent {
   }
 }
 
-class GetCountNoti extends MainEvent{
+class GetCountNotificationUnRead extends MainEvent{
   final bool isRefresh;
 
-  GetCountNoti({this.isRefresh = false});
+  GetCountNotificationUnRead({this.isRefresh = false});
   @override
   String toString() {
-    return 'GetCountNoti{isRefresh: $isRefresh}';
+    return 'GetCountNotificationUnRead{isRefresh: $isRefresh}';
   }
 }
 

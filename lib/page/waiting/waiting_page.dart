@@ -47,12 +47,9 @@ class WaitingPageState extends State<WaitingPage> {
 
   @override
   Widget build(BuildContext context) {
-    print('check: ${_mainBloc.listCustomer.length}');
-
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
-
         title: Text(
           'Lịch Khách Chờ',
           style: TextStyle(color: Colors.black),
@@ -100,6 +97,7 @@ class WaitingPageState extends State<WaitingPage> {
           if(state is GetListOfWaitingCustomerSuccess){
            _mainBloc.listOfGroupAwaitingCustomer = _bloc.listOfGroupAwaitingCustomer;
             print('Length123');
+           _mainBloc.add(GetCountNotificationUnRead());
           }
           else if(state is GetListOfDetailTripsOfWaitingPageSuccess){
             db.deleteAll();
@@ -129,6 +127,7 @@ class WaitingPageState extends State<WaitingPage> {
                 totalCustomer: _bloc.listOfDetailTrips.length,
                 idKhungGio: _mainBloc.idKhungGio,
                 idVanPhong: _mainBloc.idVanPhong,
+                ngayTC: _mainBloc.ngayTC,
               );
               var contain =  _mainBloc.listCustomer.where((phone) => phone.soDienThoaiKhach == element.soDienThoaiKhach);
               if (contain.isEmpty){
@@ -226,7 +225,6 @@ class WaitingPageState extends State<WaitingPage> {
   }
 
   Widget buildListItem(ListOfGroupAwaitingCustomerBody item,int index) {
-    print(_mainBloc.idVanPhong);
     return GestureDetector(
         onTap: () {
           if( _mainBloc.listCustomer.length == 0){
@@ -239,6 +237,7 @@ class WaitingPageState extends State<WaitingPage> {
                 _mainBloc.idKhungGio = item.idKhungGio;
                 _mainBloc.loaiKhach = item.loaiKhach;
                 _mainBloc.idVanPhong = item.idVanPhong;
+                _mainBloc.ngayTC = item.ngayChay;
                 _mainBloc.currentNumberCustomerOfList = item.soKhach;
                 Utils.showToast( 'Chạy thôi nào bạn ơi !!!');
                 Future.delayed(Duration(seconds: 1), () {

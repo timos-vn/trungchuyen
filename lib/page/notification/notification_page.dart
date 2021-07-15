@@ -1,3 +1,4 @@
+import 'package:adaptive_dialog/adaptive_dialog.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -86,7 +87,17 @@ class _NotificationPageState extends State<NotificationPage> {
                   child: IconButton(
                       icon: Icon(Icons.delete_forever,color: Colors.black,),
                     onPressed: () async {
-                      //_bloc.add(UpdateAllNotificationEvent(ite));
+                      if(!Utils.isEmpty(_list)){
+                        final result = await showOkCancelAlertDialog(
+                          context: context,
+                          title: 'Thông báo'.tr,
+                          message: 'AllowDeleteAll'.tr,
+                          barrierDismissible: false,
+                        );
+                        if(result == OkCancelResult.ok){
+                          _bloc.add(DeleteAllNotificationEvent());
+                        }
+                      }
                     },
                   ),
                 ),
@@ -166,7 +177,7 @@ class _NotificationPageState extends State<NotificationPage> {
   }
 
   Widget buildListTile(NotificationDataResponse item) => Container(
-    color: item.daDoc == true ? white : grey_100,
+    color: item.daDoc == false ? white : grey_100,
     child: ListTile(
       onTap: ()=>_bloc.add(UpdateNotificationEvent(item.id)),
       contentPadding: EdgeInsets.symmetric(
@@ -184,7 +195,7 @@ class _NotificationPageState extends State<NotificationPage> {
             item.tieuDe,
             style: TextStyle(color: black,
                 fontWeight:
-                item.daDoc == true ? FontWeight.normal : FontWeight.bold),
+                item.daDoc == false ? FontWeight.normal : FontWeight.bold),
             overflow: TextOverflow.fade,
           ),
           const SizedBox(height: 4),

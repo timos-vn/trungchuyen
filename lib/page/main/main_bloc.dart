@@ -26,6 +26,7 @@ import 'package:trungchuyen/models/network/response/detail_trips_repose.dart';
 import 'package:trungchuyen/models/network/response/list_customer_confirm_response.dart';
 import 'package:trungchuyen/models/network/response/list_of_group_awaiting_customer_response.dart';
 import 'package:trungchuyen/models/network/response/list_of_group_limo_customer_response.dart';
+import 'package:trungchuyen/models/network/response/unread_count_response.dart';
 import 'package:trungchuyen/models/network/service/network_factory.dart';
 import 'package:trungchuyen/page/map_limo/map_limo_bloc.dart';
 import 'package:trungchuyen/page/waiting/waiting_bloc.dart';
@@ -75,6 +76,7 @@ class MainBloc extends Bloc<MainEvent, MainState> {
   bool blocked;
   int idKhungGio;
   int idVanPhong;
+  String ngayTC;
   int loaiKhach;
   bool isOnline = false;
   bool isInProcessPickup = false;
@@ -113,33 +115,20 @@ class MainBloc extends Bloc<MainEvent, MainState> {
 
   MainBloc()   {
     socketIOService = Get.find<SocketIOService>();
-    firebaseMessaging = FirebaseMessaging();
-    // firebaseMessaging.getToken().then((token) {
-    //   print("token");
-    //   print(token);
-    //
-    //   _deviceToken = token;
-    //  _pref?.setString(Const.DEVICE_TOKEN, token);
-    //
-    // });
-   // _registerNotification();
     registerUpPushNotification();
     _listenToPushNotifications();
+
   }
 
   init(BuildContext context) async{
-    // await Firebase.initializeApp().whenComplete(() {
-    //   print('CPL OK');
-    //
-    // });
     _waitingBloc = WaitingBloc(context);
     _mapLimoBloc = MapLimoBloc(context);
     if (this.context == null) {
       this.context = context;
       _networkFactory = NetWorkFactory(context);
+      add(GetCountNotificationUnRead());
     }
   }
-
 
   @override
   MainState get initialState => InitialMainState();
@@ -156,6 +145,7 @@ class MainBloc extends Bloc<MainEvent, MainState> {
       print('token $value');
     });
   }
+
   _listenToPushNotifications() {
     FirebaseMessaging.instance.setForegroundNotificationPresentationOptions(badge: true, alert: true, sound: true);
     contexts = context;
@@ -175,10 +165,6 @@ class MainBloc extends Bloc<MainEvent, MainState> {
 
   void subscribeToTopic(RemoteMessage message){
     if(message.data['EVENT'] == 'TRUNGCHUYEN_THONGBAO_TAIXE'){
-      /// trong chuyến vẫn thêm được khách - giống như trong chuyến huỷ được khách
-      ///
-      ///
-      ///
       String item = message.data['IdTrungChuyen'];
       List<String> listId = item.replaceAll('[', '').replaceAll(']', '').replaceAll('\"', '').split(',');
       NotificationCustomerOfTC notificationCustomer = new NotificationCustomerOfTC(
@@ -213,7 +199,7 @@ class MainBloc extends Bloc<MainEvent, MainState> {
        idKhungGio = int.parse(message.data['IdKhungGio']);
        idVanPhong = int.parse(message.data['IdVanPhong']);
         DateFormat format = DateFormat("dd/MM/yyyy");
-       add(GetListDetailTripsTC(format.parse(message.data['NgayTrungChuyen']),message.data['IdVanPhong'],message.data['IdKhungGio'],message.data['LoaiKhach']));
+        add(GetListDetailTripsTC(format.parse(message.data['NgayTrungChuyen']),message.data['IdVanPhong'],message.data['IdKhungGio'],message.data['LoaiKhach']));
       }
     }
     else if(message.data['EVENT'] == 'LIMO_THONGBAO_TAIXE'){
@@ -223,14 +209,15 @@ class MainBloc extends Bloc<MainEvent, MainState> {
       DateTime parseDate = new DateFormat("yyyy-MM-dd").parse(DateTime.now().toString());
       add(GetListTripsLimo(parseDate));
     }
-    else if(message.data['EVENT' == 'LIMO_THONGBAO_TAIXETC']){
+    else if(message.data['EVENT'] == 'LIMO_THONGBAO_TAIXETC'){
       if(!Utils.isEmpty(listOfGroupAwaitingCustomer)){
         listOfGroupAwaitingCustomer.clear();
       }
       DateTime parseDate = new DateFormat("yyyy-MM-dd").parse(DateTime.now().toString());
       add(GetListGroupCustomer(parseDate));
       if(!Utils.isEmpty(listCustomer)){
-
+        DateFormat format = DateFormat("dd/MM/yyyy");
+        add(GetListDetailTripsTC(format.parse(ngayTC),idVanPhong.toString(),idKhungGio.toString(),loaiKhach.toString()));
       }
     }
     else if((message.data['EVENT'] == 'TRUNGCHUYEN_THONGBAO_TAIXE_TDK' || message.data['EVENT'] == 'TRUNGCHUYEN_THONGBAO_TAIXE_KHACHHUY')){
@@ -244,7 +231,6 @@ class MainBloc extends Bloc<MainEvent, MainState> {
       add(GetListGroupCustomer(parseDate));
     }
     else if(message.data['EVENT'] == 'TAIXE_TRUNGCHUYEN_GIAOKHACH_LIMO'){
-
       Utils.showForegroundNotification(context, message.notification.title, message.notification.body, onTapNotification: () {
         add(NavigateToNotification());
       },);
@@ -760,8 +746,6 @@ class MainBloc extends Bloc<MainEvent, MainState> {
       yield state;
     }
 
-
-
     else if (event is NavigateBottomNavigation) {
       int position = event.position;
       if (state is MainPageState) {
@@ -803,30 +787,25 @@ class MainBloc extends Bloc<MainEvent, MainState> {
       yield MainLoading();
       yield NavigateToNotificationState();
     }
-
-    // if (event is GetCountNoti) {
-    //   yield MainLoading();
-    //   MainState state = MainPageState(_prePosition);
-    //     state = _handleUnreadCountNotify(await _networkFactory.countNotification(_accessToken));
-    //   if (countNotifyUnRead == null || countNotifyUnRead < 0) countNotifyUnRead = 0;
-    //   yield state;
-    // }
-      else if (event is LogoutMainEvent) {
+    else if (event is GetCountNotificationUnRead) {
+      yield InitialMainState();
+      MainState  state = _handleUnreadCountNotify(await _networkFactory.readNotification(_accessToken));
+      // if (countNotifyUnRead == null || countNotifyUnRead < 0) countNotifyUnRead = 0;
+      yield state;
+    }
+    else if (event is LogoutMainEvent) {
         yield MainLoading();
         Utils.removeData(_pref);
         _prePosition = 0;
-        countNotifyUnRead = null;
+        countNotifyUnRead = 0;
         countApproval = 0;
         yield LogoutSuccess();
       }
   }
 
-
-
   MainState _handleGetListOfDetailTrips(Object data) {
     if (data is String) return MainFailure(data);
-    try {///2ef0d92b-fcc0-4982-98ec-3d3a5aaa084a,ddefe5a2-4775-4550-9887-721d6738e0d6
-      ///1906ab8f-f07f-478f-b3d5-0a7578bc445b,2ef0d92b-fcc0-4982-98ec-3d3a5aaa084a,ddefe5a2-4775-4550-9887-721d6738e0d6,21ffd958-210e-4665-b965-8b7741d04d9a
+    try {
       listCustomer.clear();
       soKhachDaDonDuoc = 0;
       DetailTripsResponse response = DetailTripsResponse.fromJson(data);
@@ -857,7 +836,8 @@ class MainBloc extends Bloc<MainEvent, MainState> {
             chuyen: trips,
             totalCustomer: listOfDetailTripsTC.length,
             idKhungGio: idKhungGio,
-            idVanPhong: idVanPhong
+            idVanPhong: idVanPhong,
+            ngayTC: ngayTC
         );
         if(element.trangThaiTC == 4){
           soKhachDaDonDuoc = soKhachDaDonDuoc +1;
@@ -985,8 +965,6 @@ class MainBloc extends Bloc<MainEvent, MainState> {
     }
   }
 
-
-
   MainState _handleUpdateStatusCustomer(Object data) {
     if (data is String) return MainFailure(data);
     try {
@@ -997,17 +975,17 @@ class MainBloc extends Bloc<MainEvent, MainState> {
     }
   }
 
-  // MainState _handleUnreadCountNotify(Object data) {
-  //   if (data is String) return MainFailure(data);
-  //   try {
-  //     UnreadCountResponse response = UnreadCountResponse.fromJson(data);
-  //     countNotifyUnRead = response.unreadTotal ?? 0;
-  //     return RefreshMainState();
-  //   } catch (e) {
-  //     print(e.toString());
-  //     return MainFailure('Error'.tr);
-  //   }
-  // }
+  MainState _handleUnreadCountNotify(Object data) {
+    if (data is String) return MainFailure(data);
+    try {
+      UnreadCountResponse response = UnreadCountResponse.fromJson(data);
+      countNotifyUnRead = response.unreadTotal ?? 0;
+      return RefreshMainState();
+    } catch (e) {
+      print(e.toString());
+      return MainFailure('Error'.tr);
+    }
+  }
 
   Future<bool> showDialogTransferCustomer({@required BuildContext context, @required String content, Function accept, Function cancel, bool dismissible: false}) => showDialog(
       barrierDismissible: dismissible,

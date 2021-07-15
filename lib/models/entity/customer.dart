@@ -25,6 +25,7 @@ class Customer extends Equatable {
   int totalCustomer;
   int idKhungGio;
   int idVanPhong;
+  String ngayTC;
 
 
   Customer(
@@ -47,7 +48,7 @@ class Customer extends Equatable {
     this.loaiKhach,
     this.trangThaiTC,
     this.soKhach,
-    this.statusCustomer,this.chuyen,this.totalCustomer,this.idKhungGio,this.idVanPhong}
+    this.statusCustomer,this.chuyen,this.totalCustomer,this.idKhungGio,this.idVanPhong,this.ngayTC}
       );
 
   Customer.fromDb(Map<String, dynamic> map)
@@ -73,7 +74,8 @@ class Customer extends Equatable {
         soKhach = map['soKhach'],
         statusCustomer = map['statusCustomer'],chuyen = map['chuyen'],totalCustomer = map['totalCustomer'],
         idKhungGio = map['idKhungGio'],
-        idVanPhong = map['idVanPhong'];
+        idVanPhong = map['idVanPhong'],
+        ngayTC = map['ngayTC'];
 
   Map<String, dynamic> toMapForDb() {
     var map = Map<String, dynamic>();
@@ -100,6 +102,7 @@ class Customer extends Equatable {
     map['chuyen'] = chuyen;
     map['totalCustomer'] = totalCustomer;
     map['idKhungGio'] = idKhungGio;map['idVanPhong'] = idVanPhong;
+    map['ngayTC'] = ngayTC;
     return map;
   }
 
@@ -126,6 +129,7 @@ class Customer extends Equatable {
     soKhach,
     chuyen,
     idKhungGio,
-    idVanPhong
+    idVanPhong,
+    ngayTC
   ];
 }

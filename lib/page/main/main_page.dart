@@ -109,6 +109,7 @@ class _MainPageState extends State<MainPage> with WidgetsBindingObserver{
       _mainBloc.idKhungGio = _mainBloc.listCustomer[0].idKhungGio;
       _mainBloc.idVanPhong = _mainBloc.listCustomer[0].idVanPhong;
       _mainBloc.loaiKhach = _mainBloc.listCustomer[0].loaiKhach;
+      _mainBloc.ngayTC = _mainBloc.listCustomer[0].ngayTC;
       _mainBloc.blocked = true;
       _mainBloc.listCustomer.forEach((element) {
         if(element.statusCustomer == 4 || element.statusCustomer == 8){
@@ -284,6 +285,8 @@ class _MainPageState extends State<MainPage> with WidgetsBindingObserver{
                   _lastIndexToShop = Const.WAITING;
                   _currentIndex = _lastIndexToShop;
                   _currentTabKey = firstTabNavKey;
+                }else if (state is RefreshMainState){
+                  refreshChildPage();
                 }
                 else if(state is GetListOfGroupCustomerSuccess){
                   _waitingPageKey?.currentState?.setState(() {
@@ -309,17 +312,6 @@ class _MainPageState extends State<MainPage> with WidgetsBindingObserver{
                 }
                 else if (state is NavigateToNotificationState) {}
                 else if(state is GetLocationSuccess){
-                  // _mapLimoPageKey?.currentState?.setState(() {
-                  //   if(_mapLimoBloc.lsMarkerId.where((id) => id==state.makerID).length==0)
-                  //   {
-                  //     print('ALALALA');
-                  //     _mapLimoBloc.lsMarkerId.add(state.makerID);
-                  //     _mapLimoBloc.add(GetEvent(state.makerID));
-                  //   }
-                  //   _mapLimoBloc.latLngStream.addLatLng(new LatLngInfo(state.lat,state.lng,state.makerID));
-                  // });
-                  // print('ALALALA');
-                  // print(state.makerID +' - '+ state.lat.toString() +' - '+ state.lng.toString());
                 }
               },
               child: BlocBuilder<MainBloc, MainState>(
@@ -489,6 +481,15 @@ class _MainPageState extends State<MainPage> with WidgetsBindingObserver{
       ),
 
     ];
+  }
+
+  void refreshChildPage() {
+    // _homeBloc.add(RefreshHomeEvent());
+    // _reportBloc.add(RefreshReportEvent());
+    // _approvalBloc.add(RefreshApprovalEvent());
+    // _orderBloc.add(RefreshOrderEvent());
+    // _settingBloc.add(RefreshSettingEvent());
+    // _workBloc.add(RefreshWorkEvent());
   }
 
   void _exitApp(BuildContext context) {

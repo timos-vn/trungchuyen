@@ -155,7 +155,7 @@ class _AccountPageState extends State<AccountPage> with TickerProviderStateMixin
                                       ),
                                       child: Text(_mainBloc.countApproval > 0
                                           ? _mainBloc.countApproval.toString()
-                                          : "0",
+                                          : _mainBloc.countNotifyUnRead?.toString(),
                                         style: TextStyle(
                                           color: Colors.white,
                                           fontSize: 10,

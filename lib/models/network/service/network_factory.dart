@@ -310,4 +310,10 @@ class NetWorkFactory {
   Future<Object> deleteNotification(String token,String idNotification) async {
     return await requestApi(_dio.delete('/api/v1/thongbao/' + idNotification, options: Options(headers: {"Authorization": "Bearer $token"}))); //["Authorization"] = "Bearer " + token
   }
+  Future<Object> deleteAllNotification(String token) async {
+    return await requestApi(_dio.delete('/api/v1/thongbao/xoahet', options: Options(headers: {"Authorization": "Bearer $token"}))); //["Authorization"] = "Bearer " + token
+  }
+  Future<Object> readNotification(String token) async {
+    return await requestApi(_dio.get('/api/v1/thongbao/chuadoc', options: Options(headers: {"Authorization": "Bearer $token"}))); //["Authorization"] = "Bearer " + token
+  }
 }

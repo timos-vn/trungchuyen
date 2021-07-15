@@ -40,3 +40,9 @@ class UpdateAllNotificationEvent extends NotificationEvent {
   @override
   String toString() => '';
 }
+
+class DeleteAllNotificationEvent extends NotificationEvent {
+
+  @override
+  String toString() => '';
+}

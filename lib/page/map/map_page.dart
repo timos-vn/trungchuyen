@@ -1265,7 +1265,8 @@ class MapPageState extends State<MapPage>{
                                                                    chuyen: _mainBloc.listCustomer[index].chuyen,
                                                                    totalCustomer: _mainBloc.currentNumberCustomerOfList,
                                                                    idKhungGio:  _mainBloc.idKhungGio,
-                                                                   idVanPhong:  _mainBloc.idVanPhong
+                                                                   idVanPhong:  _mainBloc.idVanPhong,
+                                                                   ngayTC:_mainBloc.ngayTC
                                                                );
                                                                _mapBloc.add(UpdateCustomerList(customer));
                                                                _mapBloc.add(UpdateStatusCustomerMapEvent(status: 2,idTrungChuyen: _mainBloc.listCustomer[index].idTrungChuyen.split(',')));
@@ -1333,7 +1334,8 @@ class MapPageState extends State<MapPage>{
                                                                       chuyen: _mainBloc.listCustomer[index].chuyen,
                                                                       totalCustomer: _mainBloc.currentNumberCustomerOfList,
                                                                       idKhungGio:  _mainBloc.idKhungGio,
-                                                                      idVanPhong:  _mainBloc.idVanPhong
+                                                                      idVanPhong:  _mainBloc.idVanPhong,
+                                                                      ngayTC:_mainBloc.ngayTC
                                                                   );
                                                                   _mapBloc.add(UpdateCustomerList(customer));
                                                                   _mapBloc.add(GetListLocationPolylineEvent(_mainBloc.listCustomer[index].toaDoDiaChiKhachDi));
@@ -1367,7 +1369,8 @@ class MapPageState extends State<MapPage>{
                                                                       chuyen: _mainBloc.listCustomer[index].chuyen,
                                                                       totalCustomer: _mainBloc.currentNumberCustomerOfList,
                                                                       idKhungGio:  _mainBloc.idKhungGio,
-                                                                      idVanPhong:  _mainBloc.idVanPhong
+                                                                      idVanPhong:  _mainBloc.idVanPhong,
+                                                                      ngayTC:_mainBloc.ngayTC
                                                                   );
                                                                   _mapBloc.add(DeleteCustomer(customer.idTrungChuyen,0));
                                                                   _mapBloc.add(AddOldCustomer(customer));
@@ -1411,7 +1414,8 @@ class MapPageState extends State<MapPage>{
                                                                       chuyen: _mainBloc.listCustomer[index].chuyen,
                                                                       totalCustomer: _mainBloc.currentNumberCustomerOfList,
                                                                       idKhungGio:  _mainBloc.idKhungGio,
-                                                                      idVanPhong:  _mainBloc.idVanPhong
+                                                                      idVanPhong:  _mainBloc.idVanPhong,
+                                                                      ngayTC:_mainBloc.ngayTC
                                                                   );
                                                                   _mapBloc.add(UpdateCustomerList(customer));
                                                                   _mapBloc.add(UpdateStatusCustomerMapEvent(status: 6,idTrungChuyen: _mainBloc.listCustomer[index].idTrungChuyen.split(',')));
@@ -1445,7 +1449,8 @@ class MapPageState extends State<MapPage>{
                                                                       chuyen: _mainBloc.listCustomer[index].chuyen,
                                                                       totalCustomer: _mainBloc.currentNumberCustomerOfList,
                                                                       idKhungGio:  _mainBloc.idKhungGio,
-                                                                      idVanPhong:  _mainBloc.idVanPhong
+                                                                      idVanPhong:  _mainBloc.idVanPhong,
+                                                                      ngayTC:_mainBloc.ngayTC
                                                                   );
                                                                   _mapBloc.add(UpdateCustomerList(customer));
                                                                   _mapBloc.add(UpdateStatusCustomerMapEvent(status: 7,idTrungChuyen: _mainBloc.listCustomer[index].idTrungChuyen.split(',')));

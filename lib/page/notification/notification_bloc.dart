@@ -81,6 +81,10 @@ class NotificationBloc extends Bloc<NotificationEvent,NotificationState>{
       yield NotificationLoading();
       NotificationState state = _handleUpdateNotification(await _networkFactory.updateAllNotification(_accessToken,_userId));
       yield state;
+    }else if(event is DeleteAllNotificationEvent){
+      yield NotificationLoading();
+      NotificationState state = _handleUpdateNotification(await _networkFactory.deleteAllNotification(_accessToken));
+      yield state;
     }
   }
 

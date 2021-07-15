@@ -62,6 +62,7 @@ dependencies:
   circular_countdown_timer: ^0.2.0
   wakelock: ^0.5.1
   new_version: any
+  adaptive_dialog: ^0.9.4
 
 dev_dependencies:
   flutter_launcher_icons: ^0.8.0
