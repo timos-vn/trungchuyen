@@ -376,7 +376,7 @@ class MapPageState extends State<MapPage>{
                                       });
                                       String id = idTC.join(',');
                                       print(id.split(','));
-                                      _mapBloc.add(UpdateStatusCustomerMapEvent(status: 10,idTrungChuyen: id.split(',')));
+                                      _mapBloc.add(UpdateStatusCustomerMapEvent(status: 11,idTrungChuyen: id.split(',')));
                                     },
                                     child: Container(
                                       height: 40.0,
