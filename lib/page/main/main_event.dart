@@ -2,6 +2,7 @@ import 'package:equatable/equatable.dart';
 import 'package:trungchuyen/models/entity/customer.dart';
 import 'package:trungchuyen/models/entity/notification_of_limo.dart';
 import 'package:trungchuyen/models/entity/notification_trung_chuyen.dart';
+import 'package:trungchuyen/models/network/response/detail_trips_repose.dart';
 
 
 abstract class MainEvent extends Equatable {
@@ -188,7 +189,7 @@ class GetLocationEvent extends MainEvent {
 //
 class UpdateCustomerItemList extends MainEvent{
 
-  final Customer customer;
+  final DetailTripsResponseBody customer;
 
   UpdateCustomerItemList(this.customer);
 
@@ -199,7 +200,7 @@ class UpdateCustomerItemList extends MainEvent{
   }
 }class AddOldCustomerItemList extends MainEvent{
 
-  final Customer customer;
+  final DetailTripsResponseBody customer;
 
   AddOldCustomerItemList(this.customer);
 
@@ -212,7 +213,7 @@ class UpdateCustomerItemList extends MainEvent{
 
 class UpdateTaiXeLimo extends MainEvent{
 
-  final Customer customer;
+  final DetailTripsResponseBody customer;
 
   UpdateTaiXeLimo(this.customer);
 
@@ -233,17 +234,6 @@ class AddNotificationOfLimo extends MainEvent{
   String toString() {
     // TODO: implement toString
     return 'AddNotificationOfLimo{}';
-  }
-}class AddNotificationOfTC extends MainEvent{
-
-  final NotificationCustomerOfTC notificationCustomerOfTC;
-
-  AddNotificationOfTC(this.notificationCustomerOfTC);
-
-  @override
-  String toString() {
-    // TODO: implement toString
-    return 'UpdateTaiXeLimo{}';
   }
 }
 
@@ -282,13 +272,6 @@ class GetListNotificationOfLimo extends MainEvent{
   String toString() {
     // TODO: implement toString
     return 'GetListNotificationOfLimo{}';
-  }
-}class GetListNotificationCustomerTC extends MainEvent{
-
-  @override
-  String toString() {
-    // TODO: implement toString
-    return 'GetListNotificationCustomerTC{}';
   }
 }
 
@@ -333,18 +316,6 @@ class ThemKhachMoiKhiTrongChuyen extends MainEvent{
   }
 }
 
-class UpdateKhachHuyOrDoiTaiXe extends MainEvent{
-  final String idTCOld;
-  final Customer customer;
-
-  UpdateKhachHuyOrDoiTaiXe(this.idTCOld, this.customer);
-
-  @override
-  String toString() {
-    // TODO: implement toString
-    return 'KhachHuyOrDoiTaiXe{}';
-  }
-}
 class GetListGroupCustomerTC extends MainEvent {
 
   final DateTime date;
@@ -373,9 +344,9 @@ class GetListTripsLimo extends MainEvent {
 class GetListDetailTripsTC extends MainEvent {
 
   final DateTime date;
-  final String idRoom;
-  final String idTime;
-  final String typeCustomer;
+  final int idRoom;
+  final int idTime;
+  final int typeCustomer;
 
   GetListDetailTripsTC(this.date,this.idRoom,this.idTime,this.typeCustomer);
 

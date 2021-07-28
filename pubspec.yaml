@@ -2,7 +2,7 @@ name: trungchuyen
 description: A new Flutter application.
 
 publish_to: 'none' # Remove this line if you wish to publish to pub.dev
-version: 1.0.4+6
+version: 1.0.5+8
 
 environment:
   sdk: ">=2.7.0 <3.0.0"
@@ -63,6 +63,7 @@ dependencies:
   wakelock: ^0.5.1
   new_version: any
   adaptive_dialog: ^0.9.4
+  timelines: ^0.1.0
 
 dev_dependencies:
   flutter_launcher_icons: ^0.8.0

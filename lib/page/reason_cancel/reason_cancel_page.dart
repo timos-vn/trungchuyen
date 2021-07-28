@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:trungchuyen/utils/utils.dart';
 
 class ReasonCancelPage extends StatefulWidget {
   @override
@@ -228,7 +229,7 @@ class _ReasonCancelPageState extends State<ReasonCancelPage> {
                                         }else if(groupValue == 1){
                                           Navigator.pop(context,'Khách yêu cầu huỷ');
                                         }else if(groupValue == 2){
-                                          Navigator.pop(context,contentController.text??'Lý do khác');
+                                          Navigator.pop(context, !Utils.isEmpty(contentController.text) ? contentController.text : 'Lý do khác');
                                         }
                                       },
                                       child: Text(

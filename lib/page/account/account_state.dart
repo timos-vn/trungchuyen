@@ -31,3 +31,8 @@ class LogOutSuccess extends AccountState {
   @override
   String toString() => 'LogOutSuccess }';
 }
+
+class UpdateInfoSuccess extends AccountState {
+  @override
+  String toString() => 'UpdateInfoSuccess }';
+}

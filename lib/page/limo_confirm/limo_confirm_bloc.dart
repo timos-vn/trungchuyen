@@ -109,7 +109,11 @@ class LimoConfirmBloc extends Bloc<LimoConfirmEvent,LimoConfirmState> {
   LimoConfirmState _handleGetListConfirmLimo(Object data) {
     if (data is String) return LimoConfirmFailure(data);
     try {
+      _mainBloc.tongKhachXacNhan = 0;
+      _mainBloc.tongChuyenXacNhan = 0;
+      _mainBloc.listCustomerConfirmLimo.clear();
       CustomerLimoConfirm response = CustomerLimoConfirm.fromJson(data);
+      _mainBloc.listCustomerConfirm = response.data;
       response.data.forEach((element) {
         CustomerLimoConfirmBody customer = new CustomerLimoConfirmBody(
             idTrungChuyen: element.idTrungChuyen,
@@ -126,22 +130,41 @@ class LimoConfirmBloc extends Bloc<LimoConfirmEvent,LimoConfirmState> {
             idTaiXe: element.idTaiXe,
             soKhach: 1
         );
-        var contain =  listCustomerConfirmLimos.where((phone) => phone.soDienThoaiKhach == element.soDienThoaiKhach);
+        var contain =  listCustomerConfirmLimos.where((item) => (
+            item.idTaiXe == element.idTaiXe
+            &&
+            item.ngayChay == element.ngayChay
+            &&
+            item.thoiGianDi == element.thoiGianDi
+            &&
+            item.tenTuyenDuong == element.tenTuyenDuong
+        ));
         if (contain.isEmpty){
           listCustomerConfirmLimos.add(customer);
-        }else{
-          final customerNews = listCustomerConfirmLimos.firstWhere((item) => item.soDienThoaiKhach == element.soDienThoaiKhach);
+        }
+        else{
+          final customerNews = listCustomerConfirmLimos.firstWhere((item) =>
+          (
+              item.idTaiXe == element.idTaiXe
+              &&
+              item.ngayChay == element.ngayChay
+              &&
+              item.thoiGianDi == element.thoiGianDi
+              &&
+              item.tenTuyenDuong == element.tenTuyenDuong
+          ));
           if (customerNews != null){
             customerNews.soKhach = customerNews.soKhach + 1;
             String listIdTC = customerNews.idTrungChuyen + ',' + customer.idTrungChuyen;
             customerNews.idTrungChuyen = listIdTC;
           }
-          listCustomerConfirmLimos.remove(customerNews);
+          listCustomerConfirmLimos.removeWhere((rm) => rm.idTaiXe == customerNews.idTaiXe && rm.ngayChay == customerNews.ngayChay && rm.thoiGianDi == customerNews.thoiGianDi && rm.tenTuyenDuong == customerNews.tenTuyenDuong);
           listCustomerConfirmLimos.add(customerNews);
         }
       });
-      _mainBloc.listCustomerConfirmLimo.clear();
       _mainBloc.listCustomerConfirmLimo = listCustomerConfirmLimos;
+      _mainBloc.tongChuyenXacNhan = listCustomerConfirmLimos.length;
+      _mainBloc.tongKhachXacNhan = response.data.length;
       return GetListCustomerConfirmLimoSuccess();
     } catch (e) {
       return LimoConfirmFailure(e.toString());

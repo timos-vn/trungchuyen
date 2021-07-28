@@ -40,7 +40,7 @@ class CustomerLimoConfirmBody {
   String ngayChay;
   String thoiGianDi;
   String idTaiXe;
-  int soKhach;
+  int soKhach = 1;
 
   CustomerLimoConfirmBody(
       {this.idTrungChuyen,

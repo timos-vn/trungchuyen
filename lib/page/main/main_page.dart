@@ -10,6 +10,7 @@ import 'package:trungchuyen/models/entity/customer.dart';
 import 'package:trungchuyen/models/entity/notification_trung_chuyen.dart';
 import 'package:trungchuyen/models/network/response/detail_trips_repose.dart';
 import 'package:trungchuyen/page/account/account_bloc.dart';
+import 'package:trungchuyen/page/account/account_event.dart';
 import 'package:trungchuyen/page/account/account_page.dart';
 import 'package:trungchuyen/page/limo_confirm/limo_confirm_bloc.dart';
 import 'package:trungchuyen/page/limo_confirm/limo_confirm_event.dart';
@@ -43,9 +44,10 @@ import 'main_event.dart';
 import 'main_state.dart';
 
 class MainPage extends StatefulWidget {
+  final bool roleTC;
   final int roleAccount;
   final String tokenFCM;
-  const MainPage({Key key,this.roleAccount,this.tokenFCM}) : super(key: key);
+  const MainPage({Key key,this.roleTC,this.roleAccount,this.tokenFCM}) : super(key: key);
 
 
   @override
@@ -60,14 +62,11 @@ class _MainPageState extends State<MainPage> with WidgetsBindingObserver{
   AccountBloc _accountBloc;
   ListCustomerLimoBloc _listCustomerLimoBloc;
   MapLimoBloc _mapLimoBloc;
-  // ReportLimoBloc _reportLimoBloc;
-   LimoConfirmBloc _limoConfirmBloc;
-
+  LimoConfirmBloc _limoConfirmBloc;
+  DateFormat format = DateFormat("dd/MM/yyyy");
   int testcase = 0;
   int _lastIndexToShop = 0;
   int _currentIndex = 0;
-
-  List<Customer> customerAwaiting = new List<Customer>();
 
   DatabaseHelper db = DatabaseHelper();
   GlobalKey<NavigatorState> _currentTabKey;
@@ -83,42 +82,24 @@ class _MainPageState extends State<MainPage> with WidgetsBindingObserver{
   final GlobalKey<WaitingPageState> _waitingPageKey = GlobalKey();
   final GlobalKey<ListCustomerLimoPageState> _listCustomerLimoKey = GlobalKey();
   final GlobalKey<LimoConfirmPageState> _limoConfirmKey = GlobalKey();
+  final GlobalKey<AccountPageState> _accountPageKey = GlobalKey();
 
-  Future<List<NotificationCustomerOfTC>> getListFromDbNotificationCustomer() {
-    return _mainBloc.db.fetchAllNotificationCustomer();
-  }
 
-  Future<List<Customer>> getListFromDbCustomer() {
-    return _mainBloc.db.fetchAll();
-  }
-
-  Future<List<NotificationCustomerOfTC>> getCurrentNotificationCustomer() async {
-    _mainBloc.listNotificationCustomer = await getListFromDbNotificationCustomer();
-    if (!Utils.isEmpty(_mainBloc.listNotificationCustomer)) {
-      print(_mainBloc.listNotificationCustomer.length);
-      return _mainBloc.listNotificationCustomer;
-    }else{
-      print('NuisNull1');
-      return null;
-    }
-  }
 
   Future<List<Customer>> getListCustomer() async {
-    _mainBloc.listCustomer = await getListFromDb();
-    if (!Utils.isEmpty(_mainBloc.listCustomer)) {
-      _mainBloc.idKhungGio = _mainBloc.listCustomer[0].idKhungGio;
-      _mainBloc.idVanPhong = _mainBloc.listCustomer[0].idVanPhong;
-      _mainBloc.loaiKhach = _mainBloc.listCustomer[0].loaiKhach;
-      _mainBloc.ngayTC = _mainBloc.listCustomer[0].ngayTC;
+    _mainBloc.listInfo = await getListFromDb();
+    if (!Utils.isEmpty(_mainBloc.listInfo)) {
+      _mainBloc.idKhungGio = _mainBloc.listInfo[0].idKhungGio;
+      _mainBloc.idVanPhong = _mainBloc.listInfo[0].idVanPhong;
+      _mainBloc.loaiKhach = _mainBloc.listInfo[0].loaiKhach;
+      _mainBloc.ngayTC = _mainBloc.listInfo[0].ngayTC;
+      _mainBloc.trips = _mainBloc.listInfo[0].chuyen;
       _mainBloc.blocked = true;
-      _mainBloc.listCustomer.forEach((element) {
-        if(element.statusCustomer == 4 || element.statusCustomer == 8){
-          _mainBloc.soKhachDaDonDuoc =  _mainBloc.soKhachDaDonDuoc + 1;
-        }
-      //  _mainBloc.add(KhachHuyOrDoiTaiXe(element.idTrungChuyen));
-      });
+      if(!Utils.isEmpty(_mainBloc.idKhungGio) && !Utils.isEmpty(_mainBloc.ngayTC) && !Utils.isEmpty(_mainBloc.idVanPhong) && !Utils.isEmpty(_mainBloc.idKhungGio) && !Utils.isEmpty(_mainBloc.loaiKhach)){
+        _mainBloc.add(GetListDetailTripsTC(format.parse(_mainBloc.ngayTC),_mainBloc.idVanPhong,_mainBloc.idKhungGio,_mainBloc.loaiKhach));
+      }
       print('LENGHT: ${_mainBloc.soKhachDaDonDuoc}');
-      return _mainBloc.listCustomer ;
+      return _mainBloc.listInfo ;
     }else{
       print('nullll');
       // _mainBloc.db.deleteAll();
@@ -182,25 +163,25 @@ class _MainPageState extends State<MainPage> with WidgetsBindingObserver{
     super.didChangeAppLifecycleState(state);
     if(state == AppLifecycleState.resumed){
       // Utils.showToast('Bạn đã Online');
+      if(widget.roleAccount == 3){
+        if(!Utils.isEmpty(_mainBloc.idKhungGio) && !Utils.isEmpty(_mainBloc.ngayTC) && !Utils.isEmpty(_mainBloc.idVanPhong) && !Utils.isEmpty(_mainBloc.idKhungGio) && !Utils.isEmpty(_mainBloc.loaiKhach)){
+          _mainBloc.add(GetListDetailTripsTC(format.parse(_mainBloc.ngayTC),_mainBloc.idVanPhong,_mainBloc.idKhungGio,_mainBloc.loaiKhach));
+        }
+      }
       if(_mainBloc.socketIOService.socket.disconnected)
       {
         _mainBloc.socketIOService.socket.connect();
         if(widget.roleAccount == 3){
-          // getListCustomer();
-          // getListTaiXeLimo();
-          //_mainBloc.add(GetListNotificationCustomerTC());
         }else if(widget.roleAccount == 7){
           _mainBloc.add(GetListNotificationOfLimo());
         }
       }
-      // _mapBloc.add(UpdateStatusDriverEvent(1));
     }else if(state == AppLifecycleState.inactive || state == AppLifecycleState.paused){
       Utils.showToast('Bạn đã offline. Vui lòng quay lại app.');
       if(_mainBloc.socketIOService.socket.connected)
       {
         _mainBloc.socketIOService.socket.disconnect();
       }
-      // _mapBloc.add(UpdateStatusDriverEvent(0));///viet ntn dung k :))))
     }
   }
 
@@ -307,8 +288,10 @@ class _MainPageState extends State<MainPage> with WidgetsBindingObserver{
                   _mapPageKey?.currentState?.setState(() {
                     _mainBloc.listCustomer = _mainBloc.listCustomer;
                   });
-                }else if(state is GetCustomerListSuccess){
-
+                }else if(state is CountNotificationSuccess){
+                  _accountPageKey?.currentState?.setState(() {
+                    _mainBloc.countNotifyUnRead = _mainBloc.countNotifyUnRead;
+                  });
                 }
                 else if (state is NavigateToNotificationState) {}
                 else if(state is GetLocationSuccess){
@@ -337,6 +320,7 @@ class _MainPageState extends State<MainPage> with WidgetsBindingObserver{
                       _mainBloc.add(GetListCustomerConfirm());
                     }
                     if (_currentIndex == Const.ACCOUNT) {
+                      _mainBloc.add(GetCountNotificationUnRead());
                     }
                   }
                   if (state is MainProfile) {
@@ -400,11 +384,11 @@ class _MainPageState extends State<MainPage> with WidgetsBindingObserver{
                               break;
                             case 2:
                               key = thirdTabNavKey;
-                              newWidget = LimoConfirmPage(key: _limoConfirmKey,);//widget.roleAccount == 3 ? ReportPage() : ReportLimoPage();
+                              newWidget = LimoConfirmPage(key: _limoConfirmKey,roleTC: widget.roleAccount == 3 ? true : widget.roleTC,);//widget.roleAccount == 3 ? ReportPage() : ReportLimoPage();
                               break;
                             case 3:
                               key = fourthTabNavKey;
-                              newWidget = AccountPage();
+                              newWidget = AccountPage(key: _accountPageKey,);
                               break;
                           }
                           return CustomTabView(
@@ -449,16 +433,6 @@ class _MainPageState extends State<MainPage> with WidgetsBindingObserver{
           style: TextStyle(color: _currentIndex == Const.MAP ? orange : grey, fontSize: 10),
         ),
       ),
-      // BottomNavigationBarItem(
-      //   icon: Icon(
-      //     MdiIcons.chartArc,
-      //     color: _currentIndex == Const.REPORT ? orange : grey,
-      //   ),
-      //   title: Text(
-      //     'Report'.tr,
-      //     style: TextStyle(color: _currentIndex == Const.REPORT ? orange : grey, fontSize: 10),
-      //   ),
-      // ),
       BottomNavigationBarItem(
         icon: Icon(
           Icons.stream,

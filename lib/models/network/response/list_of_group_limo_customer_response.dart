@@ -35,7 +35,8 @@ class ListOfGroupLimoCustomerResponseBody {
   String thoiGianDi;
   String thoiGianDen;
   int loaiKhach;
-  int soKhach;
+  int khachCanXuLy;
+  int tongSoGhe;
 
   ListOfGroupLimoCustomerResponseBody(
       {this.ngayChay,
@@ -45,7 +46,8 @@ class ListOfGroupLimoCustomerResponseBody {
         this.thoiGianDi,
         this.thoiGianDen,
         this.loaiKhach,
-        this.soKhach});
+        this.khachCanXuLy,
+        this.tongSoGhe});
 
   ListOfGroupLimoCustomerResponseBody.fromJson(Map<String, dynamic> json) {
     ngayChay = json['ngayChay'];
@@ -55,7 +57,8 @@ class ListOfGroupLimoCustomerResponseBody {
     thoiGianDi = json['thoiGianDi'];
     thoiGianDen = json['thoiGianDen'];
     loaiKhach = json['loaiKhach'];
-    soKhach = json['soKhach'];
+    khachCanXuLy = json['khachCanXuLy'];
+    tongSoGhe = json['tongSoGhe'];
   }
 
   Map<String, dynamic> toJson() {
@@ -67,7 +70,8 @@ class ListOfGroupLimoCustomerResponseBody {
     data['thoiGianDi'] = this.thoiGianDi;
     data['thoiGianDen'] = this.thoiGianDen;
     data['loaiKhach'] = this.loaiKhach;
-    data['soKhach'] = this.soKhach;
+    data['khachCanXuLy'] = this.khachCanXuLy;
+    data['tongSoGhe'] = this.tongSoGhe;
     return data;
   }
 }

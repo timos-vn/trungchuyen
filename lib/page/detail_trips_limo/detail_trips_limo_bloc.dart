@@ -19,7 +19,9 @@ class DetailTripsLimoBloc extends Bloc<DetailTripsLimoEvent,DetailTripsLimoState
   String get refreshToken => _refreshToken;
   SharedPreferences _prefs;
   SharedPreferences get prefs => _prefs;
-  List<DetailTripsLimoReponseBody> listOfDetailTripsLimo = new List<DetailTripsLimoReponseBody>();
+  List<DsKhachs> listOfDetailTripsLimo = new List<DsKhachs>();
+  int totalCustomerCancel;
+  int totalCustomer;
 
   DetailTripsLimoBloc(this.context) {
     _networkFactory = NetWorkFactory(context);
@@ -53,7 +55,9 @@ class DetailTripsLimoBloc extends Bloc<DetailTripsLimoEvent,DetailTripsLimoState
     if (data is String) return DetailTripsLimoFailure(data);
     try {
       DetailTripsLimo response = DetailTripsLimo.fromJson(data);
-      listOfDetailTripsLimo = response.data;
+      listOfDetailTripsLimo = response.data.dsKhachs;
+      totalCustomerCancel = response.data.khachHuy;
+      totalCustomer = response.data.tongKhach;
       return GetListOfDetailTripsLimoSuccess();
     } catch (e) {
       print(e.toString());

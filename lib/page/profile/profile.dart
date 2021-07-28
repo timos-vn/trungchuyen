@@ -22,13 +22,13 @@ class _ProfileState extends State<Profile> {
         backgroundColor: backgroundColor,
         actions: <Widget>[
           IconButton(
-            icon: Icon(Icons.mode_edit),
+            icon: Icon(Icons.mode_edit,color: backgroundColor,),
             onPressed: (){
-              Navigator.of(context).push(MaterialPageRoute<Null>(
-                  builder: (BuildContext context) {
-                    return MyProfile();
-                  },
-              ));
+              // Navigator.of(context).push(MaterialPageRoute<Null>(
+              //     builder: (BuildContext context) {
+              //       return MyProfile();
+              //     },
+              // ));
             },
           )
         ],

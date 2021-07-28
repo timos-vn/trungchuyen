@@ -895,7 +895,7 @@ class Utils {
 
 
 
-  static Future<bool> showDialogTransferCustomerLimo({@required BuildContext context, @required List<DetailTripsLimoReponseBody> listOfDetailTripsSuccessful, @required String content, Function accept, Function cancel, bool dismissible: false}) => showDialog(
+  static Future<bool> showDialogTransferCustomerLimo({@required BuildContext context, @required List<DsKhachs> listOfDetailTripsSuccessful, @required String content, Function accept, Function cancel, bool dismissible: false}) => showDialog(
       barrierDismissible: dismissible,
       context: context,
       builder: (context) {

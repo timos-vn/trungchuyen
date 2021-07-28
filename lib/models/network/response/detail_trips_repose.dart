@@ -48,8 +48,13 @@ class DetailTripsResponseBody {
   String toaDoLimoDen;
   int loaiKhach;
   int trangThaiTC;
-  int soKhach;
-  int status;
+  int soKhach =1;
+  String chuyen;
+  int totalCustomer;
+  int idKhungGio;
+  int idVanPhong;
+  String ngayTC;
+  int maVe;
 
   DetailTripsResponseBody(
       {
@@ -72,7 +77,10 @@ class DetailTripsResponseBody {
         this.loaiKhach,
         this.trangThaiTC,
         this.soKhach,
-        this.status,
+        this.chuyen,
+        this.totalCustomer,
+        this.idKhungGio,
+        this.idVanPhong,this.ngayTC,this.maVe
       });
 
   DetailTripsResponseBody.fromJson(Map<String, dynamic> json) {
@@ -94,6 +102,7 @@ class DetailTripsResponseBody {
     toaDoLimoDen = json['toaDoLimoDen'];
     loaiKhach = json['loaiKhach'];
     trangThaiTC = json['trangThaiTC'];
+    maVe = json['maVe'];
   }
 
   Map<String, dynamic> toJson() {
@@ -115,7 +124,7 @@ class DetailTripsResponseBody {
     data['diaChiLimoDen'] = this.diaChiLimoDen;
     data['toaDoLimoDen'] = this.toaDoLimoDen;
     data['loaiKhach'] = this.loaiKhach;
-    data['trangThaiTC'] = this.trangThaiTC;
+    data['trangThaiTC'] = this.trangThaiTC;data['maVe'] = this.maVe;
     return data;
   }
 }

@@ -15,6 +15,8 @@ import 'package:trungchuyen/models/network/request/update_status_customer_reques
 import 'package:trungchuyen/models/network/response/detail_trips_repose.dart';
 import 'package:trungchuyen/models/network/response/polyline_result_response.dart';
 import 'package:trungchuyen/models/network/service/network_factory.dart';
+import 'package:trungchuyen/page/main/main_bloc.dart';
+import 'package:trungchuyen/page/main/main_event.dart';
 import 'package:trungchuyen/service/soket_io_service.dart';
 import 'package:trungchuyen/utils/const.dart';
 import 'package:trungchuyen/utils/utils.dart';
@@ -26,6 +28,8 @@ import 'map_state.dart';
 String latLngLocation;
 class MapBloc extends Bloc<MapEvent,MapState> {
 
+  MainBloc _mainBloc;
+  MainBloc get mainBloc => _mainBloc;
   BuildContext context;
   NetWorkFactory _networkFactory;
   String _accessToken;
@@ -35,10 +39,10 @@ class MapBloc extends Bloc<MapEvent,MapState> {
   SharedPreferences _prefs;
   SharedPreferences get prefs => _prefs;
   SocketIOService socketIOService;
-  List<DetailTripsResponseBody> listOfCustomerTrips = new List<DetailTripsResponseBody>();
+ // List<DetailTripsResponseBody> listDetailTripsCustomer = new List<DetailTripsResponseBody>();
 
   ///
-  List<Customer> listCustomers = new List<Customer>();
+  //List<DetailTripsResponseBody> listCustomers = new List<DetailTripsResponseBody>();
   Location location = new Location();
   bool serviceEnabled;
   String currentLocationTC;
@@ -62,18 +66,6 @@ class MapBloc extends Bloc<MapEvent,MapState> {
   // TODO: implement initialState
   MapState get initialState => MapInitial();
 
-  // Future<List<Customer>> getListFromDb() {
-  //   return db.fetchAll();
-  // }
-  //
-  // void deleteItems(int index) {
-  //   listCustomer.removeAt(index);
-  // }
-  //
-  // Customer getCustomer(int i) {
-  //   return listCustomer.elementAt(i);
-  // }
-
   @override
   Stream<MapState> mapEventToState(MapEvent event) async* {
     // TODO: implement mapEventToState
@@ -86,42 +78,35 @@ class MapBloc extends Bloc<MapEvent,MapState> {
       idUser = _prefs.getString(Const.USER_ID) ??'';
     }
 
-    if(event is GetCustomerList){
-      yield MapLoading();
-      listCustomers = await getListFromDb();
-      if (!Utils.isEmpty(listCustomers)) {
-        yield GetListCustomerSuccess();
-        return;
-      }
-      yield GetListCustomerSuccess();
-    }
-
-    if (event is AddOldCustomer) {
-      yield MapInitial();
-      await db.addNew(event.customer);
-      listCustomers = await getListFromDb();
-      yield GetListCustomerSuccess();
-    }
-
-    if (event is DeleteCustomer) {
-      yield MapLoading();
-      _deleteItems(event.index);
-      await db.remove(event.idTC);
-      listCustomers = await getListFromDb();
-      yield GetListCustomerSuccess();
-      //    add(GetCustomerItemList());
-    }
-
-    if(event is UpdateCustomerList){
-      yield MapInitial();
-      await db.updateCustomer(event.customer);
-      listCustomers = await getListFromDb();
-      yield GetListCustomerSuccess();
-    }
-
     if(event is UpdateTaiXeLimos){
       yield MapInitial();
-      await db.addDriverLimo(event.customer);
+      Customer customer = new Customer(
+        idTrungChuyen: event.customer.idTrungChuyen,
+        idTaiXeLimousine : event.customer.idTaiXeLimousine,
+        hoTenTaiXeLimousine : event.customer.hoTenTaiXeLimousine,
+        dienThoaiTaiXeLimousine : event.customer.dienThoaiTaiXeLimousine,
+        tenXeLimousine : event.customer.tenXeLimousine,
+        bienSoXeLimousine : event.customer.bienSoXeLimousine,
+        tenKhachHang : event.customer.tenKhachHang,
+        soDienThoaiKhach :event.customer.soDienThoaiKhach,
+        diaChiKhachDi :event.customer.diaChiKhachDi,
+        toaDoDiaChiKhachDi:event.customer.toaDoDiaChiKhachDi,
+        diaChiKhachDen:event.customer.diaChiKhachDen,
+        toaDoDiaChiKhachDen:event.customer.toaDoDiaChiKhachDen,
+        diaChiLimoDi:event.customer.diaChiLimoDi,
+        toaDoLimoDi:event.customer.toaDoLimoDi,
+        diaChiLimoDen:event.customer.diaChiLimoDen,
+        toaDoLimoDen:event.customer.toaDoLimoDen,
+        loaiKhach:event.customer.loaiKhach,
+        trangThaiTC: event.customer.trangThaiTC,
+        soKhach:event.customer.soKhach,
+        chuyen: _mainBloc.trips,
+        totalCustomer: event.customer.totalCustomer,
+        idKhungGio: event.customer.idKhungGio,
+        idVanPhong: event.customer.idVanPhong,
+        ngayTC: event.customer.ngayTC,
+      );
+      await db.addDriverLimo(customer);
       listTaiXeLimos = await getListTXLimoFromDb();
       yield GetListTaiXeLimosSuccess();
     }
@@ -151,7 +136,6 @@ class MapBloc extends Bloc<MapEvent,MapState> {
           print('connected');
         }
       }
-      // MapState state = _handleUpdateStatusDriver(await _networkFactory.updateStatusDriver(_accessToken, event.statusDriver));
       yield UpdateStatusDriverState();
     }
     if(event is CheckPermissionEvent){
@@ -175,7 +159,6 @@ class MapBloc extends Bloc<MapEvent,MapState> {
       if(socketIOService.socket.connected)
         {
           socketIOService.socket.emit("TAIXE_CAPNHAT_TOADO",event.location);
-          print('TAIXE_TC_CAPNHAT_TOADO => ${event.location.toString()}');
         }
       yield PushLocationToLimoSuccess();
     }
@@ -191,7 +174,6 @@ class MapBloc extends Bloc<MapEvent,MapState> {
         List<String> listKhach = new List<String>();
         List<String> listIdTC = new List<String>();
         String numberCustomer;
-        // String listIdTAIXELIMO;
         String idTC;
         List<Customer> listTaiXeTC = event.listTaiXeTC;
         listTaiXeTC.forEach((element) {
@@ -200,17 +182,11 @@ class MapBloc extends Bloc<MapEvent,MapState> {
           listIdTC.add(element.idTrungChuyen);
         });
         numberCustomer = listKhach.join('|');
-        // listIdTAIXELIMO = listIdTXLimo.join(',');
         idTC  = listIdTC.join(',');
 
         var objData = {
           'EVENT':'TAIXE_TRUNGCHUYEN_GIAOKHACH_LIMO',
           'numberCustomer' : numberCustomer,
-          // 'listIdTAIXELIMO':listIdTAIXELIMO,
-          // 'nameTC': _nameLXTC,
-          // 'phoneTC': _sdtLXTC,
-          // 'listIdTC':idTC,
-          // 'idDriverTC':idUser
         };
         TranferCustomerRequestBody request = TranferCustomerRequestBody(
           title: event.title,
@@ -232,7 +208,54 @@ class MapBloc extends Bloc<MapEvent,MapState> {
       );
       MapState state = _handleUpdateStatusCustomer(await _networkFactory.updateGroupStatusCustomer(request,_accessToken),event.status);
       yield state;
-      // add(GetCustomerList());
+    }else if(event is GetListDetailTripsCustomer){
+      yield MapLoading();
+      MapState state = _handleGetListOfDetailTrips(await _networkFactory.getDetailTrips(_accessToken,event.date,event.idRoom.toString(),event.idTime.toString(),event.typeCustomer.toString()));
+      yield state;
+    }
+  }
+
+  MapState _handleGetListOfDetailTrips(Object data) {
+    if (data is String) return MapFailure(data);
+    try {
+      _mainBloc.listCustomer.clear();
+      db.deleteAll();
+      DetailTripsResponse response = DetailTripsResponse.fromJson(data);
+      response.data.forEach((element) {
+        var contain =  _mainBloc.listCustomer.where((phone) => phone.soDienThoaiKhach == element.soDienThoaiKhach);
+
+        if (contain.isEmpty){
+          element.chuyen = _mainBloc.trips;
+          element.totalCustomer = response.data.length;
+          element.idKhungGio = _mainBloc.idKhungGio;
+          element.idVanPhong = _mainBloc.idVanPhong;
+          element.ngayTC = _mainBloc.ngayTC;
+          _mainBloc.listCustomer.add(element);
+          _mainBloc.add(AddOldCustomerItemList(element));
+        }else{
+          final customerNews = _mainBloc.listCustomer.firstWhere((item) => item.soDienThoaiKhach == element.soDienThoaiKhach);
+          if (customerNews != null){
+            customerNews.soKhach = customerNews.soKhach + 1;
+            String listIdTC = customerNews.idTrungChuyen + ',' + element.idTrungChuyen;
+            customerNews.idTrungChuyen = listIdTC;
+          }
+          _mainBloc.listCustomer.removeWhere((rm) => rm.soDienThoaiKhach == customerNews.soDienThoaiKhach);
+          _mainBloc.listCustomer.add(customerNews);
+          _mainBloc.add(DeleteCustomerFormDB(element.idTrungChuyen));
+          _mainBloc.add(AddOldCustomerItemList(customerNews));
+          print(_mainBloc.listCustomer.length);
+        }
+      });
+      // _mainBloc.listCustomer.forEach((element) {
+      //   if(element.trangThaiTC == 4 || element.trangThaiTC == 8){
+      //     _mainBloc.soKhachDaDonDuoc =  _mainBloc.soKhachDaDonDuoc + 1;
+      //   }
+      // });
+      _mainBloc.currentNumberCustomerOfList = _mainBloc.listCustomer.length;
+      return GetListOfDetailTripsSuccess();
+    } catch (e) {
+      print(e.toString());
+      return MapFailure(e.toString());
     }
   }
 
@@ -278,26 +301,6 @@ class MapBloc extends Bloc<MapEvent,MapState> {
     }
   }
 
-  MapState _handlePushLocationToLimo(Object data) {
-    if (data is String) return MapFailure(data);
-    try {
-      return PushLocationToLimoSuccess();
-    } catch (e) {
-      print(e.toString());
-      return MapFailure(e.toString());
-    }
-  }
-
-  MapState _handleUpdateStatusDriver(Object data) {
-    if (data is String) return MapFailure(data);
-    try {
-      return UpdateStatusDriverState();
-    } catch (e) {
-      print(e.toString());
-      return MapFailure(e.toString());
-    }
-  }
-
   startListenChangeLocation() async {
     int countPush = 0;
     if (await checkPermission()) {
@@ -308,8 +311,6 @@ class MapBloc extends Bloc<MapEvent,MapState> {
         latLngStream.addLatLng(LatLngInfo(currentLocation.latitude, currentLocation.longitude, "DriverMarker"));
         //add(GetCurrentLocationEvent(currentLocationTC));
         currentLocations(currentLocationTC);
-        // print('---Tream--- ${currentLocationTC.toString()}');
-        ///{\"lat\":20.9763858,\"lng\":105.8175841}
         // print(countPush);
         if(countPush == 5){
 
@@ -334,7 +335,6 @@ class MapBloc extends Bloc<MapEvent,MapState> {
   }
 
   currentLocations(String location){
-    print(location + "---Tream---");
     latLngLocation = location;
   }
 
@@ -367,19 +367,14 @@ class MapBloc extends Bloc<MapEvent,MapState> {
     return false;
   }
 
-  Future<List<Customer>> getListFromDb() {
-    return db.fetchAll();
-  }
-
   Future<List<Customer>> getListTXLimoFromDb() {
     return db.fetchAllDriverLimo();
   }
 
-  void _deleteItems(int index) {
-    listCustomers.removeAt(index);
-  }
 
-  Customer getCustomer(int i) {
-    return listCustomers.elementAt(i);
+
+
+  void getMainBloc(BuildContext context) {
+    _mainBloc = BlocProvider.of<MainBloc>(context);
   }
 }

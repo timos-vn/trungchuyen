@@ -262,60 +262,6 @@ class DatabaseHelper {
     return client.delete('CustomerPending', where: 'idTrungChuyen = ?', whereArgs: [idTC]);
   }
 
-  ///Notification_Customer
-  Future<void> addNotificationCustomer(NotificationCustomerOfTC notificationCustomer) async {
-    var client = await db;
-    NotificationCustomerOfTC oldNotificationCustomer = await fetchNotificationCustomer(notificationCustomer.idTrungChuyen);
-    if (oldNotificationCustomer == null)
-      await client.insert('NotificationCustomer', notificationCustomer.toMapForDb(),
-          conflictAlgorithm: ConflictAlgorithm.replace);
-    else {
-      await updateNotificationCustomer(oldNotificationCustomer);
-    }
-  }
-
-  Future<NotificationCustomerOfTC> fetchNotificationCustomer(String idTrungChuyen,) async {
-    var client = await db;
-    final Future<List<Map<String, dynamic>>> futureMaps =
-    client.query('NotificationCustomer', where: 'idTrungChuyen = ?', whereArgs: [idTrungChuyen]);
-    var maps = await futureMaps;
-    if (maps.length != 0) {
-      return NotificationCustomerOfTC.fromDb(maps.first);
-    }
-    return null;
-  }
-
-  Future<int> updateNotificationCustomer(NotificationCustomerOfTC notificationCustomer) async {
-    var client = await db;
-    return client.update('NotificationCustomer', notificationCustomer.toMapForDb(),
-        where: 'idTrungChuyen = ?',
-        whereArgs: [notificationCustomer.idTrungChuyen],
-        conflictAlgorithm: ConflictAlgorithm.replace);
-  }
-
-  Future<List<NotificationCustomerOfTC>> fetchAllNotificationCustomer() async {
-    var client = await db;
-    var res = await client.query('NotificationCustomer');
-
-    if (res.isNotEmpty) {
-      var products =
-      res.map((productMap) => NotificationCustomerOfTC.fromDb(productMap)).toList();
-      return products;
-    }
-    return [];
-  }
-
-  Future<void> removeNotificationCustomer(String idTrungChuyen) async {
-    var client = await db;
-    return client.delete('NotificationCustomer', where: 'idTrungChuyen = ?', whereArgs: [idTrungChuyen]);
-  }
-
-  Future<void> deleteAllNotificationCustomer() async {
-    var client = await db;
-    await client.delete('NotificationCustomer');
-  }
-
-
   ///Notification_Limo
   Future<void> addNotificationLimo(NotificationOfLimo notificationOfLimo) async {
     var client = await db;

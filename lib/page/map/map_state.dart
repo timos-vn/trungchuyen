@@ -90,3 +90,7 @@ class GetListTaiXeLimosSuccess extends MapState {
   @override
   String toString() => 'GetListTaiXeLimosSuccess {}';
 }
+class GetListOfDetailTripsSuccess extends MapState {
+  @override
+  String toString() => 'GetListOfDetailTripsSuccess }';
+}

@@ -79,7 +79,7 @@ class NotificationBloc extends Bloc<NotificationEvent,NotificationState>{
     }
     if(event is UpdateAllNotificationEvent){
       yield NotificationLoading();
-      NotificationState state = _handleUpdateNotification(await _networkFactory.updateAllNotification(_accessToken,_userId));
+      NotificationState state = _handleUpdateNotification(await _networkFactory.updateAllNotification(_accessToken));
       yield state;
     }else if(event is DeleteAllNotificationEvent){
       yield NotificationLoading();
@@ -99,7 +99,7 @@ class NotificationBloc extends Bloc<NotificationEvent,NotificationState>{
   }
 
   Future<NotificationState> handleCallApi(int pageIndex) async {
-    NotificationState state = _handleGetListNotification(await _networkFactory.getListNotification(_accessToken,pageIndex,_userId,20),pageIndex);
+    NotificationState state = _handleGetListNotification(await _networkFactory.getListNotification(_accessToken,pageIndex,20),pageIndex);
     return state;
   }
 
@@ -110,7 +110,7 @@ class NotificationBloc extends Bloc<NotificationEvent,NotificationState>{
       _maxPage =  20;//Const.MAX_COUNT_ITEM
       List<NotificationDataResponse> list = response.data ?? List();
       if (!Utils.isEmpty(list) && listNotification.length >= (pageIndex - 1) * _maxPage + list.length) {
-        listNotification.replaceRange((pageIndex - 1) * maxPage, pageIndex * maxPage, list);
+        listNotification.replaceRange((pageIndex - 1) * maxPage, list.length < _maxPage ? (pageIndex * list.length) : (pageIndex * maxPage), list);
       } else {
         if (_currentPage == 1) {
           listNotification = list;

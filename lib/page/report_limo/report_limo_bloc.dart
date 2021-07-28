@@ -54,7 +54,51 @@ class ReportLimoBloc extends Bloc<ReportLimoEvent,ReportLimoState> {
       ReportReponse reponse = ReportReponse.fromJson(data);
       reponseDetail = reponse.data;
       tongKhach = reponseDetail.tongKhach;
-      listReport = reponseDetail.dsKhachs;
+      reponseDetail.dsKhachs.forEach((element) {
+        DsKhachs customer = new DsKhachs(
+            ngayChay: element.ngayChay,
+            tenTuyenDuong: element.tenTuyenDuong,
+            gioBatDau: element.gioBatDau,
+            gioKetThuc: element.gioKetThuc,
+            tenKhachHang: element.tenKhachHang,
+            soDienThoaiKhach: element.soDienThoaiKhach,
+            hoTenTaiXeLimousine: element.hoTenTaiXeLimousine,
+            dienThoaiTaiXeLimousine: element.dienThoaiTaiXeLimousine,
+            tenXeLimousine: element.tenXeLimousine,
+            bienSoXeLimousine: element.bienSoXeLimousine,
+            loaiKhach: element.loaiKhach,
+            hoTenTaiXeTrungChuyen: element.hoTenTaiXeTrungChuyen,
+            dienThoaiTaiXeTrungChuyen: element.dienThoaiTaiXeTrungChuyen,
+            tenXeTrungChuyen: element.tenXeTrungChuyen,
+            bienSoXeTrungChuyen: element.bienSoXeTrungChuyen,
+            soKhach: 1,
+        );
+        var contain =  listReport.where((item) => (
+                item.ngayChay == element.ngayChay
+                &&
+                item.gioBatDau == element.gioBatDau
+                &&
+                item.tenTuyenDuong == element.tenTuyenDuong
+        ));
+        if (contain.isEmpty){
+          listReport.add(customer);
+        }
+        else{
+          final customerNews = listReport.firstWhere((item) =>
+          (
+              item.ngayChay == element.ngayChay
+                  &&
+                  item.gioBatDau == element.gioBatDau
+                  &&
+                  item.tenTuyenDuong == element.tenTuyenDuong
+          ));
+          if (customerNews != null){
+            customerNews.soKhach = customerNews.soKhach + 1;
+          }
+          listReport.removeWhere((rm) => rm.ngayChay == customerNews.ngayChay && rm.gioBatDau == customerNews.gioBatDau && rm.tenTuyenDuong == customerNews.tenTuyenDuong);
+          listReport.add(customerNews);
+        }
+      });
       return GetReportLimoEventSuccess();
     } catch (e) {
       print(e.toString());

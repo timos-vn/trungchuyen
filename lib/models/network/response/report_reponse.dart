@@ -62,7 +62,13 @@ class DsKhachs {
   String dienThoaiTaiXeLimousine;
   String tenXeLimousine;
   String bienSoXeLimousine;
+  String hoTenTaiXeTrungChuyen;
+  String dienThoaiTaiXeTrungChuyen;
+  String tenXeTrungChuyen;
+  String bienSoXeTrungChuyen;
   int loaiKhach;
+  int khachTrungChuyen;
+  int soKhach =1;
 
   DsKhachs(
       {this.ngayChay,
@@ -75,7 +81,9 @@ class DsKhachs {
         this.dienThoaiTaiXeLimousine,
         this.tenXeLimousine,
         this.bienSoXeLimousine,
-        this.loaiKhach});
+        this.loaiKhach,
+        this.hoTenTaiXeTrungChuyen,this.dienThoaiTaiXeTrungChuyen,this.tenXeTrungChuyen,this.bienSoXeTrungChuyen,this.khachTrungChuyen,
+        this.soKhach});
 
   DsKhachs.fromJson(Map<String, dynamic> json) {
     ngayChay = json['ngayChay'];
@@ -89,6 +97,10 @@ class DsKhachs {
     tenXeLimousine = json['tenXeLimousine'];
     bienSoXeLimousine = json['bienSoXeLimousine'];
     loaiKhach = json['loaiKhach'];
+    hoTenTaiXeTrungChuyen = json['hoTenTaiXeTrungChuyen'];
+    dienThoaiTaiXeTrungChuyen = json['dienThoaiTaiXeTrungChuyen'];
+    tenXeTrungChuyen = json['tenXeTrungChuyen'];
+    bienSoXeTrungChuyen = json['bienSoXeTrungChuyen'];khachTrungChuyen = json['khachTrungChuyen'];
   }
 
   Map<String, dynamic> toJson() {
@@ -104,6 +116,10 @@ class DsKhachs {
     data['tenXeLimousine'] = this.tenXeLimousine;
     data['bienSoXeLimousine'] = this.bienSoXeLimousine;
     data['loaiKhach'] = this.loaiKhach;
+    data['hoTenTaiXeTrungChuyen'] = this.hoTenTaiXeTrungChuyen;
+    data['dienThoaiTaiXeTrungChuyen'] = this.dienThoaiTaiXeTrungChuyen;
+    data['tenXeTrungChuyen'] = this.tenXeTrungChuyen;
+    data['bienSoXeTrungChuyen'] = this.bienSoXeTrungChuyen; data['khachTrungChuyen'] = this.khachTrungChuyen;
     return data;
   }
 }

@@ -215,7 +215,7 @@ class _ReportLimoPageState extends State<ReportLimoPage> {
                   Row(
                     children: [
                       Expanded(child: Divider()),
-                      Text('Danh sách Khách hàng'),
+                      Text('Danh sách chuyến'),
                       Expanded(child: Divider()),
                     ],
                   ),
@@ -229,106 +229,87 @@ class _ReportLimoPageState extends State<ReportLimoPage> {
                   ),
                   SizedBox(height: 10,),
                   Expanded(
-                    child: LiquidPullToRefresh(
-                      showChildOpacityTransition: false,
-                      onRefresh: () => Future.delayed(Duration.zero).then(
-                              (_) {
-                                if(Utils.isEmpty(fromDate) || Utils.isEmpty(toDate)){
-                                  _bloc.add(GetReportLimoEvent(DateFormat("yyyy-MM-dd").parse(DateTime.now().toString()).toString(),DateFormat("yyyy-MM-dd").parse(DateTime.now().toString()).toString()));
-                                }
-                                _bloc.add(GetReportLimoEvent(fromDate,toDate));
-                              }),
-                      child: Scrollbar(
-                        child: ListView.builder(
-                            shrinkWrap: true,
-                            itemCount: _bloc.listReport.length,
-                            itemBuilder: (BuildContext context, int index) {
-                              return GestureDetector(
-                                  onTap: () {
-                                    print('$index');
-                                    // historyController.navigateToDetail(index.toString());
-                                  },
-                                  child: Padding(
-                                    padding: const EdgeInsets.only(left: 10,right: 16,top: 8,bottom: 8),
-                                    child: Container(
-                                      width: double.infinity,
-                                      decoration: BoxDecoration(
-                                        color: Colors.white,
-                                        borderRadius: BorderRadius.circular(0),
-                                        boxShadow: [
-                                          new BoxShadow(
-                                            //color: Theme.of(Get.context).accentColor,
-                                            blurRadius:1,
-                                          ),
-                                        ],
-                                      ),
-                                      child: Column(
-                                        crossAxisAlignment: CrossAxisAlignment.start,
-                                        children: <Widget>[
-                                          Container(
-                                            padding: const EdgeInsets.all(14),
-                                            color: Colors.grey.withOpacity(0.2),
-                                            child: Row(
-                                              crossAxisAlignment: CrossAxisAlignment.start,
-                                              children: <Widget>[
-                                                ClipRRect(
-                                                  borderRadius: BorderRadius.circular(10),
-                                                  child: Image.asset(
-                                                    icLogo,
-                                                    height: 40,
-                                                    width: 40,
+                    child: Scrollbar(
+                      child: ListView.builder(
+                          shrinkWrap: true,
+                          itemCount: _bloc.listReport.length,
+                          itemBuilder: (BuildContext context, int index) {
+                            return GestureDetector(
+                                onTap: () {
+                                  print('$index');
+                                },
+                                child: Padding(
+                                  padding: const EdgeInsets.only(left: 10,right: 16,top: 8,bottom: 8),
+                                  child: Container(
+                                    width: double.infinity,
+                                    decoration: BoxDecoration(
+                                      color: Colors.white,
+                                        border: Border.all(
+                                            color: Colors.grey,
+                                            width: 1.0
+                                        )
+                                    ),
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: <Widget>[
+                                        Container(
+                                          padding: const EdgeInsets.all(14),
+                                          color: Colors.grey.withOpacity(0.2),
+                                          child: Row(
+                                            crossAxisAlignment: CrossAxisAlignment.start,
+                                            children: <Widget>[
+                                              ClipRRect(
+                                                borderRadius: BorderRadius.circular(10),
+                                                child: Image.asset(
+                                                  icLogo,
+                                                  height: 40,
+                                                  width: 40,
+                                                ),
+                                              ),
+                                              SizedBox(
+                                                width: 8,
+                                              ),
+                                              Column(
+                                                crossAxisAlignment: CrossAxisAlignment.start,
+                                                children: <Widget>[
+                                                  Text(
+                                                    '${ _bloc.listReport[index].tenTuyenDuong?.toString()??''}',
+                                                    style: TextStyle(fontWeight: FontWeight.bold),
                                                   ),
-                                                ),
-                                                SizedBox(
-                                                  width: 8,
-                                                ),
-                                                Column(
-                                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                                  children: <Widget>[
-                                                    Row(
-                                                      children: [
-                                                        Text(
-                                                          'KH: ${_bloc.listReport[index].tenKhachHang?.toString()??''}',
-                                                          style: TextStyle(fontWeight: FontWeight.bold),
-                                                        ),
-                                                        SizedBox(
-                                                          width: 5,
-                                                        ),
-                                                        Text('(${_bloc.listReport[index].soDienThoaiKhach?.toString()??""})', style: TextStyle(fontSize: 12, color: Colors.grey)),
-                                                      ],
-                                                    ),
-                                                    SizedBox(
-                                                      height: 4,
-                                                    ),
-                                                    Container(
-                                                      padding: EdgeInsets.all(2),
-                                                      child: Center(
-                                                        child: Text(
-                                                          'Time: ${_bloc.listReport[index].ngayChay?.toString()??''} - ${_bloc.listReport[index].gioBatDau?.toString()??''}',
-                                                          style: TextStyle(color: Colors.grey,fontSize: 12),
-                                                        ),
+                                                  SizedBox(
+                                                    height: 4,
+                                                  ),
+                                                  Container(
+                                                    padding: EdgeInsets.all(2),
+                                                    child: Center(
+                                                      child: Text(
+                                                        '${_bloc.listReport[index].ngayChay?.toString()??''}  -  ${_bloc.listReport[index].gioBatDau?.toString()??''}',
+                                                        style: TextStyle(color: Colors.blue,fontSize: 12,fontStyle: FontStyle.italic),
                                                       ),
-                                                      decoration: BoxDecoration(
-                                                        borderRadius: BorderRadius.all(
-                                                          Radius.circular(15),
-                                                        ),
+                                                    ),
+                                                    decoration: BoxDecoration(
+                                                      borderRadius: BorderRadius.all(
+                                                        Radius.circular(15),
                                                       ),
-                                                    )
-                                                  ],
-                                                ),
-                                                Expanded(
-                                                  child: SizedBox(),
-                                                ),
-                                                Container(
+                                                    ),
+                                                  )
+                                                ],
+                                              ),
+                                              Expanded(
+                                                child: SizedBox(),
+                                              ),
+                                              Visibility(
+                                                visible: _bloc.listReport[index].khachTrungChuyen == 1,
+                                                child: Container(
                                                   height: 45,
                                                   width: 45,
                                                   padding: EdgeInsets.all(8),
                                                   decoration: BoxDecoration(
-                                                      color:_bloc.listReport[index].loaiKhach == 1 ? Colors.blue  : Colors.grey,
+                                                      color:_bloc.listReport[index].loaiKhach == 1 ? Colors.orange  : Colors.blue,
                                                       borderRadius: BorderRadius.all(Radius.circular(32))
                                                   ),
                                                   child: Center(
-                                                    child: Text(_bloc.listReport[index].loaiKhach == 1 ? 'Trả' : 'Đón',
+                                                    child: Text(_bloc.listReport[index].loaiKhach == 1 ? 'Đón' : 'Trả',
                                                       style:TextStyle(
                                                         color: Colors.white,
                                                         fontWeight: FontWeight.normal,
@@ -337,78 +318,78 @@ class _ReportLimoPageState extends State<ReportLimoPage> {
                                                     ),
                                                   ),
                                                 ),
-                                              ],
-                                            ),
+                                              ),
+                                            ],
                                           ),
-                                          Divider(
-                                            height: 0.5,
-                                            color: Colors.grey,
-                                          ),
-                                          // Padding(
-                                          //   padding: const EdgeInsets.only(right: 16, left: 16, top: 10, bottom: 10),
-                                          //   child: Column(
-                                          //     crossAxisAlignment: CrossAxisAlignment.start,
-                                          //     children: <Widget>[
-                                          //       Text(
-                                          //         'Thông tin khách hàng',
-                                          //         style: Theme.of(Get.context).textTheme.caption.copyWith(
-                                          //           color: Theme.of(Get.context).disabledColor,
-                                          //           fontWeight: FontWeight.normal,
-                                          //         ),
-                                          //       ),
-                                          //       SizedBox(height: 5,),
-                                          //       Text(
-                                          //         'Khách ${index.toString()}' + ' - ' + '0962983437',
-                                          //         maxLines: 2,
-                                          //         overflow: TextOverflow.ellipsis,
-                                          //         style: Theme.of(Get.context).textTheme.subtitle.copyWith(
-                                          //           fontWeight: FontWeight.normal,
-                                          //           color: Theme.of(Get.context).textTheme.title.color,
-                                          //         ),
-                                          //       ),
-                                          //     ],
-                                          //   ),
-                                          // ),
-                                          // Padding(
-                                          //   padding: const EdgeInsets.only(right: 16, left: 16, top: 0, bottom: 0),
-                                          //   child: Divider(
-                                          //     height: 0.5,
-                                          //     color: Theme.of(Get.context).disabledColor,
-                                          //   ),
-                                          // ),
-                                          Padding(
-                                            padding: const EdgeInsets.only(right: 16, left: 16, top: 10, bottom: 10),
-                                            child: Column(
-                                              crossAxisAlignment: CrossAxisAlignment.start,
-                                              children: <Widget>[
-                                                Text(
-                                                  'Trip (Chuyến đi)',
-                                                  style:TextStyle(
-                                                    color:Colors.grey,
-                                                    fontWeight: FontWeight.normal,
-                                                  ),
+                                        ),
+                                        Divider(
+                                          height: 0.5,
+                                          color: Colors.grey,
+                                        ),
+                                        // Padding(
+                                        //   padding: const EdgeInsets.only(right: 16, left: 16, top: 10, bottom: 10),
+                                        //   child: Column(
+                                        //     crossAxisAlignment: CrossAxisAlignment.start,
+                                        //     children: <Widget>[
+                                        //       Text(
+                                        //         'Thông tin khách hàng',
+                                        //         style: Theme.of(Get.context).textTheme.caption.copyWith(
+                                        //           color: Theme.of(Get.context).disabledColor,
+                                        //           fontWeight: FontWeight.normal,
+                                        //         ),
+                                        //       ),
+                                        //       SizedBox(height: 5,),
+                                        //       Text(
+                                        //         'Khách ${index.toString()}' + ' - ' + '0962983437',
+                                        //         maxLines: 2,
+                                        //         overflow: TextOverflow.ellipsis,
+                                        //         style: Theme.of(Get.context).textTheme.subtitle.copyWith(
+                                        //           fontWeight: FontWeight.normal,
+                                        //           color: Theme.of(Get.context).textTheme.title.color,
+                                        //         ),
+                                        //       ),
+                                        //     ],
+                                        //   ),
+                                        // ),
+                                        // Padding(
+                                        //   padding: const EdgeInsets.only(right: 16, left: 16, top: 0, bottom: 0),
+                                        //   child: Divider(
+                                        //     height: 0.5,
+                                        //     color: Theme.of(Get.context).disabledColor,
+                                        //   ),
+                                        // ),
+                                        Padding(
+                                          padding: const EdgeInsets.only(right: 16, left: 16, top: 10, bottom: 10),
+                                          child: Column(
+                                            crossAxisAlignment: CrossAxisAlignment.start,
+                                            children: <Widget>[
+                                              Text(
+                                                'Tổng số khách',
+                                                style:TextStyle(
+                                                  color:Colors.grey,
+                                                  fontWeight: FontWeight.normal,
                                                 ),
-                                                SizedBox(height: 5,),
-                                                Text(
-                                                  _bloc.listReport[index].tenTuyenDuong?.toString()??'',
-                                                  maxLines: 2,
-                                                  overflow: TextOverflow.ellipsis,
-                                                  style: TextStyle(
-                                                    fontWeight: FontWeight.normal,
-                                                    color: Colors.black,
-                                                  ),
+                                              ),
+                                              SizedBox(height: 5,),
+                                              Text(
+                                                '${_bloc.listReport[index].soKhach?.toString()??''} Khách',
+                                                maxLines: 1,
+                                                overflow: TextOverflow.ellipsis,
+                                                style: TextStyle(
+                                                  fontWeight: FontWeight.normal,
+                                                  color: Colors.red,fontStyle: FontStyle.italic
                                                 ),
-                                              ],
-                                            ),
+                                              ),
+                                            ],
                                           ),
+                                        ),
 
-                                        ],
-                                      ),
+                                      ],
                                     ),
-                                  )
-                              );
-                            }
-                        ),
+                                  ),
+                                )
+                            );
+                          }
                       ),
                     ),
                   ),

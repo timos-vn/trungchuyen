@@ -1,6 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:trungchuyen/models/network/request/update_info_request.dart';
 import 'package:trungchuyen/models/network/service/network_factory.dart';
 import 'package:trungchuyen/page/account/account_event.dart';
 import 'package:trungchuyen/utils/const.dart';
@@ -45,6 +46,17 @@ class AccountBloc extends Bloc<AccountEvent,AccountState> {
       yield AccountLoading();
       AccountState state = _handleLogOut(await _networkFactory.logOut(_accessToken));
       yield state;
+    }else if(event is UpdateInfo){
+      yield AccountLoading();
+      UpdateInfoRequestBody request = UpdateInfoRequestBody(
+        phone: event.phone,
+        email: event.email,
+        fullName: event.fullName,
+        companyId: event.companyId,
+        role: event.role
+      );
+      AccountState state = _handleUpdateInfo(await _networkFactory.updateInfo(_accessToken,request));
+      yield state;
     }
   }
 
@@ -57,6 +69,16 @@ class AccountBloc extends Bloc<AccountEvent,AccountState> {
     try {
       Utils.removeData(_prefs);
       return LogOutSuccess();
+    } catch (e) {
+      print(e.toString());
+      return AccountFailure(e.toString());
+    }
+  }
+
+  AccountState _handleUpdateInfo(Object data) {
+    if (data is String) return AccountFailure(data);
+    try {
+      return UpdateInfoSuccess();
     } catch (e) {
       print(e.toString());
       return AccountFailure(e.toString());

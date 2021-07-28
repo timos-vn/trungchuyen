@@ -8,6 +8,7 @@ import 'package:trungchuyen/page/account/account_bloc.dart';
 import 'package:trungchuyen/page/account/account_state.dart';
 import 'package:trungchuyen/page/login/login_page.dart';
 import 'package:trungchuyen/page/main/main_bloc.dart';
+import 'package:trungchuyen/page/main/main_event.dart';
 import 'package:trungchuyen/page/map/map_bloc.dart';
 import 'package:trungchuyen/page/notification/notification_page.dart';
 import 'package:trungchuyen/page/profile/my_profile.dart';
@@ -25,13 +26,13 @@ import 'account_event.dart';
 
 
 class AccountPage extends StatefulWidget {
-
-  const AccountPage({Key key}) : super(key: key);
+  final bool roleTC;
+  const AccountPage({Key key,this.roleTC}) : super(key: key);
   @override
-  _AccountPageState createState() => _AccountPageState();
+  AccountPageState createState() => AccountPageState();
 }
 
-class _AccountPageState extends State<AccountPage> with TickerProviderStateMixin {
+class AccountPageState extends State<AccountPage> with TickerProviderStateMixin {
 
   AccountBloc _accountBloc;
   MainBloc _mainBloc;
@@ -129,7 +130,9 @@ class _AccountPageState extends State<AccountPage> with TickerProviderStateMixin
                             Separator(color: Colors.grey),
                             SizedBox(height: 15,),
                             InkWell(
-                              onTap: ()=> Navigator.push(context, MaterialPageRoute(builder: (context)=>NotificationPage())),
+                              onTap: ()=> Navigator.push(context, MaterialPageRoute(builder: (context)=>NotificationPage())).then((value) {
+                                _mainBloc.add(GetCountNotificationUnRead());
+                              }),
                               child: Row(
                                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                 children: [
@@ -153,8 +156,8 @@ class _AccountPageState extends State<AccountPage> with TickerProviderStateMixin
                                         minWidth: 17,
                                         minHeight: 17,
                                       ),
-                                      child: Text(_mainBloc.countApproval > 0
-                                          ? _mainBloc.countApproval.toString()
+                                      child: Text(_mainBloc.countNotifyUnRead > 0
+                                          ? _mainBloc.countNotifyUnRead.toString()
                                           : _mainBloc.countNotifyUnRead?.toString(),
                                         style: TextStyle(
                                           color: Colors.white,

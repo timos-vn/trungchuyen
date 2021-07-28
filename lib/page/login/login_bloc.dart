@@ -32,6 +32,7 @@ class LoginBloc extends Bloc<LoginEvent,LoginState> with Validators{
   String _hotURL;
   String get hotURL => _hotURL;
   int roleAccount;
+  bool roleTC;
   String codeLang = "v";
   List<AccountInfo> listAccountInfo = new List<AccountInfo>();
   LoginBloc(this.context) {
@@ -119,6 +120,7 @@ class LoginBloc extends Bloc<LoginEvent,LoginState> with Validators{
       _refreshToken = loginResponseData.refreshToken;
       LoginResponseData dataUser = loginResponseData;
       roleAccount = dataUser.taiKhoan.chucVu;
+      roleTC = dataUser.taiKhoan.lienKetTrungChuyen;
       _username = dataUser.taiKhoan.hoTen.toString().trim();
       Utils.saveDataLogin(_prefs, dataUser,_accessToken,_refreshToken,username,pass);
      pushService(savePassword,username,pass);

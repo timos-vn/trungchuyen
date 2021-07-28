@@ -97,7 +97,7 @@ class GetCustomerList extends MapEvent{
 
 class UpdateCustomerList extends MapEvent{
 
-  final Customer customer;
+  final DetailTripsResponseBody customer;
 
   UpdateCustomerList(this.customer);
 
@@ -122,7 +122,7 @@ class UpdateStatusCustomerMapEvent extends MapEvent{
 
 class UpdateTaiXeLimos extends MapEvent{
 
-  final Customer customer;
+  final DetailTripsResponseBody customer;
 
   UpdateTaiXeLimos(this.customer);
 
@@ -153,9 +153,22 @@ class DeleteCustomer extends MapEvent{
   }
 }
 
+class GetListDetailTripsCustomer extends MapEvent {
+
+  final DateTime date;
+  final int idRoom;
+  final int idTime;
+  final int typeCustomer;
+
+  GetListDetailTripsCustomer(this.date,this.idRoom,this.idTime,this.typeCustomer);
+
+  @override
+  String toString() => 'GetListDetailTripsOfPageWaiting {date: $date }';
+}
+
 class AddOldCustomer extends MapEvent{
 
-  final Customer customer;
+  final DetailTripsResponseBody customer;
 
   AddOldCustomer(this.customer);
 

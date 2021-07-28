@@ -88,7 +88,7 @@ class _LoginPageState extends State<LoginPage> {
                 ///0 : Offline
                 ///1 : Online
                 _loginBloc.add(UpdateTokenDiveEvent(state.tokenFCM));
-                Navigator.push(context, (MaterialPageRoute(builder: (context)=>MainPage(roleAccount: _loginBloc.roleAccount,tokenFCM: state.tokenFCM,))));
+                Navigator.push(context, (MaterialPageRoute(builder: (context)=>MainPage(roleTC: _loginBloc.roleTC,roleAccount: _loginBloc.roleAccount,tokenFCM: state.tokenFCM,))));
               }
               else if (state is UpdateTokenSuccessState) {
 

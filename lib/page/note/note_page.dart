@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:trungchuyen/utils/utils.dart';
 
 class NotePage extends StatefulWidget {
   @override
@@ -114,8 +115,7 @@ class _NotePageState extends State<NotePage> {
                                   child: Center(
                                     child: TextButton(
                                       onPressed: (){
-                                        print(contentController.text);
-                                       Navigator.pop(context,contentController.text??' ');
+                                       Navigator.pop(context,!Utils.isEmpty(contentController.text) ? contentController.text : 'Đón khách thành công');
                                       },
                                       child: Text(
                                         'Đồng ý',

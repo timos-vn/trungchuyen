@@ -36,14 +36,15 @@ class ListCustomerLimoPageState extends State<ListCustomerLimoPage> {
   ListCustomerLimoBloc _bloc;
   MainBloc _mainBloc;
   DateTime dateTime;
-
+  DateTime parseDate = new DateFormat("yyyy-MM-dd").parse(DateTime.now().toString());
+  DateFormat format = DateFormat("dd/MM/yyyy");
   @override
   void initState() {
     // TODO: implement initState
     super.initState();
+    dateTime = DateTime.now();
     _bloc = ListCustomerLimoBloc(context);
     _mainBloc = BlocProvider.of<MainBloc>(context);
-    DateTime parseDate = new DateFormat("yyyy-MM-dd").parse(DateTime.now().toString());
     _bloc.add(GetListCustomerLimo(parseDate));
   }
 
@@ -153,10 +154,14 @@ class ListCustomerLimoPageState extends State<ListCustomerLimoPage> {
                 padding: const EdgeInsets.only(right: 14, left: 14),
                 child: Row(
                   children: <Widget>[
-                    Text(
-                      _mainBloc.listCustomerLimo.length <= 0 ?
-                      'Bạn có không Chuyến nào trong ngày hôm nay!!!' : 'Bạn có ${_mainBloc.listCustomerLimo.length} Chuyến trong ngày hôm nay',
-                      style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15, color: Colors.white),
+                    Expanded(
+                      child: Text(
+                        _mainBloc.listCustomerLimo.length <= 0 ?
+                        'Bạn có không Chuyến nào trong ngày ${DateFormat('dd-MM-yyyy').format(DateTime.parse(dateTime.toString()))}!!!' : 'Bạn có ${_mainBloc.listCustomerLimo.length} Chuyến trong ngày ${DateFormat('dd-MM-yyyy').format(DateTime.parse(dateTime.toString()))}',
+                        style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15, color: Colors.white),
+                        overflow: TextOverflow.ellipsis,
+                        maxLines: 1,
+                      ),
                     ),
                   ],
                 ),
@@ -192,7 +197,7 @@ class ListCustomerLimoPageState extends State<ListCustomerLimoPage> {
         )
             : Container(
           child: Center(
-            child: Text('Chưa có chuyến nào'),
+            child: Text('Ngày ${DateFormat('dd-MM-yyyy').format(DateTime.parse(dateTime.toString()))} \n \nChưa có chuyến nào',textAlign: TextAlign.center,),
           ),
         ),
         Visibility(
@@ -208,8 +213,9 @@ class ListCustomerLimoPageState extends State<ListCustomerLimoPage> {
   Widget buildListItem(ListOfGroupLimoCustomerResponseBody item,int index) {
     return GestureDetector(
         onTap: () {
-          DateFormat format = DateFormat("dd/MM/yyyy");
-          Navigator.push(context, MaterialPageRoute(builder: (context)=>DetailTripsLimoPage(dateTime: format.parse(item.ngayChay).toString(),idTrips: item.idTuyenDuong,idTime: item.idKhungGio)));
+          Navigator.push(context, MaterialPageRoute(builder: (context)=>DetailTripsLimoPage(dateTime: format.parse(item.ngayChay).toString(),idTrips: item.idTuyenDuong,idTime: item.idKhungGio,tenTuyenDuong: item.tenTuyenDuong,thoiGianDi:(item.ngayChay +' - ' + item.thoiGianDi)))).then((value){
+            _bloc.add(GetListCustomerLimo(parseDate));
+          });
         },
         child: Padding(
           padding: const EdgeInsets.only(left: 10, right: 16, top: 8, bottom: 8),
@@ -276,7 +282,6 @@ class ListCustomerLimoPageState extends State<ListCustomerLimoPage> {
                         height: 5,
                       ),
                       Text(
-                        //'dateStartingOrFinishing',
                         '${item.thoiGianDi??''}' + " / " + '${item.ngayChay??''}',
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
@@ -313,14 +318,27 @@ class ListCustomerLimoPageState extends State<ListCustomerLimoPage> {
                             SizedBox(
                               height: 5,
                             ),
-                            Text(
-                              '${item.soKhach??''}',
-                              maxLines: 2,
-                              overflow: TextOverflow.ellipsis,
-                              style: Theme.of(this.context).textTheme.subtitle.copyWith(
-                                fontWeight: FontWeight.normal,
-                                color: Theme.of(this.context).textTheme.title.color,
-                              ),
+                            Row(
+                              children: [
+                                Text(
+                                  '${item.khachCanXuLy??''} khách cần xử lý / ',
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: Theme.of(this.context).textTheme.subtitle.copyWith(
+                                    fontWeight: FontWeight.normal,
+                                    color: Colors.blue,
+                                  ),
+                                ),
+                                Text(
+                                  '${item.tongSoGhe?.toString() ?? ''} ghế',
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: Theme.of(this.context).textTheme.subtitle.copyWith(
+                                    fontWeight: FontWeight.normal,
+                                    color: Colors.black.withOpacity(0.8),
+                                  ),
+                                ),
+                              ],
                             ),
                           ],
                         ),

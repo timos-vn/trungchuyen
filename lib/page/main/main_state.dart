@@ -197,3 +197,7 @@ class GetListOfDetailTripsTCSuccess extends MainState {
   @override
   String toString() => 'GetListOfDetailTripsTCSuccess }';
 }
+class CountNotificationSuccess extends MainState {
+  @override
+  String toString() => 'CountNotificationSuccess }';
+}

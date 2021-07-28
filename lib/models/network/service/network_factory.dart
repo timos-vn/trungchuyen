@@ -5,6 +5,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:trungchuyen/models/network/request/login_request.dart';
 import 'package:trungchuyen/models/network/request/push_location_request.dart';
 import 'package:trungchuyen/models/network/request/tranfer_customer_request.dart';
+import 'package:trungchuyen/models/network/request/update_info_request.dart';
 import 'package:trungchuyen/models/network/request/update_status_customer_request.dart';
 import 'package:trungchuyen/models/network/request/update_token_request.dart';
 import 'package:trungchuyen/page/login/login_page.dart';
@@ -289,18 +290,15 @@ class NetWorkFactory {
     return await requestApi(_dio.get('/api/v1/trungchuyen/dskhach-choxacnhan', options: Options(headers: {"Authorization": "Bearer $token"})));
   }
 
-  Future<Object> getListNotification(String token,int pageIndex,String idTaiKhoan,int pageSize) async {
+  Future<Object> getListNotification(String token,int pageIndex,int pageSize) async {
     return await requestApi(_dio.get('/api/v1/thongbao', options: Options(headers: {"Authorization": "Bearer $token"}), queryParameters: {
-      "idTaiKhoan": idTaiKhoan,
       "PageIndex": pageIndex,
       "pageSize": pageSize,
     })); //["Authorization"] = "Bearer " + token
   }
 
-  Future<Object> updateAllNotification(String token,String idTaiKhoan) async {
-    return await requestApi(_dio.put('/api/v1/thongbao/read-all', options: Options(headers: {"Authorization": "Bearer $token"}), queryParameters: {
-      "idTaiKhoan": idTaiKhoan,
-    })); //["Authorization"] = "Bearer " + token
+  Future<Object> updateAllNotification(String token) async {
+    return await requestApi(_dio.put('/api/v1/thongbao/read-all', options: Options(headers: {"Authorization": "Bearer $token"}))); //["Authorization"] = "Bearer " + token
   }
 
   Future<Object> updateNotification(String token,String idNotification) async {
@@ -315,5 +313,8 @@ class NetWorkFactory {
   }
   Future<Object> readNotification(String token) async {
     return await requestApi(_dio.get('/api/v1/thongbao/chuadoc', options: Options(headers: {"Authorization": "Bearer $token"}))); //["Authorization"] = "Bearer " + token
+  }
+  Future<Object> updateInfo(String token,UpdateInfoRequestBody updateInfoRequestBody) async {
+    return await requestApi(_dio.put('/api/v1/taikhoan/capnhat', options: Options(headers: {"Authorization": "Bearer $token"}), data: updateInfoRequestBody.toJson()));
   }
 }

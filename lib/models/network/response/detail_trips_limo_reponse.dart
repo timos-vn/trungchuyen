@@ -1,5 +1,5 @@
 // class DetailTripsLimo {
-//   List<DetailTripsLimoReponseBody> data;
+//   List<DsKhachs> data;
 //   int statusCode;
 //   String message;
 //
@@ -7,9 +7,9 @@
 //
 //   DetailTripsLimo.fromJson(Map<String, dynamic> json) {
 //     if (json['data'] != null) {
-//       data = new List<DetailTripsLimoReponseBody>();
+//       data = new List<DsKhachs>();
 //       json['data'].forEach((v) {
-//         data.add(new DetailTripsLimoReponseBody.fromJson(v));
+//         data.add(new DsKhachs.fromJson(v));
 //       });
 //     }
 //     statusCode = json['statusCode'];
@@ -44,8 +44,11 @@
 //   String toaDoLimoDi;
 //   String diaChiLimoDen;
 //   String toaDoLimoDen;
+//   String ghiChu;
 //   int loaiKhach;
 //   int khachTrungChuyen;
+//   int trangThaiVe;
+//   int trangThaiTC;
 //   int soKhach;
 //
 //   DetailTripsLimoReponseBody(
@@ -65,8 +68,11 @@
 //         this.toaDoLimoDi,
 //         this.diaChiLimoDen,
 //         this.toaDoLimoDen,
+//         this.ghiChu,
 //         this.loaiKhach,
 //         this.khachTrungChuyen,
+//         this.trangThaiVe,
+//         this.trangThaiTC,
 //         this.soKhach});
 //
 //   DetailTripsLimoReponseBody.fromJson(Map<String, dynamic> json) {
@@ -86,8 +92,11 @@
 //     toaDoLimoDi = json['toaDoLimoDi'];
 //     diaChiLimoDen = json['diaChiLimoDen'];
 //     toaDoLimoDen = json['toaDoLimoDen'];
+//     ghiChu = json['ghiChu'];
 //     loaiKhach = json['loaiKhach'];
 //     khachTrungChuyen = json['khachTrungChuyen'];
+//     trangThaiVe = json['trangThaiVe'];
+//     trangThaiTC = json['trangThaiTC'];
 //   }
 //
 //   Map<String, dynamic> toJson() {
@@ -108,27 +117,24 @@
 //     data['toaDoLimoDi'] = this.toaDoLimoDi;
 //     data['diaChiLimoDen'] = this.diaChiLimoDen;
 //     data['toaDoLimoDen'] = this.toaDoLimoDen;
+//     data['ghiChu'] = this.ghiChu;
 //     data['loaiKhach'] = this.loaiKhach;
 //     data['khachTrungChuyen'] = this.khachTrungChuyen;
+//     data['trangThaiVe'] = this.trangThaiVe;
+//     data['trangThaiTC'] = this.trangThaiTC;
 //     return data;
 //   }
 // }
 
-
 class DetailTripsLimo {
-  List<DetailTripsLimoReponseBody> data;
+  DetailTripsLimoReponseBody data;
   int statusCode;
   String message;
 
   DetailTripsLimo({this.data, this.statusCode, this.message});
 
   DetailTripsLimo.fromJson(Map<String, dynamic> json) {
-    if (json['data'] != null) {
-      data = new List<DetailTripsLimoReponseBody>();
-      json['data'].forEach((v) {
-        data.add(new DetailTripsLimoReponseBody.fromJson(v));
-      });
-    }
+    data = json['data'] != null ? new DetailTripsLimoReponseBody.fromJson(json['data']) : null;
     statusCode = json['statusCode'];
     message = json['message'];
   }
@@ -136,7 +142,7 @@ class DetailTripsLimo {
   Map<String, dynamic> toJson() {
     final Map<String, dynamic> data = new Map<String, dynamic>();
     if (this.data != null) {
-      data['data'] = this.data.map((v) => v.toJson()).toList();
+      data['data'] = this.data.toJson();
     }
     data['statusCode'] = this.statusCode;
     data['message'] = this.message;
@@ -145,8 +151,39 @@ class DetailTripsLimo {
 }
 
 class DetailTripsLimoReponseBody {
+  int tongKhach;
+  int khachHuy;
+  List<DsKhachs> dsKhachs;
+
+  DetailTripsLimoReponseBody({this.tongKhach, this.khachHuy, this.dsKhachs});
+
+  DetailTripsLimoReponseBody.fromJson(Map<String, dynamic> json) {
+    tongKhach = json['tongKhach'];
+    khachHuy = json['khachHuy'];
+    if (json['dsKhachs'] != null) {
+      dsKhachs = new List<DsKhachs>();
+      json['dsKhachs'].forEach((v) {
+        dsKhachs.add(new DsKhachs.fromJson(v));
+      });
+    }
+  }
+
+  Map<String, dynamic> toJson() {
+    final Map<String, dynamic> data = new Map<String, dynamic>();
+    data['tongKhach'] = this.tongKhach;
+    data['khachHuy'] = this.khachHuy;
+    if (this.dsKhachs != null) {
+      data['dsKhachs'] = this.dsKhachs.map((v) => v.toJson()).toList();
+    }
+    return data;
+  }
+}
+
+class DsKhachs {
   String idDatVe;
   String idTaiXeTC;
+  int maVe;
+  int soGhe;
   String hoTenTaiXeTrungChuyen;
   String dienThoaiTaiXeTrungChuyen;
   String tenXeTrungChuyen;
@@ -166,11 +203,14 @@ class DetailTripsLimoReponseBody {
   int khachTrungChuyen;
   int trangThaiVe;
   int trangThaiTC;
-  int soKhach;
+  int soKhach=1;
+  int daThanhToan;
 
-  DetailTripsLimoReponseBody(
+  DsKhachs(
       {this.idDatVe,
         this.idTaiXeTC,
+        this.maVe,
+        this.soGhe,
         this.hoTenTaiXeTrungChuyen,
         this.dienThoaiTaiXeTrungChuyen,
         this.tenXeTrungChuyen,
@@ -190,11 +230,13 @@ class DetailTripsLimoReponseBody {
         this.khachTrungChuyen,
         this.trangThaiVe,
         this.trangThaiTC,
-        this.soKhach});
+        this.soKhach,this.daThanhToan});
 
-  DetailTripsLimoReponseBody.fromJson(Map<String, dynamic> json) {
+  DsKhachs.fromJson(Map<String, dynamic> json) {
     idDatVe = json['idDatVe'];
     idTaiXeTC = json['idTaiXeTC'];
+    maVe = json['maVe'];
+    soGhe = json['soGhe'];
     hoTenTaiXeTrungChuyen = json['hoTenTaiXeTrungChuyen'];
     dienThoaiTaiXeTrungChuyen = json['dienThoaiTaiXeTrungChuyen'];
     tenXeTrungChuyen = json['tenXeTrungChuyen'];
@@ -213,13 +255,15 @@ class DetailTripsLimoReponseBody {
     loaiKhach = json['loaiKhach'];
     khachTrungChuyen = json['khachTrungChuyen'];
     trangThaiVe = json['trangThaiVe'];
-    trangThaiTC = json['trangThaiTC'];
+    trangThaiTC = json['trangThaiTC'];daThanhToan = json['daThanhToan'];
   }
 
   Map<String, dynamic> toJson() {
     final Map<String, dynamic> data = new Map<String, dynamic>();
     data['idDatVe'] = this.idDatVe;
     data['idTaiXeTC'] = this.idTaiXeTC;
+    data['maVe'] = this.maVe;
+    data['soGhe'] = this.soGhe;
     data['hoTenTaiXeTrungChuyen'] = this.hoTenTaiXeTrungChuyen;
     data['dienThoaiTaiXeTrungChuyen'] = this.dienThoaiTaiXeTrungChuyen;
     data['tenXeTrungChuyen'] = this.tenXeTrungChuyen;
@@ -239,10 +283,7 @@ class DetailTripsLimoReponseBody {
     data['khachTrungChuyen'] = this.khachTrungChuyen;
     data['trangThaiVe'] = this.trangThaiVe;
     data['trangThaiTC'] = this.trangThaiTC;
+    data['daThanhToan'] = this.daThanhToan;
     return data;
   }
 }
-
-
-
-

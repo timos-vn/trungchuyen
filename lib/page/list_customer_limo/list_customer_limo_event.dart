@@ -20,7 +20,7 @@ class CustomerTransferToTC extends ListCustomerLimoEvent {
 
   final String title;
   final String body;
-  final  List<DetailTripsLimoReponseBody> listTaiXeTC;
+  final  List<DsKhachs> listTaiXeTC;
 
   CustomerTransferToTC(this.title, this.body, this.listTaiXeTC);
 

@@ -28,7 +28,7 @@ class ListCustomerLimoBloc extends Bloc<ListCustomerLimoEvent,ListCustomerLimoSt
   SharedPreferences _prefs;
   SharedPreferences get prefs => _prefs;
   List<ListOfGroupLimoCustomerResponseBody> listCustomerLimo;
-  List<DetailTripsLimoReponseBody> listOfDetailTripsLimo = new List<DetailTripsLimoReponseBody>();
+  List<DsKhachs> listOfDetailTripsLimo = new List<DsKhachs>();
   String _nameLXLimo;
   String _sdtLXLimo;
 
@@ -64,29 +64,6 @@ class ListCustomerLimoBloc extends Bloc<ListCustomerLimoEvent,ListCustomerLimoSt
     }
 
     if(event is CustomerTransferToTC){
-    //   yield ListCustomerLimoLoading();
-    //   String taixeLM;
-    //   List<String> listIdTXTC = new List<String>();
-    //   List<DetailTripsLimoReponseBody> listTaiXeTC = event.listTaiXeTC;
-    //   listTaiXeTC.forEach((element) {
-    //     listIdTXTC.add(element.idTaiXeTC);
-    //
-    //     //numberCustomer += element.soKhach;
-    //   });
-    //   print(listIdTXTC);
-    //   var objData = {
-    //     'EVENT':'TAIXE_LIMO_GIAOKHACH_TRUNGCHUYEN',
-    //     // 'Sokhach':numberCustomer, nghiên cứu thêm
-    //     'TaiXeLimo': _nameLXLimo
-    //   };
-    //   TranferCustomerRequestBody request = TranferCustomerRequestBody(
-    //     title: event.title,
-    //     body: event.body,
-    //     data: null,
-    //     idTaiKhoans: listIdTXTC
-    //   );
-    //  ListCustomerLimoState state =  _handleTransferCustomerLimo(await _networkFactory.sendNotification(request,_accessToken));
-    //   yield state;
     }
   }
 
@@ -104,7 +81,7 @@ class ListCustomerLimoBloc extends Bloc<ListCustomerLimoEvent,ListCustomerLimoSt
     if (data is String) return ListCustomerLimoFailure(data);
     try {
       DetailTripsLimo response = DetailTripsLimo.fromJson(data);
-      listOfDetailTripsLimo = response.data;
+      listOfDetailTripsLimo = response.data.dsKhachs;
       return GetListOfDetailTripLimoSuccess();
     } catch (e) {
       print(e.toString());

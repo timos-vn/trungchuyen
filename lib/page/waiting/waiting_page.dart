@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:liquid_pull_to_refresh/liquid_pull_to_refresh.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
+import 'package:trungchuyen/extension/customer_clip_path.dart';
 import 'package:trungchuyen/extension/popup_picker.dart';
 import 'package:trungchuyen/models/database/dbhelper.dart';
 import 'package:trungchuyen/models/entity/customer.dart';
@@ -28,7 +29,7 @@ class WaitingPage extends StatefulWidget {
 }
 
 class WaitingPageState extends State<WaitingPage> {
-
+  DateFormat format = DateFormat("dd/MM/yyyy");
   WaitingBloc _bloc;
   MainBloc _mainBloc;
   //List<ListOfGroupAwaitingCustomerBody> _listOfGroupAwaitingCustomer = new List();
@@ -43,6 +44,9 @@ class WaitingPageState extends State<WaitingPage> {
     _mainBloc = BlocProvider.of<MainBloc>(context);
     DateTime parseDate = new DateFormat("yyyy-MM-dd").parse(DateTime.now().toString());
     _bloc.add(GetListGroupAwaitingCustomer(parseDate));
+    if(!Utils.isEmpty(_mainBloc.idKhungGio) && !Utils.isEmpty(_mainBloc.ngayTC) && !Utils.isEmpty(_mainBloc.idVanPhong) && !Utils.isEmpty(_mainBloc.idKhungGio) && !Utils.isEmpty(_mainBloc.loaiKhach)){
+      _bloc.add(GetListDetailTripsOfPageWaiting(format.parse(_mainBloc.ngayTC),_mainBloc.idVanPhong,_mainBloc.idKhungGio,_mainBloc.loaiKhach));
+    }
   }
 
   @override
@@ -96,57 +100,55 @@ class WaitingPageState extends State<WaitingPage> {
         listener:  (context, state){
           if(state is GetListOfWaitingCustomerSuccess){
            _mainBloc.listOfGroupAwaitingCustomer = _bloc.listOfGroupAwaitingCustomer;
-            print('Length123');
-           _mainBloc.add(GetCountNotificationUnRead());
           }
           else if(state is GetListOfDetailTripsOfWaitingPageSuccess){
-            db.deleteAll();
-            _bloc.listOfDetailTrips.forEach((element) {
-              Customer customer = new Customer(
-                idTrungChuyen: element.idTrungChuyen,
-                idTaiXeLimousine : element.idTaiXeLimousine,
-                hoTenTaiXeLimousine : element.hoTenTaiXeLimousine,
-                dienThoaiTaiXeLimousine : element.dienThoaiTaiXeLimousine,
-                tenXeLimousine : element.tenXeLimousine,
-                bienSoXeLimousine : element.bienSoXeLimousine,
-                tenKhachHang : element.tenKhachHang,
-                soDienThoaiKhach :element.soDienThoaiKhach,
-                diaChiKhachDi :element.diaChiKhachDi,
-                toaDoDiaChiKhachDi:element.toaDoDiaChiKhachDi,
-                diaChiKhachDen:element.diaChiKhachDen,
-                toaDoDiaChiKhachDen:element.toaDoDiaChiKhachDen,
-                diaChiLimoDi:element.diaChiLimoDi,
-                toaDoLimoDi:element.toaDoLimoDi,
-                diaChiLimoDen:element.diaChiLimoDen,
-                toaDoLimoDen:element.toaDoLimoDen,
-                loaiKhach:element.loaiKhach,
-                trangThaiTC: element.trangThaiTC,
-                soKhach:1,
-                statusCustomer: element.loaiKhach == 1 ? 2 : 5,
-                chuyen: _mainBloc.trips,
-                totalCustomer: _bloc.listOfDetailTrips.length,
-                idKhungGio: _mainBloc.idKhungGio,
-                idVanPhong: _mainBloc.idVanPhong,
-                ngayTC: _mainBloc.ngayTC,
-              );
-              var contain =  _mainBloc.listCustomer.where((phone) => phone.soDienThoaiKhach == element.soDienThoaiKhach);
-              if (contain.isEmpty){
-                _mainBloc.listCustomer.add(customer);
-                db.addNew(customer);
-              }else{
-                final customerNews = _mainBloc.listCustomer.firstWhere((item) => item.soDienThoaiKhach == element.soDienThoaiKhach);
-                if (customerNews != null){
-                  customerNews.soKhach = customerNews.soKhach + 1;
-                  String listIdTC = customerNews.idTrungChuyen + ',' + customer.idTrungChuyen;
-                  customerNews.idTrungChuyen = listIdTC;
-                }
-                _mainBloc.listCustomer.remove(customerNews);
-                _mainBloc.listCustomer.add(customerNews);
-                _mainBloc.add(DeleteCustomerFormDB(customer.idTrungChuyen));
-                _mainBloc.add(AddOldCustomerItemList(customerNews));
-              }
-            });
-            _mainBloc.currentNumberCustomerOfList = _mainBloc.listCustomer.length;
+            // db.deleteAll();
+            // _bloc.listOfDetailTrips.forEach((element) {
+            //   Customer customer = new Customer(
+            //     idTrungChuyen: element.idTrungChuyen,
+            //     idTaiXeLimousine : element.idTaiXeLimousine,
+            //     hoTenTaiXeLimousine : element.hoTenTaiXeLimousine,
+            //     dienThoaiTaiXeLimousine : element.dienThoaiTaiXeLimousine,
+            //     tenXeLimousine : element.tenXeLimousine,
+            //     bienSoXeLimousine : element.bienSoXeLimousine,
+            //     tenKhachHang : element.tenKhachHang,
+            //     soDienThoaiKhach :element.soDienThoaiKhach,
+            //     diaChiKhachDi :element.diaChiKhachDi,
+            //     toaDoDiaChiKhachDi:element.toaDoDiaChiKhachDi,
+            //     diaChiKhachDen:element.diaChiKhachDen,
+            //     toaDoDiaChiKhachDen:element.toaDoDiaChiKhachDen,
+            //     diaChiLimoDi:element.diaChiLimoDi,
+            //     toaDoLimoDi:element.toaDoLimoDi,
+            //     diaChiLimoDen:element.diaChiLimoDen,
+            //     toaDoLimoDen:element.toaDoLimoDen,
+            //     loaiKhach:element.loaiKhach,
+            //     trangThaiTC: element.trangThaiTC,
+            //     soKhach:1,
+            //     statusCustomer: element.loaiKhach == 1 ? 2 : 5,
+            //     chuyen: _mainBloc.trips,
+            //     totalCustomer: _bloc.listOfDetailTrips.length,
+            //     idKhungGio: _mainBloc.idKhungGio,
+            //     idVanPhong: _mainBloc.idVanPhong,
+            //     ngayTC: _mainBloc.ngayTC,
+            //   );
+            //   var contain =  _mainBloc.listCustomer.where((phone) => phone.soDienThoaiKhach == element.soDienThoaiKhach);
+            //   if (contain.isEmpty){
+            //     _mainBloc.listCustomer.add(customer);
+            //     db.addNew(customer);
+            //   }else{
+            //     final customerNews = _mainBloc.listCustomer.firstWhere((item) => item.soDienThoaiKhach == element.soDienThoaiKhach);
+            //     if (customerNews != null){
+            //       customerNews.soKhach = customerNews.soKhach + 1;
+            //       String listIdTC = customerNews.idTrungChuyen + ',' + customer.idTrungChuyen;
+            //       customerNews.idTrungChuyen = listIdTC;
+            //     }
+            //     _mainBloc.listCustomer.remove(customerNews);
+            //     _mainBloc.listCustomer.add(customerNews);
+            //     _mainBloc.add(DeleteCustomerFormDB(customer.idTrungChuyen));
+            //     _mainBloc.add(AddOldCustomerItemList(customerNews));
+            //   }
+            // });
+
           }
         },
         child: BlocBuilder<WaitingBloc,WaitingState>(
@@ -225,13 +227,15 @@ class WaitingPageState extends State<WaitingPage> {
   }
 
   Widget buildListItem(ListOfGroupAwaitingCustomerBody item,int index) {
+    print('----------' + _mainBloc.listInfo.length.toString());
+    print(_mainBloc.ngayTC);print(_mainBloc.idVanPhong);print(_mainBloc.idKhungGio);print(_mainBloc.trips);
+    print(_mainBloc.blocked);
     return GestureDetector(
         onTap: () {
           if( _mainBloc.listCustomer.length == 0){
             Utils.showDialogAssign(context: context,titleHintText: 'Bạn sẽ đón nhóm Khách này?').then((value){
               if(!Utils.isEmpty(value)){
                 _mainBloc.trips = item.thoiGianDi + ' - ' + item.ngayChay;
-                DateFormat format = DateFormat("dd/MM/yyyy");
                 _bloc.add(GetListDetailTripsOfPageWaiting(format.parse(item.ngayChay),item.idVanPhong,item.idKhungGio,item.loaiKhach));
                 _mainBloc.blocked = true;
                 _mainBloc.idKhungGio = item.idKhungGio;
@@ -257,152 +261,155 @@ class WaitingPageState extends State<WaitingPage> {
           padding: const EdgeInsets.only(left: 10, right: 16, top: 8, bottom: 8),
           child: Stack(
             children: [
-              Container(
-                width: double.infinity,
-                decoration: BoxDecoration(
-                  color: (item.idKhungGio == _mainBloc.idKhungGio && item.loaiKhach == _mainBloc.loaiKhach && _mainBloc.blocked == true && item.idVanPhong == _mainBloc.idVanPhong) ?  Colors.black.withOpacity(0.5) : Theme.of(this.context).scaffoldBackgroundColor,
-                  borderRadius: BorderRadius.circular(0),
-                  boxShadow: [
-                    new BoxShadow(
-                      color: Colors.grey,
-                      blurRadius: 1,
-                    ),
-                  ],
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: <Widget>[
-                    Container(
-                      padding: const EdgeInsets.all(14),
-                      color: Colors.grey.withOpacity(0.2),
-                      child: Row(
-                        crossAxisAlignment: CrossAxisAlignment.center,
-                        children: <Widget>[
-                          ClipRRect(
-                            borderRadius: BorderRadius.circular(10),
-                            child: Image.asset(
-                              icLogo,
-                              height: 40,
-                              width: 40,
+              ClipPath(
+                clipper: CustomClipPath(),
+                child: Container(
+                  width: double.infinity,
+                  decoration: BoxDecoration(
+                    color: (item.idKhungGio == _mainBloc.idKhungGio && item.loaiKhach == _mainBloc.loaiKhach && _mainBloc.blocked == true && item.idVanPhong == _mainBloc.idVanPhong) ?  Colors.black.withOpacity(0.5) : Theme.of(this.context).scaffoldBackgroundColor,
+                    borderRadius: BorderRadius.circular(0),
+                    boxShadow: [
+                      new BoxShadow(
+                        color: Colors.grey,
+                        blurRadius: 1,
+                      ),
+                    ],
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: <Widget>[
+                      Container(
+                        padding: const EdgeInsets.all(14),
+                        color: Colors.grey.withOpacity(0.2),
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          children: <Widget>[
+                            ClipRRect(
+                              borderRadius: BorderRadius.circular(10),
+                              child: Image.asset(
+                                icLogo,
+                                height: 40,
+                                width: 40,
+                              ),
                             ),
-                          ),
-                          SizedBox(
-                            width: 8,
-                          ),
-                          Text(item.tenVanPhong??
-                            '',
-                            style: TextStyle(fontWeight: FontWeight.bold),
-                          ),
-                          Expanded(
-                            child: SizedBox(),
-                          ),
-                          Container(
-                            height: 45,
-                            width: 45,
-                            padding: EdgeInsets.all(8),
-                            decoration: BoxDecoration(
-                                color:   (item.idKhungGio == _mainBloc.idKhungGio && item.loaiKhach == _mainBloc.loaiKhach && _mainBloc.blocked == true&& item.idVanPhong == _mainBloc.idVanPhong) ? (item.loaiKhach == 1 ? Colors.orange.withOpacity(0.5) : Colors.blue.withOpacity(0.5)) : (item.loaiKhach == 1 ? Colors.orange : Colors.blue),
-                                borderRadius: BorderRadius.all(Radius.circular(32))),
-                            child: Center(
-                              child: Text(
-                               '${item.loaiKhach == 1 ? 'Đón' : 'Trả'}',
-                                style: Theme.of(this.context).textTheme.caption.copyWith(
-                                  color: (item.idKhungGio == _mainBloc.idKhungGio && item.loaiKhach == _mainBloc.loaiKhach && _mainBloc.blocked == true&& item.idVanPhong == _mainBloc.idVanPhong)? Colors.white.withOpacity(0.5) :Colors.white,
-                                  fontWeight: FontWeight.bold,
+                            SizedBox(
+                              width: 8,
+                            ),
+                            Text(item.tenVanPhong??
+                              '',
+                              style: TextStyle(fontWeight: FontWeight.bold),
+                            ),
+                            Expanded(
+                              child: SizedBox(),
+                            ),
+                            Container(
+                              height: 45,
+                              width: 45,
+                              padding: EdgeInsets.all(8),
+                              decoration: BoxDecoration(
+                                  color:   (item.idKhungGio == _mainBloc.idKhungGio && item.loaiKhach == _mainBloc.loaiKhach && _mainBloc.blocked == true&& item.idVanPhong == _mainBloc.idVanPhong) ? (item.loaiKhach == 1 ? Colors.orange.withOpacity(0.5) : Colors.blue.withOpacity(0.5)) : (item.loaiKhach == 1 ? Colors.orange : Colors.blue),
+                                  borderRadius: BorderRadius.all(Radius.circular(32))),
+                              child: Center(
+                                child: Text(
+                                 '${item.loaiKhach == 1 ? 'Đón' : 'Trả'}',
+                                  style: Theme.of(this.context).textTheme.caption.copyWith(
+                                    color: (item.idKhungGio == _mainBloc.idKhungGio && item.loaiKhach == _mainBloc.loaiKhach && _mainBloc.blocked == true&& item.idVanPhong == _mainBloc.idVanPhong)? Colors.white.withOpacity(0.5) :Colors.white,
+                                    fontWeight: FontWeight.bold,
+                                  ),
                                 ),
                               ),
                             ),
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
-                    ),
-                    Divider(
-                      height: 0.5,
-                      color: Theme.of(this.context).disabledColor,
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.only(right: 16, left: 16, top: 10, bottom: 10),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: <Widget>[
-                          Text(
-                            'Thông tin chuyến',
-                            style: Theme.of(this.context).textTheme.caption.copyWith(
-                              color: Theme.of(this.context).disabledColor,
-                              fontWeight: FontWeight.normal,
-                            ),
-                          ),
-                          SizedBox(
-                            height: 5,
-                          ),
-                          Text(
-                            //'dateStartingOrFinishing',
-                            '${item.thoiGianDi??''}' + " / " + '${item.ngayChay??''}',
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                            style: Theme.of(this.context).textTheme.subtitle.copyWith(
-                              fontWeight: FontWeight.normal,
-                              color: Theme.of(this.context).textTheme.title.color,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.only(right: 16, left: 16, top: 0, bottom: 0),
-                      child: Divider(
+                      Divider(
                         height: 0.5,
                         color: Theme.of(this.context).disabledColor,
                       ),
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.only(right: 8, left: 16, top: 10, bottom: 10),
-                      child: Row(
-                        children: [
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: <Widget>[
-                                Text(
-                                  'Số khách',
-                                  style: Theme.of(this.context).textTheme.caption.copyWith(
-                                    color: Theme.of(this.context).disabledColor,
-                                    fontWeight: FontWeight.normal,
-                                  ),
-                                ),
-                                SizedBox(
-                                  height: 5,
-                                ),
-                                Text(
-                                  '${item.soKhach??''}',
-                                  maxLines: 2,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: Theme.of(this.context).textTheme.subtitle.copyWith(
-                                    fontWeight: FontWeight.normal,
-                                    color: Theme.of(this.context).textTheme.title.color,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          GestureDetector(
-                            onTap: () {
-                              DateTime parseDate = new DateFormat("yyyy-MM-dd").parse(DateTime.now().toString());
-                              Navigator.push(context, MaterialPageRoute(builder: (context)=>DetailTripsPage(dateTime: parseDate,idRoom: item.idVanPhong,idTime: item.idKhungGio,typeCustomer: item.loaiKhach,)));///item.idTuyenDuong.toString()
-                            },
-                            child: Container(
-                              padding: EdgeInsets.all(8),
-                              decoration: BoxDecoration(
-                                color: (item.idKhungGio == _mainBloc.idKhungGio && item.loaiKhach == _mainBloc.loaiKhach && _mainBloc.blocked == true&& item.idVanPhong == _mainBloc.idVanPhong) ? Colors.purple.withOpacity(0.5): Colors.purple,
-                                borderRadius: BorderRadius.all(Radius.circular(16))
+                      Padding(
+                        padding: const EdgeInsets.only(right: 16, left: 16, top: 10, bottom: 10),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: <Widget>[
+                            Text(
+                              'Thông tin chuyến',
+                              style: Theme.of(this.context).textTheme.caption.copyWith(
+                                color: Theme.of(this.context).disabledColor,
+                                fontWeight: FontWeight.normal,
                               ),
-                              child: Text('Xem thêm',style: TextStyle(color: (item.idKhungGio == _mainBloc.idKhungGio && item.loaiKhach == _mainBloc.loaiKhach && _mainBloc.blocked == true && item.idVanPhong == _mainBloc.idVanPhong) ? Colors.white.withOpacity(0.5) : Colors.white,fontSize: 10),),
                             ),
-                          ),
-                        ],
+                            SizedBox(
+                              height: 5,
+                            ),
+                            Text(
+                              //'dateStartingOrFinishing',
+                              '${item.thoiGianDi??''}' + " / " + '${item.ngayChay??''}',
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                              style: Theme.of(this.context).textTheme.subtitle.copyWith(
+                                fontWeight: FontWeight.normal,
+                                color: Theme.of(this.context).textTheme.title.color,
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
-                    ),
-                  ],
+                      Padding(
+                        padding: const EdgeInsets.only(right: 16, left: 16, top: 0, bottom: 0),
+                        child: Divider(
+                          height: 0.5,
+                          color: Theme.of(this.context).disabledColor,
+                        ),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.only(right: 8, left: 16, top: 10, bottom: 10),
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: <Widget>[
+                                  Text(
+                                    'Số khách',
+                                    style: Theme.of(this.context).textTheme.caption.copyWith(
+                                      color: Theme.of(this.context).disabledColor,
+                                      fontWeight: FontWeight.normal,
+                                    ),
+                                  ),
+                                  SizedBox(
+                                    height: 5,
+                                  ),
+                                  Text(
+                                    '${item.soKhach??''}',
+                                    maxLines: 2,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: Theme.of(this.context).textTheme.subtitle.copyWith(
+                                      fontWeight: FontWeight.normal,
+                                      color: Theme.of(this.context).textTheme.title.color,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            GestureDetector(
+                              onTap: () {
+                                DateTime parseDate = new DateFormat("yyyy-MM-dd").parse(DateTime.now().toString());
+                                Navigator.push(context, MaterialPageRoute(builder: (context)=>DetailTripsPage(dateTime: parseDate,idRoom: item.idVanPhong,idTime: item.idKhungGio,typeCustomer: item.loaiKhach,)));///item.idTuyenDuong.toString()
+                              },
+                              child: Container(
+                                padding: EdgeInsets.all(8),
+                                decoration: BoxDecoration(
+                                  color: (item.idKhungGio == _mainBloc.idKhungGio && item.loaiKhach == _mainBloc.loaiKhach && _mainBloc.blocked == true&& item.idVanPhong == _mainBloc.idVanPhong) ? Colors.purple.withOpacity(0.5): Colors.purple,
+                                  borderRadius: BorderRadius.all(Radius.circular(16))
+                                ),
+                                child: Text('Xem thêm',style: TextStyle(color: (item.idKhungGio == _mainBloc.idKhungGio && item.loaiKhach == _mainBloc.loaiKhach && _mainBloc.blocked == true && item.idVanPhong == _mainBloc.idVanPhong) ? Colors.white.withOpacity(0.5) : Colors.white,fontSize: 10),),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
               Visibility(

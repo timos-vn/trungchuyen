@@ -56,6 +56,7 @@ class TaiKhoan {
 	String hoTen;
 	int chucVu;
 	int nhaXe;
+	bool lienKetTrungChuyen;
 
 	TaiKhoan(
 			{this.id,
@@ -64,7 +65,8 @@ class TaiKhoan {
 				this.email,
 				this.hoTen,
 				this.chucVu,
-				this.nhaXe});
+				this.nhaXe,
+				this.lienKetTrungChuyen});
 
 	TaiKhoan.fromJson(Map<String, dynamic> json) {
 		id = json['id'];
@@ -74,6 +76,7 @@ class TaiKhoan {
 		hoTen = json['hoTen'];
 		chucVu = json['chucVu'];
 		nhaXe = json['nhaXe'];
+		lienKetTrungChuyen = json['lienKetTrungChuyen'];
 	}
 
 	Map<String, dynamic> toJson() {
@@ -85,6 +88,7 @@ class TaiKhoan {
 		data['hoTen'] = this.hoTen;
 		data['chucVu'] = this.chucVu;
 		data['nhaXe'] = this.nhaXe;
+		data['lienKetTrungChuyen'] = this.lienKetTrungChuyen;
 		return data;
 	}
 }

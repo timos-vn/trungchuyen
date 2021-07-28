@@ -114,8 +114,6 @@ class MapLimoBloc extends Bloc<MapLimoEvent,MapLimoState> {
         latLngStream.addLatLng(LatLngInfo(currentLocation.latitude, currentLocation.longitude, "DriverMarker"));
         //add(GetCurrentLocationEvent(currentLocationTC));
         currentLocations(currentLocationLimo);
-        // print('---Tream--- ${currentLocationTC.toString()}');
-        ///{\"lat\":20.9763858,\"lng\":105.8175841}
         // print(countPush);
         if(countPush == 1){
           countPush=0;
@@ -137,7 +135,6 @@ class MapLimoBloc extends Bloc<MapLimoEvent,MapLimoState> {
   }
 
   currentLocations(String location){
-    print(location + "---Tream---");
     latLngLocation = location;
   }
 

@@ -61,7 +61,7 @@ class _NotificationPageState extends State<NotificationPage> {
           _list = _bloc.listNotification;
         }
         if(state is UpdateNotificationSuccess){
-          Utils.showToast('Successful'.tr);
+          //Utils.showToast('Successful'.tr);
         }
       },
       child: BlocBuilder<NotificationBloc,NotificationState>(
@@ -96,6 +96,7 @@ class _NotificationPageState extends State<NotificationPage> {
                         );
                         if(result == OkCancelResult.ok){
                           _bloc.add(DeleteAllNotificationEvent());
+                          _list.clear();
                         }
                       }
                     },
@@ -105,7 +106,10 @@ class _NotificationPageState extends State<NotificationPage> {
                   padding: const EdgeInsets.only(right: 10),
                   child: IconButton(
                       icon: Icon(Icons.mark_chat_read,color: Colors.black,),
-                    onPressed: () => _bloc.add(UpdateAllNotificationEvent()),
+                    onPressed: () {
+                        _bloc.add(UpdateAllNotificationEvent());
+                        _bloc.add(GetListNotification());
+                        },
                   ),
                 )
               ],
@@ -177,9 +181,12 @@ class _NotificationPageState extends State<NotificationPage> {
   }
 
   Widget buildListTile(NotificationDataResponse item) => Container(
-    color: item.daDoc == false ? white : grey_100,
+    color: item.daDoc == true ? white : Colors.grey.withOpacity(0.7),
     child: ListTile(
-      onTap: ()=>_bloc.add(UpdateNotificationEvent(item.id)),
+      onTap: (){
+        _bloc.add(UpdateNotificationEvent(item.id));
+        _bloc.add(GetListNotification());
+      },
       contentPadding: EdgeInsets.symmetric(
         horizontal: 16,
         vertical: 16,
@@ -195,7 +202,7 @@ class _NotificationPageState extends State<NotificationPage> {
             item.tieuDe,
             style: TextStyle(color: black,
                 fontWeight:
-                item.daDoc == false ? FontWeight.normal : FontWeight.bold),
+                item.daDoc == true ? FontWeight.normal : FontWeight.bold),
             overflow: TextOverflow.fade,
           ),
           const SizedBox(height: 4),
@@ -203,11 +210,11 @@ class _NotificationPageState extends State<NotificationPage> {
         ],
       ),
       trailing:Text(
-        Utils.parseStringDateToString(
+        Utils.parseDateTToString(
             item?.ngayTao,
-            Const.DATE_SV,
-            Const.DATE_FORMAT_1) ??
-            "",
+            Const.DATE_SV,).split('T')[0].toString() + '\n' + '  '+ Utils.parseDateTToString(
+          item?.ngayTao,
+          Const.DATE_SV,).split('T')[1].toString(),
         style: TextStyle(
             fontSize: 12.0,
             color: grey,
