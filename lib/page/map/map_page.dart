@@ -1207,7 +1207,5 @@ class MapPageState extends State<MapPage>{
       myPolyline = Polyline(polylineId: PolylineId('Id_Polyline'), points:lsPoint, color: Colors.deepPurpleAccent, width: 4);
       mapController.addPolyline(myPolyline);
     }
-
-
 }
 

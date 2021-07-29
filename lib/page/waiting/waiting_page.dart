@@ -32,7 +32,6 @@ class WaitingPageState extends State<WaitingPage> {
   DateFormat format = DateFormat("dd/MM/yyyy");
   WaitingBloc _bloc;
   MainBloc _mainBloc;
-  //List<ListOfGroupAwaitingCustomerBody> _listOfGroupAwaitingCustomer = new List();
   DatabaseHelper db = DatabaseHelper();
   DateTime dateTime;
   @override
@@ -102,53 +101,6 @@ class WaitingPageState extends State<WaitingPage> {
            _mainBloc.listOfGroupAwaitingCustomer = _bloc.listOfGroupAwaitingCustomer;
           }
           else if(state is GetListOfDetailTripsOfWaitingPageSuccess){
-            // db.deleteAll();
-            // _bloc.listOfDetailTrips.forEach((element) {
-            //   Customer customer = new Customer(
-            //     idTrungChuyen: element.idTrungChuyen,
-            //     idTaiXeLimousine : element.idTaiXeLimousine,
-            //     hoTenTaiXeLimousine : element.hoTenTaiXeLimousine,
-            //     dienThoaiTaiXeLimousine : element.dienThoaiTaiXeLimousine,
-            //     tenXeLimousine : element.tenXeLimousine,
-            //     bienSoXeLimousine : element.bienSoXeLimousine,
-            //     tenKhachHang : element.tenKhachHang,
-            //     soDienThoaiKhach :element.soDienThoaiKhach,
-            //     diaChiKhachDi :element.diaChiKhachDi,
-            //     toaDoDiaChiKhachDi:element.toaDoDiaChiKhachDi,
-            //     diaChiKhachDen:element.diaChiKhachDen,
-            //     toaDoDiaChiKhachDen:element.toaDoDiaChiKhachDen,
-            //     diaChiLimoDi:element.diaChiLimoDi,
-            //     toaDoLimoDi:element.toaDoLimoDi,
-            //     diaChiLimoDen:element.diaChiLimoDen,
-            //     toaDoLimoDen:element.toaDoLimoDen,
-            //     loaiKhach:element.loaiKhach,
-            //     trangThaiTC: element.trangThaiTC,
-            //     soKhach:1,
-            //     statusCustomer: element.loaiKhach == 1 ? 2 : 5,
-            //     chuyen: _mainBloc.trips,
-            //     totalCustomer: _bloc.listOfDetailTrips.length,
-            //     idKhungGio: _mainBloc.idKhungGio,
-            //     idVanPhong: _mainBloc.idVanPhong,
-            //     ngayTC: _mainBloc.ngayTC,
-            //   );
-            //   var contain =  _mainBloc.listCustomer.where((phone) => phone.soDienThoaiKhach == element.soDienThoaiKhach);
-            //   if (contain.isEmpty){
-            //     _mainBloc.listCustomer.add(customer);
-            //     db.addNew(customer);
-            //   }else{
-            //     final customerNews = _mainBloc.listCustomer.firstWhere((item) => item.soDienThoaiKhach == element.soDienThoaiKhach);
-            //     if (customerNews != null){
-            //       customerNews.soKhach = customerNews.soKhach + 1;
-            //       String listIdTC = customerNews.idTrungChuyen + ',' + customer.idTrungChuyen;
-            //       customerNews.idTrungChuyen = listIdTC;
-            //     }
-            //     _mainBloc.listCustomer.remove(customerNews);
-            //     _mainBloc.listCustomer.add(customerNews);
-            //     _mainBloc.add(DeleteCustomerFormDB(customer.idTrungChuyen));
-            //     _mainBloc.add(AddOldCustomerItemList(customerNews));
-            //   }
-            // });
-
           }
         },
         child: BlocBuilder<WaitingBloc,WaitingState>(
