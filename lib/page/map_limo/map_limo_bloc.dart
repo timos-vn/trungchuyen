@@ -1,21 +1,16 @@
 import 'dart:async';
 import 'dart:convert';
-
-import 'package:async/async.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter_animarker/lat_lng_interpolation.dart';
-import 'package:flutter_animarker/models/lat_lng_delta.dart';
 import 'package:flutter_animarker/models/lat_lng_info.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:get/get.dart';
-import 'package:google_maps_controller/google_maps_controller.dart';
 import 'package:location/location.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:trungchuyen/models/network/response/detail_trips_repose.dart';
 import 'package:trungchuyen/models/network/service/network_factory.dart';
 import 'package:trungchuyen/service/soket_io_service.dart';
 import 'package:trungchuyen/utils/const.dart';
-import 'package:trungchuyen/utils/marker_icon.dart';
 import 'map_limo_event.dart';
 import 'map_limo_state.dart';
 String latLngLocation;

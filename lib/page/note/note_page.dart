@@ -3,14 +3,20 @@ import 'package:get/get.dart';
 import 'package:trungchuyen/utils/utils.dart';
 
 class NotePage extends StatefulWidget {
+  final bool typeView;
+  final String reasonOld;
+
+  const NotePage({Key key, this.typeView,this.reasonOld}) : super(key: key);
   @override
   _NotePageState createState() => _NotePageState();
 }
 
 class _NotePageState extends State<NotePage> {
-  TextEditingController contentController = TextEditingController();
-  int groupValue = 0;
-  FocusNode focusNodeContent = FocusNode();
+  bool _isChecked = true;
+  bool _isChecked2 = true;
+
+  List<String> text = ["Đã đón", "Đã thu tiền"];
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -41,50 +47,34 @@ class _NotePageState extends State<NotePage> {
                                     height: 10,
                                   ),
                                   Row(
-                                    mainAxisAlignment: MainAxisAlignment.start,
-                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    crossAxisAlignment: CrossAxisAlignment.center,
                                     children: [
                                       Text(
-                                        'Ghi chú',
-                                        style: TextStyle(color: Colors.black, fontSize: 15),
+                                        'Xác nhận đón khách',
+                                        style: TextStyle(color: Colors.black, fontSize: 18,fontWeight: FontWeight.bold),
                                         maxLines: 1,
                                         overflow: TextOverflow.ellipsis,
                                       ),
                                     ],
                                   ),
                                   SizedBox(height: 10,),
-                                  GestureDetector(
-                                    onTap: () => FocusScope.of(context).requestFocus(focusNodeContent),
-                                    child: Container(
-                                      // height: 80,
-                                      decoration: BoxDecoration(
-                                        borderRadius: BorderRadius.all(Radius.circular(8)),
-                                      ),
-                                      child: TextField(
-                                        maxLines: 10,
-                                        // obscureText: true,
-                                        controller: contentController,
-                                        decoration: new InputDecoration(
-                                          enabledBorder: OutlineInputBorder(
-                                            borderSide: BorderSide(
-                                              color: Colors.grey,
-                                            ),
-                                          ),
-                                          focusedBorder: OutlineInputBorder(
-                                            borderSide: BorderSide(
-                                              color: Colors.grey,
-                                            ),
-                                          ),
-                                          contentPadding: EdgeInsets.all(8),
-                                          hintText: 'Vui lòng nhập ghi chú',
-                                          hintStyle: TextStyle(fontStyle: FontStyle.italic, color: Colors.grey),
-                                        ),
-                                        // focusNode: focusNodeContent,
-                                        keyboardType: TextInputType.text,
-                                        textAlign: TextAlign.left,
-                                        style: TextStyle(fontSize: 14),
-                                        //textInputAction: TextInputAction.none,
-                                      ),
+                                  Divider(),
+                                  SizedBox(height: 10,),
+                                  CheckboxListTile(
+                                    title: Text('Đón khách thành công'),
+                                    value: _isChecked,
+                                  ),
+                                  Visibility(
+                                    visible: widget.typeView == true,
+                                    child: CheckboxListTile(
+                                      title: Text('Đã thu tiền'),
+                                      value: _isChecked2,
+                                      onChanged: (val) {
+                                        setState(() {
+                                          _isChecked2 = val;
+                                        });
+                                      },
                                     ),
                                   ),
                                 ],
@@ -115,7 +105,11 @@ class _NotePageState extends State<NotePage> {
                                   child: Center(
                                     child: TextButton(
                                       onPressed: (){
-                                       Navigator.pop(context,!Utils.isEmpty(contentController.text) ? contentController.text : 'Đón khách thành công');
+                                        String content = '${Utils.isEmpty(widget.reasonOld) ? '' : widget.reasonOld + '/'} [TX]Đón khách thành công';
+                                        if(widget.typeView == true){
+                                          content = content + ', ' + '[TX]Đã thu tiền';
+                                        }
+                                       Navigator.pop(context,content);
                                       },
                                       child: Text(
                                         'Đồng ý',

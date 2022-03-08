@@ -3,14 +3,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
-import 'package:liquid_pull_to_refresh/liquid_pull_to_refresh.dart';
+import 'package:jiffy/jiffy.dart';
 import 'package:table_calendar/table_calendar.dart';
 import 'package:trungchuyen/page/options_input/options_input_pages.dart';
 import 'package:trungchuyen/page/report/report_bloc.dart';
 import 'package:trungchuyen/page/report/report_event.dart';
 import 'package:trungchuyen/page/report/report_state.dart';
 import 'package:trungchuyen/themes/images.dart';
-import 'package:trungchuyen/utils/const.dart';
 import 'package:trungchuyen/utils/utils.dart';
 
 class ReportPage extends StatefulWidget {
@@ -22,8 +21,9 @@ class _ReportPageState extends State<ReportPage> {
 
   ReportBloc _bloc;
   void onDaySelected(DateTime day, List events, List holidays) {
-    print('CALLBACK: ${DateFormat("yyyy-MM-dd").parse(day.toString())}');
-    _bloc.add(GetReportEvent(DateFormat("yyyy-MM-dd").parse(day.toString()).toString(),DateFormat("yyyy-MM-dd").parse(day.toString()).toString()));
+    print(Jiffy(day, "dd-MM-yyyy").format("yyyy-MM-dd"));
+    print('CALLBACK: ${Jiffy(day, "dd-MM-yyyy").format("yyyy-MM-dd")}');
+    _bloc.add(GetReportEvent(Jiffy(day, "dd-MM-yyyy").format("yyyy-MM-dd"),Jiffy(day, "dd-MM-yyyy").format("yyyy-MM-dd")));
   }
   CalendarController calendarController;
   int countTotalCustomer = 0;
@@ -35,7 +35,7 @@ class _ReportPageState extends State<ReportPage> {
     super.initState();
     _bloc = ReportBloc(context);
     calendarController = CalendarController();
-    _bloc.add(GetReportEvent(DateFormat("yyyy-MM-dd").parse(DateTime.now().toString()).toString(),DateFormat("yyyy-MM-dd").parse(DateTime.now().toString()).toString()));
+    _bloc.add(GetReportEvent(Jiffy(DateTime.now(), "dd-MM-yyyy").format("yyyy-MM-dd"),Jiffy(DateTime.now(), "dd-MM-yyyy").format("yyyy-MM-dd")));
   }
 
   @override
@@ -95,7 +95,7 @@ class _ReportPageState extends State<ReportPage> {
                   Container(
                     margin: EdgeInsets.symmetric(horizontal: 16.0),
                     child: TableCalendar(
-
+                      locale: 'vi_VN',
                       initialCalendarFormat: CalendarFormat.week,
                       calendarStyle: CalendarStyle(
                         todayColor: Theme.of(context).primaryColor,
@@ -233,7 +233,7 @@ class _ReportPageState extends State<ReportPage> {
                   ),
                   SizedBox(height: 10,),
                   Expanded(
-                    child: Scrollbar(
+                    child: Utils.isEmpty(_bloc.listReport) ? Center(child: Text('Dữ liệu trống'),) : Scrollbar(
                       child: ListView.builder(
                           shrinkWrap: true,
                           itemCount: _bloc.listReport.length,

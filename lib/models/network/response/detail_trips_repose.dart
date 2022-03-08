@@ -55,6 +55,11 @@ class DetailTripsResponseBody {
   int idVanPhong;
   String ngayTC;
   int maVe;
+  String vanPhongDen;
+  String vanPhongDi;
+  String tenNhaXe;
+  String hoTenKhachDatHo;
+  String soDienThoaiKhachDatHo;
 
   DetailTripsResponseBody(
       {
@@ -80,7 +85,8 @@ class DetailTripsResponseBody {
         this.chuyen,
         this.totalCustomer,
         this.idKhungGio,
-        this.idVanPhong,this.ngayTC,this.maVe
+        this.idVanPhong,this.ngayTC,this.maVe,this.vanPhongDen,this.vanPhongDi,this.tenNhaXe,
+        this.hoTenKhachDatHo,this.soDienThoaiKhachDatHo
       });
 
   DetailTripsResponseBody.fromJson(Map<String, dynamic> json) {
@@ -102,7 +108,11 @@ class DetailTripsResponseBody {
     toaDoLimoDen = json['toaDoLimoDen'];
     loaiKhach = json['loaiKhach'];
     trangThaiTC = json['trangThaiTC'];
-    maVe = json['maVe'];
+    maVe = json['maVe'];vanPhongDi = json['vanPhongDi'];
+    vanPhongDen = json['vanPhongDen'];
+    tenNhaXe = json['tenNhaXe'];
+    hoTenKhachDatHo = json['hoTenKhachDatHo'];
+    soDienThoaiKhachDatHo = json['soDienThoaiKhachDatHo'];
   }
 
   Map<String, dynamic> toJson() {
@@ -125,6 +135,11 @@ class DetailTripsResponseBody {
     data['toaDoLimoDen'] = this.toaDoLimoDen;
     data['loaiKhach'] = this.loaiKhach;
     data['trangThaiTC'] = this.trangThaiTC;data['maVe'] = this.maVe;
+    data['vanPhongDi'] = this.vanPhongDi;
+    data['vanPhongDen'] = this.vanPhongDen;
+    data['tenNhaXe'] = this.tenNhaXe;
+    data['hoTenKhachDatHo'] = this.hoTenKhachDatHo;
+    data['soDienThoaiKhachDatHo'] = this.soDienThoaiKhachDatHo;
     return data;
   }
 }

@@ -197,7 +197,6 @@ class MapLimoPageState extends State<MapLimoPage> {
                         }
                         isOnline = value;
                         isInProcessPickup = true;
-                        print(isOnline);
                       });
                     },
                   ),
@@ -212,8 +211,6 @@ class MapLimoPageState extends State<MapLimoPage> {
   }
 
   Widget buildPage(BuildContext context,MapLimoState state){
-    print('RELOAD AGAIN2');
-
     return Stack(
       children: [
         Container(
@@ -223,6 +220,7 @@ class MapLimoPageState extends State<MapLimoPage> {
               body: googleMap()
           ),
         ),
+        isOnline ==false? offLineMode() : Container(),
         Visibility(
           visible: state is MapLimoLoading,
           child: Center(
@@ -310,6 +308,62 @@ class MapLimoPageState extends State<MapLimoPage> {
         icon: iconCar,
         anchor: Offset(0.5, 0.5),
         rotation: alpha),
+    );
+  }
+
+  Widget offLineMode() {
+    return Animator(
+      duration: Duration(milliseconds: 400),
+      cycles: 1,
+      builder: (anim) => SizeTransition(
+        sizeFactor: anim,
+        axis: Axis.horizontal,
+        child: Container(
+          height: AppBar().preferredSize.height,
+          color: Colors.orange,
+          child: Padding(
+            padding: const EdgeInsets.only(right: 14, left: 14),
+            child: Row(
+              children: <Widget>[
+                DottedBorder(
+                  color: Colors.white,
+                  borderType: BorderType.Circle,
+                  strokeWidth: 2,
+                  child: Padding(
+                    padding: const EdgeInsets.all(4),
+                    child: Icon(
+                      FontAwesomeIcons.cloudMoon,
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
+                SizedBox(
+                  width: 16,
+                ),
+                Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: <Widget>[
+                    Text(
+                      'Bạn đang offline !',
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
+                    ),
+                    Text(
+                      'Bật online để bắt đầu nhận việc.',
+                      style: TextStyle(
+                        color: Colors.white,
+                      ),
+                    ),
+                  ],
+                )
+              ],
+            ),
+          ),
+        ),
+      ),
     );
   }
 }

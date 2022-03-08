@@ -28,9 +28,22 @@ class Validators{
   String checkPass(BuildContext context, String password) {
     if (Utils.isEmpty(password)) {
       return 'PleaseInputPassword'.tr;
-    } else if (password.length < 4) {
+    } else if (password.length < 6) {
       return 'PasswordLeastCharacter'.tr;
     } else {
+      return null;
+    }
+  }
+
+  String checkPassAgain(BuildContext context, String currentPassword, String newPassword) {
+    if (Utils.isEmpty(newPassword)) {
+      return 'PleaseInputPassword'.tr;
+    } else if (newPassword.length < 6) {
+      return 'PasswordLeastCharacter'.tr;
+    }else if (currentPassword != newPassword){
+      return 'Các mật khẩu đã nhập không khớp. Hãy thử lại.'.tr;
+    }
+    else {
       return null;
     }
   }

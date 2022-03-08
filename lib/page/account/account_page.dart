@@ -6,12 +6,13 @@ import 'package:material_design_icons_flutter/material_design_icons_flutter.dart
 import 'package:get/get.dart' as libGetX;
 import 'package:trungchuyen/page/account/account_bloc.dart';
 import 'package:trungchuyen/page/account/account_state.dart';
+import 'package:trungchuyen/page/change_password/change_password_screen.dart';
+import 'package:trungchuyen/page/history/list_history_limo_page.dart';
+import 'package:trungchuyen/page/history_tc/list_history_tc_page.dart';
 import 'package:trungchuyen/page/login/login_page.dart';
 import 'package:trungchuyen/page/main/main_bloc.dart';
 import 'package:trungchuyen/page/main/main_event.dart';
-import 'package:trungchuyen/page/map/map_bloc.dart';
 import 'package:trungchuyen/page/notification/notification_page.dart';
-import 'package:trungchuyen/page/profile/my_profile.dart';
 import 'package:trungchuyen/page/profile/profile.dart';
 import 'package:trungchuyen/page/report/report_page.dart';
 import 'package:trungchuyen/page/report_limo/report_limo_page.dart';
@@ -21,6 +22,7 @@ import 'package:trungchuyen/widget/pending_action.dart';
 import 'dart:io' show Platform, exit;
 
 import 'package:trungchuyen/widget/separator.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import 'account_event.dart';
 
@@ -122,7 +124,7 @@ class AccountPageState extends State<AccountPage> with TickerProviderStateMixin 
                                       Text('AccountInformation'.tr),
                                     ],
                                   ),
-                                  Text('Code User: 66886868',style: TextStyle(color: Colors.grey,fontSize: 12),),
+                                  Text('Code User: 6688',style: TextStyle(color: Colors.grey,fontSize: 12),),
                                 ],
                               ),
                             ),
@@ -175,28 +177,92 @@ class AccountPageState extends State<AccountPage> with TickerProviderStateMixin 
                             SizedBox(height: 15,),
                             Visibility(
                               visible: _accountBloc.role == "3",
-                              child: InkWell(
-                                onTap: ()=> Navigator.push(context, MaterialPageRoute(builder: (context)=> ReportPage())),
-                                child: Row(
-                                  children: [
-                                    Icon( MdiIcons.chartArc),
-                                    SizedBox(width: 10,),
-                                    Text('Report'.tr),
-                                  ],
-                                ),
+                              child: Column(
+                                children: [
+                                  InkWell(
+                                    onTap: ()=> Navigator.push(context, MaterialPageRoute(builder: (context)=> ReportPage())),
+                                    child: Row(
+                                      children: [
+                                        Icon( MdiIcons.chartArc),
+                                        SizedBox(width: 10,),
+                                        Text('Báo cáo cuối ngày'),
+                                      ],
+                                    ),
+                                  ),
+                                  SizedBox(height: 10,),
+                                  Separator(color: Colors.grey),
+                                  SizedBox(height: 15,),
+                                ],
                               ),
                             ),
                             Visibility(
                               visible: _accountBloc.role == "7",
-                              child: InkWell(
-                                onTap: ()=> Navigator.push(context, MaterialPageRoute(builder: (context)=> ReportLimoPage())),
-                                child: Row(
-                                  children: [
-                                    Icon( MdiIcons.chartArc),
-                                    SizedBox(width: 10,),
-                                    Text('Report'.tr),
-                                  ],
-                                ),
+                              child: Column(
+                                children: [
+                                  InkWell(
+                                    onTap: ()=> Navigator.push(context, MaterialPageRoute(builder: (context)=> ReportLimoPage())),
+                                    child: Row(
+                                      children: [
+                                        Icon( MdiIcons.chartArc),
+                                        SizedBox(width: 10,),
+                                        Text('Báo cáo cuối ngày'),
+                                      ],
+                                    ),
+                                  ),
+                                  SizedBox(height: 10,),
+                                  Separator(color: Colors.grey),
+                                  SizedBox(height: 15,),
+                                ],
+                              ),
+                            ),
+                            Visibility(
+                              visible: _accountBloc.role == "3",
+                              child: Column(
+                                children: [
+                                  InkWell(
+                                    onTap: ()=> Navigator.push(context, MaterialPageRoute(builder: (context)=> ListHistoryTCPage())),
+                                    child: Row(
+                                      children: [
+                                        Icon( MdiIcons.history),
+                                        SizedBox(width: 10,),
+                                        Text('Hoạt động Đón/Trả Khách'),
+                                      ],
+                                    ),
+                                  ),
+                                  SizedBox(height: 10,),
+                                  Separator(color: Colors.grey),
+                                  SizedBox(height: 15,),
+                                ],
+                              ),
+                            ),
+                            Visibility(
+                              visible: _accountBloc.role == "7",
+                              child: Column(
+                                children: [
+                                  InkWell(
+                                    onTap: ()=> Navigator.push(context, MaterialPageRoute(builder: (context)=> ListHistoryLimoPage())),
+                                    child: Row(
+                                      children: [
+                                        Icon( MdiIcons.history),
+                                        SizedBox(width: 10,),
+                                        Text('Hoạt động Đón/Trả Khách'),
+                                      ],
+                                    ),
+                                  ),
+                                  SizedBox(height: 10,),
+                                  Separator(color: Colors.grey),
+                                  SizedBox(height: 15,),
+                                ],
+                              ),
+                            ),
+                            InkWell(
+                              onTap: ()=>Navigator.push(context, MaterialPageRoute(builder: (context)=> ChangePassWordScreen())),
+                              child: Row(
+                                children: [
+                                  Icon(Icons.password_outlined),
+                                  SizedBox(width: 10,),
+                                  Text('Đổi mật khẩu'.tr),
+                                ],
                               ),
                             ),
                             SizedBox(height: 10,),
@@ -212,12 +278,17 @@ class AccountPageState extends State<AccountPage> with TickerProviderStateMixin 
                             SizedBox(height: 10,),
                             Separator(color: Colors.grey),
                             SizedBox(height: 15,),
-                            Row(
-                              children: [
-                                Icon(MdiIcons.informationOutline),
-                                SizedBox(width: 10,),
-                                Text('Về Trung chuyển HN'),
-                              ],
+                            GestureDetector(
+                              onTap: (){
+                                launch("https://www.facebook.com/timos.vn");
+                              },
+                              child: Row(
+                                children: [
+                                  Icon(MdiIcons.informationOutline),
+                                  SizedBox(width: 10,),
+                                  Text('Về Trung chuyển HN'),
+                                ],
+                              ),
                             ),
                             SizedBox(height: 10,),
                             Separator(color: Colors.grey),

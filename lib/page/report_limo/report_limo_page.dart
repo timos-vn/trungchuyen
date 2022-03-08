@@ -92,7 +92,7 @@ class _ReportLimoPageState extends State<ReportLimoPage> {
                   Container(
                     margin: EdgeInsets.symmetric(horizontal: 16.0),
                     child: TableCalendar(
-
+                      locale: 'vi_VN',
                       initialCalendarFormat: CalendarFormat.week,
                       calendarStyle: CalendarStyle(
                         todayColor: Theme.of(context).primaryColor,
@@ -229,7 +229,7 @@ class _ReportLimoPageState extends State<ReportLimoPage> {
                   ),
                   SizedBox(height: 10,),
                   Expanded(
-                    child: Scrollbar(
+                    child: Utils.isEmpty(_bloc.listReport) ? Center(child: Text('Dữ liệu trống'),) : Scrollbar(
                       child: ListView.builder(
                           shrinkWrap: true,
                           itemCount: _bloc.listReport.length,

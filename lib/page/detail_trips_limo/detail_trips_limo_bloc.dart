@@ -60,7 +60,6 @@ class DetailTripsLimoBloc extends Bloc<DetailTripsLimoEvent,DetailTripsLimoState
       totalCustomer = response.data.tongKhach;
       return GetListOfDetailTripsLimoSuccess();
     } catch (e) {
-      print(e.toString());
       return DetailTripsLimoFailure(e.toString());
     }
   }

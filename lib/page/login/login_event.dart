@@ -17,6 +17,13 @@ class Login extends LoginEvent {
   String toString() => 'Login {username: $username, password: $password,savePassword: $savePassword }';
 }
 
+class CheckVersion extends LoginEvent {
+  final bool showLoading;
+
+  CheckVersion(this.showLoading);
+  @override
+  String toString() => '';
+}
 
 class ValidateHostId extends LoginEvent {
   final String hostId;

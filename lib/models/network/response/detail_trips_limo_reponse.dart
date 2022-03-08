@@ -205,6 +205,10 @@ class DsKhachs {
   int trangThaiTC;
   int soKhach=1;
   int daThanhToan;
+  num tienVe;
+  num soTienCoc;
+  String hoTenKhachDatHo;
+  String soDienThoaiKhachDatHo;
 
   DsKhachs(
       {this.idDatVe,
@@ -230,7 +234,10 @@ class DsKhachs {
         this.khachTrungChuyen,
         this.trangThaiVe,
         this.trangThaiTC,
-        this.soKhach,this.daThanhToan});
+        this.soKhach,
+        this.daThanhToan,
+        this.tienVe,
+        this.soTienCoc,this.hoTenKhachDatHo,this.soDienThoaiKhachDatHo});
 
   DsKhachs.fromJson(Map<String, dynamic> json) {
     idDatVe = json['idDatVe'];
@@ -256,6 +263,10 @@ class DsKhachs {
     khachTrungChuyen = json['khachTrungChuyen'];
     trangThaiVe = json['trangThaiVe'];
     trangThaiTC = json['trangThaiTC'];daThanhToan = json['daThanhToan'];
+    tienVe = json['tienVe'];
+    soTienCoc = json['soTienCoc'];
+    hoTenKhachDatHo = json['hoTenKhachDatHo'];
+    soDienThoaiKhachDatHo = json['soDienThoaiKhachDatHo'];
   }
 
   Map<String, dynamic> toJson() {
@@ -284,6 +295,10 @@ class DsKhachs {
     data['trangThaiVe'] = this.trangThaiVe;
     data['trangThaiTC'] = this.trangThaiTC;
     data['daThanhToan'] = this.daThanhToan;
+    data['tienVe'] = this.tienVe;
+    data['soTienCoc'] = this.soTienCoc;
+    data['hoTenKhachDatHo'] = this.hoTenKhachDatHo;
+    data['soDienThoaiKhachDatHo'] = this.soDienThoaiKhachDatHo;
     return data;
   }
 }

@@ -37,14 +37,18 @@ import 'package:trungchuyen/utils/const.dart';
 import 'package:trungchuyen/utils/log.dart';
 import 'package:trungchuyen/utils/utils.dart';
 import '../../test.dart';
+import '../notification_api.dart';
 import 'main_event.dart';
 import 'main_state.dart';
 
 
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   print("Background Notification");
-  Utils.showForegroundNotification(contexts, message.notification.title, message.notification.body, onTapNotification: () {
-  },);
+  NotificationApi.showNotification(
+      title:message.notification.title,
+      body: message.notification.body,
+      payload:'Background Notification'
+  );
 }
 BuildContext contexts;
 class MainBloc extends Bloc<MainEvent, MainState> {
@@ -52,6 +56,7 @@ class MainBloc extends Bloc<MainEvent, MainState> {
   NetWorkFactory _networkFactory;
   BuildContext context;
   MapLimoBloc _mapLimoBloc;
+
   SharedPreferences _pref;
   int _prePosition = 0;
   SharedPreferences get pref => _pref;
@@ -82,6 +87,9 @@ class MainBloc extends Bloc<MainEvent, MainState> {
   bool isInProcessPickup = false;
   int currentNumberCustomerOfList=0;
   int soKhachDaDonDuoc = 0;
+  int tongKhach = 0;
+  int soKhachHuy = 0;
+  bool viewDetailTC = false;
 
   FlutterLocalNotificationsPlugin _flutterLocalNotificationsPlugin;
   FirebaseMessaging firebaseMessaging;
@@ -92,22 +100,26 @@ class MainBloc extends Bloc<MainEvent, MainState> {
   String _refreshToken;
   String get refreshToken => _refreshToken;
   bool isLock = false;
-  bool isDeleteAll = false;
   int role;
   String username;
-  Iterable markers;
+  List<String> listDriver = List<String>();
   String idUser;
   int tongKhachXacNhan;
   int tongChuyenXacNhan;
   List<Map<String, dynamic>> listLocation = new List<Map<String, dynamic>>();
   DatabaseHelper db = DatabaseHelper();
   List<DetailTripsResponseBody> listCustomer = new List<DetailTripsResponseBody>();
+  List<DetailTripsResponseBody> listDriverLimo = new List<DetailTripsResponseBody>();
   List<Customer> listInfo = new List<Customer>();
   DateFormat format = DateFormat("dd/MM/yyyy");
   DateTime parseDate = new DateFormat("yyyy-MM-dd").parse(DateTime.now().toString());
   List<NotificationOfLimo> listNotificationOfLimo = new List<NotificationOfLimo>();
   static final _messaging = FirebaseMessaging.instance;
 
+  String dateTimeDetailLimoTrips;int idLimoTrips;int idLimoTime;
+  List<DsKhachs> listOfDetailLimoTrips = new List<DsKhachs>();
+  int totalCustomerCancel;
+  int totalCustomer;
 
   MainBloc()   {
     socketIOService = Get.find<SocketIOService>();
@@ -125,6 +137,8 @@ class MainBloc extends Bloc<MainEvent, MainState> {
     }
   }
 
+
+
   @override
   MainState get initialState => InitialMainState();
 
@@ -133,7 +147,6 @@ class MainBloc extends Bloc<MainEvent, MainState> {
     if (Platform.isIOS) {
       _messaging.requestPermission();
     }
-
     _messaging.getToken().then((value) {
       if (value == null) return;
 
@@ -141,84 +154,141 @@ class MainBloc extends Bloc<MainEvent, MainState> {
     });
   }
 
+  String savedMessageId  = "";
+
   _listenToPushNotifications() {
     FirebaseMessaging.instance.setForegroundNotificationPresentationOptions(badge: true, alert: true, sound: true);
     contexts = context;
     FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
 
     FirebaseMessaging.onMessage.listen((RemoteMessage message) {
-      print("onMessage");
+      if (savedMessageId != message.messageId)
+        savedMessageId  = message.messageId;
+      else
+        return;
+      print("onMessage$savedMessageId");
       subscribeToTopic(message);
     });
 
     FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {
+      if (savedMessageId != message.messageId)
+        savedMessageId  = message.messageId;
+      else
+        return;
       subscribeToTopic(message);
       print('onMessageOpenedApp');
     });
   }
 
   void subscribeToTopic(RemoteMessage message){
-    if(message.data['EVENT'] == 'TRUNGCHUYEN_THONGBAO_TAIXE'){
-      Utils.showForegroundNotification(context, message.notification.title, message.notification.body, onTapNotification: () {},);
-      if(!Utils.isEmpty(listOfGroupAwaitingCustomer)){
-        listOfGroupAwaitingCustomer.clear();
-      }
-      add(GetListGroupCustomer(parseDate));
-      if(!Utils.isEmpty(listCustomer) && (listCustomer[0].idKhungGio.toString().trim() == message.data['IdKhungGio'].toString().trim() && listCustomer[0].idVanPhong.toString().trim() == message.data['IdVanPhong'].toString().trim())){
-       add(GetListDetailTripsTC(format.parse(ngayTC),idVanPhong,idKhungGio,loaiKhach));
+    if(message.data['EVENT'] == 'LIMO_THONGBAO_TAIXE' || message.data['EVENT'] == 'THONGBAO_DANHSACHVE_THAYDOI_CHO_TAIXE_LIMO' ){
+      if(role == 7){
+        print('role: $role - $parseDate');
+        String title = message.notification.title;
+        String body = message.notification.body;
+        add(GetListTripsLimo(parseDate));
+        if(dateTimeDetailLimoTrips != null && idLimoTrips > 0 && idLimoTime > 0){
+          print('TXLIMO Chức vụ = 7');
+          add(GetListDetailTripsLimoMain(
+              date: dateTimeDetailLimoTrips,
+              idTrips: idLimoTrips,idTime: idLimoTime
+          ));
+        }
+        NotificationApi.showNotification(
+            title:title,
+            body: body,
+            payload:'LIMO_THONGBAO_TAIXE'
+        );
       }
     }
-    else if(message.data['EVENT'] == 'LIMO_THONGBAO_TAIXE'){
-      String title = message.notification.title;
-      String body = message.notification.body;
-      Utils.showForegroundNotification(context, title, body, onTapNotification: () {},);
-      add(GetListTripsLimo(parseDate));
-    }
-    else if(message.data['EVENT'] == 'LIMO_THONGBAO_TAIXETC'){
-      if(!Utils.isEmpty(listOfGroupAwaitingCustomer)){
-        listOfGroupAwaitingCustomer.clear();
-      }
-      add(GetListGroupCustomer(parseDate));
-      if(!Utils.isEmpty(listCustomer)){
-        add(GetListDetailTripsTC(format.parse(ngayTC),idVanPhong,idKhungGio,loaiKhach));
+    else if(message.data['EVENT'] == 'LIMO_THONGBAO_TAIXETC' || message.data['EVENT'] == 'TRUNGCHUYEN_THONGBAO_TAIXE'){
+      ///Limo sửa thông tin Khách hàng.
+      ///Unable to log event: analytics library is missing => đã fix
+      if(role == 3){
+        NotificationApi.showNotification(
+            title:message.notification.title,
+            body: message.notification.body,
+            payload:'LIMO_THONGBAO_TAIXETC'
+        );
+        if(listOfGroupAwaitingCustomer != null){
+          listOfGroupAwaitingCustomer.clear();
+        }
+        if(viewDetailTC == false){
+         add(GetListGroupCustomer(parseDate));
+        }else{
+          add(GetListDetailTripsTC(format.parse(ngayTC),idVanPhong,idKhungGio,loaiKhach));
+        }
       }
     }
     else if((message.data['EVENT'] == 'TRUNGCHUYEN_THONGBAO_TAIXE_TDK' || message.data['EVENT'] == 'TRUNGCHUYEN_THONGBAO_TAIXE_KHACHHUY')){
-      Utils.showForegroundNotification(context, message.notification.title, message.notification.body, onTapNotification: () {},);
-      isLock = false;
-      if(!Utils.isEmpty(listOfGroupAwaitingCustomer)){
-        listOfGroupAwaitingCustomer.clear();
-      }
-      if(listCustomer.length == 1 && listCustomer[0].soKhach == 1){
-        db.deleteAll();
-        blocked = false;
-        idKhungGio = 0;
-        idVanPhong = 0;
-        loaiKhach = 0;
-        ngayTC = '';
-        trips ='';
-        listCustomer.clear();
-      }
-      add(GetListGroupCustomer(parseDate));
-      if(!Utils.isEmpty(listCustomer)){
-        add(GetListDetailTripsTC(format.parse(ngayTC),idVanPhong,idKhungGio,loaiKhach));
-      }
+      ///Limo huỷ Khách.
+      /// Điều hành Trung chuyển : Chuyển tài xế
+     if(role == 3){
+       NotificationApi.showNotification(
+           title:message.notification.title,
+           body: message.notification.body,
+           payload:'TRUNGCHUYEN_THONGBAO_TAIXE_TDK'
+       );
+       isLock = false;
+       if(!Utils.isEmpty(listOfGroupAwaitingCustomer)){
+         listOfGroupAwaitingCustomer.clear();
+       }
+       if(listCustomer.length == 1 && listCustomer[0].soKhach == 1){
+         db.deleteAll();
+         blocked = false;
+         idKhungGio = 0;
+         idVanPhong = 0;
+         loaiKhach = 0;
+         ngayTC = '';
+         trips ='';
+         listCustomer.clear();
+       }
+       if(viewDetailTC == false){
+         add(GetListGroupCustomer(parseDate));
+       }else{
+         add(GetListDetailTripsTC(format.parse(ngayTC),idVanPhong,idKhungGio,loaiKhach));
+       }
+     }
     }
     else if(message.data['EVENT'] == 'TAIXE_TRUNGCHUYEN_GIAOKHACH_LIMO'){
-      Utils.showForegroundNotification(context, message.notification.title, message.notification.body, onTapNotification: () {},);
-      add(GetListCustomerConfirm());
+      ///Bạn nhận được $numberCustomer khách từ LXTC $_nameLXTC.
+     if(role == 7){
+
+       List<String> listIdTXLimo = message.data['listIdTXLimo'].toString().split(',');
+       List<String> listSoKhach = message.data['numberCustomer'].toString().split(',');
+       String _nameTXTC = message.data['nameLXTC'];
+       String soKhach = '';
+       listIdTXLimo.forEach((element) {
+         if(idUser == element){
+           int index = listIdTXLimo.indexOf(element);
+           soKhach = listSoKhach[index];
+         }
+       });
+       NotificationApi.showNotification(
+           title:message.notification.title,
+           body: 'Bạn nhận được $soKhach khách từ $_nameTXTC',
+           payload:'TAIXE_TRUNGCHUYEN_GIAOKHACH_LIMO'
+       );
+       add(GetListCustomerConfirm());
+     }
     }
     else if(message.data['EVENT'] == 'TAIXE_LIMO_XACNHAN'){
-
-      Utils.showForegroundNotification(context, message.notification.title, message.notification.body, onTapNotification: () {},);
+      NotificationApi.showNotification(
+          title:message.notification.title,
+          body: message.notification.body,
+          payload:'TAIXE_LIMO_XACNHAN'
+      );
       add(GetListCustomerConfirm());
     }
     else{
-      String title = message.notification.title;
-      String body = message.notification.body;
-      Utils.showForegroundNotification(context, title, body, onTapNotification: () {},);
+      NotificationApi.showNotification(
+          title:message.notification.title,
+          body: message.notification.body,
+          payload:"None"
+      );
     }
   }
+
   void handleTypeNotification(String type) {
     switch (type) {
       default:
@@ -235,10 +305,22 @@ class MainBloc extends Bloc<MainEvent, MainState> {
       username = _pref.getString(Const.PHONE_NUMBER) ?? "";
       role = int.parse(_pref.getString(Const.CHUC_VU) ?? 0);
       idUser = _pref.getString(Const.USER_ID) ??'';
+
+    }
+    if(event is GetListDetailTripsLimoMain){
+      yield MainLoading();
+      MainState state = _handleGetListOfDetailLimoTrips(await _networkFactory.getDetailTripsLimo(_accessToken,event.date,event.idTrips
+          .toString(),event.idTime.toString()));
+      yield state;
     }
     else if(event is GetListDetailTripsTC){
       yield MainLoading();
-      MainState state = _handleGetListOfDetailTrips(await _networkFactory.getDetailTrips(_accessToken,event.date,event.idRoom.toString(),event.idTime.toString(),event.typeCustomer.toString()));
+      MainState state = _handleGetListOfDetailTrips(
+          await _networkFactory.getDetailTrips(
+              event.date.toString(),_accessToken,event.date,event.idRoom.toString(),
+              event.idTime.toString(),event.typeCustomer.toString()
+          ),event.date,event.idRoom,event.idTime,event.typeCustomer
+      );
       yield state;
     }
     else if(event is AddNotificationOfLimo) {
@@ -400,7 +482,7 @@ class MainBloc extends Bloc<MainEvent, MainState> {
         status: event.status,
         ghiChu: event.note
       );
-      MainState state = _handleUpdateStatusCustomer(await _networkFactory.updateGroupStatusCustomer(request,_accessToken));
+      MainState state = _handleUpdateStatusCustomer(await _networkFactory.updateGroupStatusCustomer(request,_accessToken),event.status);
       yield state;
     }
 
@@ -451,65 +533,101 @@ class MainBloc extends Bloc<MainEvent, MainState> {
       }
   }
 
-  MainState _handleGetListOfDetailTrips(Object data) {
+  MainState _handleGetListOfDetailLimoTrips(Object data) {
     if (data is String) return MainFailure(data);
     try {
+      DetailTripsLimo response = DetailTripsLimo.fromJson(data);
+      listOfDetailLimoTrips = response.data.dsKhachs;
+      totalCustomerCancel = response.data.khachHuy;
+      totalCustomer = response.data.tongKhach;
+      return GetListOfDetailLimoTripsSuccess();
+    } catch (e) {
+      return MainFailure(e.toString());
+    }
+  }
+
+  MainState _handleGetListOfDetailTrips(Object data, DateTime ngayChay, int idRoom, int idTime, int typeCustomer) {
+    if (data is String) return MainFailure(data);
+    try {
+
       listCustomer.clear();
       soKhachDaDonDuoc = 0;
       db.deleteAll();
       DetailTripsResponse response = DetailTripsResponse.fromJson(data);
-      listOfDetailTrips = response.data;
-      listOfDetailTrips.forEach((element) {
-        DetailTripsResponseBody customer = new DetailTripsResponseBody(
-            idTrungChuyen: element.idTrungChuyen,
-            idTaiXeLimousine : element.idTaiXeLimousine,
-            hoTenTaiXeLimousine : element.hoTenTaiXeLimousine,
-            dienThoaiTaiXeLimousine : element.dienThoaiTaiXeLimousine,
-            tenXeLimousine : element.tenXeLimousine,
-            bienSoXeLimousine : element.bienSoXeLimousine,
-            tenKhachHang : element.tenKhachHang,
-            soDienThoaiKhach :element.soDienThoaiKhach,
-            diaChiKhachDi :element.diaChiKhachDi,
-            toaDoDiaChiKhachDi:element.toaDoDiaChiKhachDi,
-            diaChiKhachDen:element.diaChiKhachDen,
-            toaDoDiaChiKhachDen:element.toaDoDiaChiKhachDen,
-            diaChiLimoDi:element.diaChiLimoDi,
-            toaDoLimoDi:element.toaDoLimoDi,
-            diaChiLimoDen:element.diaChiLimoDen,
-            toaDoLimoDen:element.toaDoLimoDen,
-            loaiKhach:element.loaiKhach,
-            trangThaiTC: element.trangThaiTC,
-            soKhach:1,
-            chuyen: trips,
-            totalCustomer: listOfDetailTripsTC.length,
-            idKhungGio: idKhungGio,
-            idVanPhong: idVanPhong,
-            ngayTC: ngayTC
-        );
-        var contain =  listCustomer.where((phone) => phone.soDienThoaiKhach == element.soDienThoaiKhach);
-        if (contain.isEmpty){
-          listCustomer.add(customer);
-          add(AddOldCustomerItemList(customer));
-        }else{
-          final customerNews = listCustomer.firstWhere((item) => item.soDienThoaiKhach == element.soDienThoaiKhach);
-          if (customerNews != null){
-            customerNews.soKhach = customerNews.soKhach + 1;
-            String listIdTC = customerNews.idTrungChuyen + ',' + customer.idTrungChuyen;
-            customerNews.idTrungChuyen = listIdTC;
+      //listOfDetailTrips = response.data;
+      listCustomer = response.data;
+      // listOfDetailTrips.forEach((element) {
+      //   DetailTripsResponseBody customer = new DetailTripsResponseBody(
+      //       idTrungChuyen: element.idTrungChuyen,
+      //       idTaiXeLimousine : element.idTaiXeLimousine,
+      //       hoTenTaiXeLimousine : element.hoTenTaiXeLimousine,
+      //       dienThoaiTaiXeLimousine : element.dienThoaiTaiXeLimousine,
+      //       tenXeLimousine : element.tenXeLimousine,
+      //       bienSoXeLimousine : element.bienSoXeLimousine,
+      //       tenKhachHang : element.tenKhachHang,
+      //       soDienThoaiKhach :element.soDienThoaiKhach,
+      //       diaChiKhachDi :element.diaChiKhachDi,
+      //       toaDoDiaChiKhachDi:element.toaDoDiaChiKhachDi,
+      //       diaChiKhachDen:element.diaChiKhachDen,
+      //       toaDoDiaChiKhachDen:element.toaDoDiaChiKhachDen,
+      //       diaChiLimoDi:element.diaChiLimoDi,
+      //       toaDoLimoDi:element.toaDoLimoDi,
+      //       diaChiLimoDen:element.diaChiLimoDen,
+      //       toaDoLimoDen:element.toaDoLimoDen,
+      //       loaiKhach:element.loaiKhach,
+      //       trangThaiTC: element.trangThaiTC,
+      //       soKhach:1,
+      //       chuyen: trips,
+      //       totalCustomer: listOfDetailTripsTC.length,
+      //       idKhungGio: idKhungGio,
+      //       idVanPhong: idVanPhong,
+      //       ngayTC: ngayTC,maVe: element.maVe,
+      //       vanPhongDi: element.vanPhongDi,
+      //       vanPhongDen: element.vanPhongDen
+      //   );
+      //   var contain =  listCustomer.where((phone) => phone.soDienThoaiKhach == element.soDienThoaiKhach);
+      //   if (contain.isEmpty){
+      //     listCustomer.add(customer);
+      //     add(AddOldCustomerItemList(customer));
+      //   }
+      //   else {
+      //     final customerNews = listCustomer.firstWhere((item) => item.soDienThoaiKhach == element.soDienThoaiKhach);
+      //     if (customerNews != null){
+      //       customerNews.soKhach = customerNews.soKhach + 1;
+      //       String listIdTC = customerNews.idTrungChuyen + ',' + customer.idTrungChuyen;
+      //       customerNews.idTrungChuyen = listIdTC;
+      //     }
+      //     listCustomer.removeWhere((item) => item.soDienThoaiKhach == customerNews.soDienThoaiKhach);
+      //     listCustomer.add(customerNews);
+      //     add(DeleteCustomerFormDB(customer.idTrungChuyen));
+      //     add(AddOldCustomerItemList(customerNews));
+      //   }
+      // });
+      tongKhach = 0;
+      soKhachHuy = 0;
+      if(!Utils.isEmpty(listCustomer)){
+        listCustomer.forEach((element) {
+          if(element.trangThaiTC == 12){
+            soKhachHuy = soKhachHuy  + 1;
           }
-          listCustomer.removeWhere((item) => item.soDienThoaiKhach == customerNews.soDienThoaiKhach);
-          listCustomer.add(customerNews);
-          add(DeleteCustomerFormDB(customer.idTrungChuyen));
-          add(AddOldCustomerItemList(customerNews));
-        }
+          if(element.trangThaiTC == 4 || element.trangThaiTC == 8 || element.trangThaiTC == 12){
+            soKhachDaDonDuoc =  soKhachDaDonDuoc + 1;
+            tongKhach = tongKhach + element.soKhach;
+          }
+        });
+      }
+      listCustomer.sort((a,b){
+        //a.trangThaiTC.compareTo(b.trangThaiTC)
+        if(a.trangThaiTC == 5) return -1;
+        if(b.trangThaiTC == 5) return 1;
+        if(a.trangThaiTC == 2) return -1;
+        if(b.trangThaiTC == 2) return 1;
+        if(a.trangThaiTC > b.trangThaiTC) return 1;
+        return 0;
       });
-      listCustomer.forEach((element) {
-        if(element.trangThaiTC == 4 || element.trangThaiTC == 8){
-          soKhachDaDonDuoc =  soKhachDaDonDuoc + 1;
-        }
-      });
+      print('131avb: ${soKhachHuy.toString()} / ${tongKhach.toString()}');
       currentNumberCustomerOfList = listCustomer.length;
-      return GetListOfDetailTripsTCSuccess();
+      return GetListOfDetailTripsTCSuccess(ngayChay,idRoom,idTime,typeCustomer);
     } catch (e) {
       print(e.toString());
       return MainFailure(e.toString());
@@ -635,7 +753,7 @@ class MainBloc extends Bloc<MainEvent, MainState> {
     }
   }
 
-  MainState _handleUpdateStatusCustomer(Object data) {
+  MainState _handleUpdateStatusCustomer(Object data, int status) {
     if (data is String) return MainFailure(data);
     try {
       return UpdateStatusCustomerSuccess();
@@ -726,7 +844,7 @@ class MainBloc extends Bloc<MainEvent, MainState> {
                                                     Align(
                                                         alignment: Alignment.centerLeft,
                                                         child: Text(
-                                                          listTaiXeLimo[index].hoTenTaiXeLimousine?.toString()??"",
+                                                          listDriverLimo[index].hoTenTaiXeLimousine?.toString()??"",
                                                           style: TextStyle(color: Colors.black),overflow: TextOverflow.ellipsis,maxLines: 2,
                                                         )),
                                                   ],
@@ -744,7 +862,7 @@ class MainBloc extends Bloc<MainEvent, MainState> {
                                                         child: Align(
                                                             alignment: Alignment.centerLeft,
                                                             child: Text(
-                                                              "( ${listTaiXeLimo[index].dienThoaiTaiXeLimousine?.toString()??""} )",
+                                                              "( ${listDriverLimo[index].dienThoaiTaiXeLimousine?.toString()??""} )",
                                                               style: TextStyle(color: Colors.grey,fontSize: 10),
                                                             )),),
                                                   ],
@@ -762,7 +880,7 @@ class MainBloc extends Bloc<MainEvent, MainState> {
                                                         child: Align(
                                                             alignment: Alignment.centerLeft,
                                                             child: Text(
-                                                              listTaiXeLimo[index].bienSoXeLimousine?.toString()??'',
+                                                              listDriverLimo[index].bienSoXeLimousine?.toString()??'',
                                                               style: TextStyle(color: Colors.black),
                                                             ))),
                                                   ],
@@ -780,7 +898,7 @@ class MainBloc extends Bloc<MainEvent, MainState> {
                                                         child: Align(
                                                             alignment: Alignment.centerLeft,
                                                             child: Text(
-                                                              '${listTaiXeLimo[index].soKhach?.toString()??'0'}',
+                                                              '${listDriverLimo[index].soKhach?.toString()??'0'}',
                                                               style: TextStyle(color: Colors.black),
                                                             ))),
                                                   ],
@@ -798,7 +916,7 @@ class MainBloc extends Bloc<MainEvent, MainState> {
                                       ),
                                     );
                                   },
-                                  itemCount: listTaiXeLimo.length),
+                                  itemCount: listDriverLimo.length),
                             )),
                         SizedBox(
                           width: double.infinity,

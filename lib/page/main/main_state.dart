@@ -137,6 +137,7 @@ class GetListOfGroupCustomerSuccess extends MainState {
   String toString() => 'GetListOfGroupCustomerSuccess }';
 }
 class UpdateStatusCustomerSuccess extends MainState {
+
   @override
   String toString() => 'UpdateStatusCustomerSuccess }';
 }
@@ -194,10 +195,23 @@ class GetListCustomerLimoSuccess extends MainState {
   String toString() => 'GetListCustomerLimoSuccess }';
 }
 class GetListOfDetailTripsTCSuccess extends MainState {
+
+  final DateTime ngayChay;
+  final int idRoom;
+  final int idTime;
+  final int typeCustomer;
+
+  GetListOfDetailTripsTCSuccess(this.ngayChay, this.idRoom, this.idTime, this.typeCustomer);
+
   @override
   String toString() => 'GetListOfDetailTripsTCSuccess }';
 }
 class CountNotificationSuccess extends MainState {
   @override
   String toString() => 'CountNotificationSuccess }';
+}
+
+class GetListOfDetailLimoTripsSuccess extends MainState {
+  @override
+  String toString() => 'GetListOfDetailLimoTripsSuccess }';
 }

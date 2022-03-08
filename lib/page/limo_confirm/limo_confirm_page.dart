@@ -36,7 +36,9 @@ class LimoConfirmPageState extends State<LimoConfirmPage>  {
     _mainBloc = BlocProvider.of<MainBloc>(context);
     _limoConfirmBloc = LimoConfirmBloc(context);
     _limoConfirmBloc.getMainBloc(context);
-   // _limoConfirmBloc.add(GetListCustomerConfirmEvent());
+    if(widget.roleTC == true || _mainBloc.role == 3){
+      _limoConfirmBloc.add(GetListCustomerConfirmEvent());
+    }
     super.initState();
   }
 
@@ -44,7 +46,7 @@ class LimoConfirmPageState extends State<LimoConfirmPage>  {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(_mainBloc.role == 3 ? 'Khách chờ limo xác nhận.' : (widget.roleTC == true ?  'Xác nhận khách cho trung chuyển': 'Xác nhận khách'),style: TextStyle(color: Colors.black),overflow: TextOverflow.ellipsis,maxLines: 1,),
+        title: Text(_mainBloc.role == 3 ? 'Khách chờ limo xác nhận' : (widget.roleTC == true ?  'Khách trung chuyển': 'Xác nhận khách'),style: TextStyle(color: Colors.black),overflow: TextOverflow.ellipsis,maxLines: 1,),
         actions: [
           InkWell(
               onTap: (){
@@ -99,11 +101,11 @@ class LimoConfirmPageState extends State<LimoConfirmPage>  {
                       Container(
                         padding: EdgeInsets.only(left: 30,right: 30),
                         height: 35,
-                        child: Center(child: Text('Tổng chuyến cần xác nhận',style: TextStyle(fontStyle: FontStyle.italic),)),
+                        child: Center(child: Text('Tổng chuyến cần xác nhận',style: TextStyle(fontStyle: FontStyle.italic,color: Colors.red),)),
                       ),
                       Container(
                         height: 35,
-                        child: Center(child: Text(_mainBloc.tongChuyenXacNhan?.toString()??'')),
+                        child: Center(child: Text(_mainBloc.tongChuyenXacNhan?.toString()??'',style: TextStyle(fontStyle: FontStyle.italic,color: Colors.red))),
                       ),
                     ],
                   ),
@@ -111,11 +113,11 @@ class LimoConfirmPageState extends State<LimoConfirmPage>  {
                     children: [
                       Container(
                         height: 35,
-                        child: Center(child: Text('Tổng khách cần xác nhận',style: TextStyle(fontStyle: FontStyle.italic),)),
+                        child: Center(child: Text('Tổng khách cần xác nhận',style: TextStyle(fontStyle: FontStyle.italic,color: Colors.red),)),
                       ),
                       Container(
                         height: 35,
-                        child: Center(child: Text(_mainBloc.tongKhachXacNhan?.toString()??'')),
+                        child: Center(child: Text(_mainBloc.tongKhachXacNhan?.toString()??'',style: TextStyle(fontStyle: FontStyle.italic,color: Colors.red))),
                       ),
                     ],
                   ),
@@ -123,7 +125,7 @@ class LimoConfirmPageState extends State<LimoConfirmPage>  {
               ),
             ),
             SizedBox(
-              height: 10,
+              height: 5,
             ),
             Row(
               children: [

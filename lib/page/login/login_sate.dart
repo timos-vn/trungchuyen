@@ -10,6 +10,11 @@ class LoginInitial extends LoginState {
   @override
   String toString() => 'LoginInitial';
 }
+class CheckVersionSuccess extends LoginState {
+
+  @override
+  String toString() => 'CheckVersionSuccess';
+}
 class ChangeLanguageSuccess extends LoginState {
   final String nameLng;
 

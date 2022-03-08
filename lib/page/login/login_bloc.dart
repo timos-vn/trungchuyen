@@ -1,6 +1,7 @@
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:new_version/new_version.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:trungchuyen/models/database/dbhelper.dart';
 import 'package:trungchuyen/models/entity/account.dart';
@@ -27,11 +28,12 @@ class LoginBloc extends Bloc<LoginEvent,LoginState> with Validators{
   SharedPreferences _prefs;
   String _username;
   String get username => _username;
-  String  _errorHostId,_errorUsername, _errorPass;
+  String  _errorUsername, _errorPass;
   DatabaseHelper db = DatabaseHelper();
   String _hotURL;
   String get hotURL => _hotURL;
   int roleAccount;
+  bool showLoading;
   bool roleTC;
   String codeLang = "v";
   List<AccountInfo> listAccountInfo = new List<AccountInfo>();
@@ -55,6 +57,7 @@ class LoginBloc extends Bloc<LoginEvent,LoginState> with Validators{
       _prefs = await SharedPreferences.getInstance();
       _username = _prefs.getString(Const.USER_NAME) ?? "";
       _accessToken = _prefs.getString(Const.ACCESS_TOKEN) ?? "";
+
       _refreshToken = _prefs.getString(Const.REFRESH_TOKEN) ?? "";
     }
     if(event is SaveUserNamePassWordEvent){
@@ -82,7 +85,11 @@ class LoginBloc extends Bloc<LoginEvent,LoginState> with Validators{
       LoginState state = _handleLogin(await _networkFactory.login(request),event.savePassword,event.username,event.password);
       yield state;
     }
-
+    if(event is CheckVersion){
+      yield LoginInitial();
+      showLoading = event.showLoading;
+      yield CheckVersionSuccess();
+    }
     if (event is ValidateHostId) {
       yield LoginInitial();
       String error = checkHotId(context, event.hostId);
@@ -170,6 +177,7 @@ class LoginBloc extends Bloc<LoginEvent,LoginState> with Validators{
     //   }
     // }
   }
+
   Future<List<AccountInfo>> getListAccountInfoFromDb() {
     return db.fetchAllAccountInfo();
   }

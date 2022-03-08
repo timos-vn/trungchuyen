@@ -1,20 +1,15 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:liquid_pull_to_refresh/liquid_pull_to_refresh.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:trungchuyen/extension/popup_picker.dart';
-import 'package:trungchuyen/models/network/response/list_of_group_awaiting_customer_response.dart';
 import 'package:trungchuyen/models/network/response/list_of_group_limo_customer_response.dart';
-import 'package:trungchuyen/page/detail_trips/detail_trips_page.dart';
-import 'package:trungchuyen/page/detail_trips_limo/detail_trips_limo_bloc.dart';
-import 'package:trungchuyen/page/detail_trips_limo/detail_trips_limo_event.dart';
 import 'package:trungchuyen/page/detail_trips_limo/detail_trips_limo_page.dart';
 import 'package:trungchuyen/page/list_customer_limo/list_customer_limo_bloc.dart';
 import 'package:trungchuyen/page/list_customer_limo/list_customer_limo_state.dart';
 import 'package:trungchuyen/page/main/main_bloc.dart';
-import 'package:trungchuyen/page/main/main_event.dart';
-import 'package:trungchuyen/page/options_input/options_input_pages.dart';
 import 'package:trungchuyen/themes/colors.dart';
 import 'package:trungchuyen/themes/images.dart';
 import 'package:intl/intl.dart';
@@ -67,9 +62,8 @@ class ListCustomerLimoPageState extends State<ListCustomerLimoPage> {
                     return DateRangePicker(
                       dateTime ?? DateTime.now(),
                       null,
-                      minDate: DateTime.now().subtract(const Duration(days: 10000)),
-                      maxDate:
-                      DateTime.now().add(const Duration(days: 10000)),
+                      minDate: DateTime.now(),
+                      maxDate: DateTime.now().add(const Duration(days: 10000)),
                       displayDate: dateTime ?? DateTime.now(),
                     );
                   });
@@ -79,18 +73,20 @@ class ListCustomerLimoPageState extends State<ListCustomerLimoPage> {
                 _bloc.add(GetListCustomerLimo(dateTime));
               }},
             child: Icon(
-                Icons.event
+                Icons.event,
+              color: Colors.black,
             ),
           ),
           SizedBox(width: 20,),
           InkWell(
               onTap: (){
+                print('role check:${_mainBloc.role}');
                 if(Utils.isEmpty(dateTime)){
                   dateTime = DateFormat("yyyy-MM-dd").parse(DateTime.now().toString());
                 }
                 _bloc.add(GetListCustomerLimo(dateTime));
               },
-              child: Icon(MdiIcons.reload)),
+              child: Icon(MdiIcons.reload,color: Colors.black,)),
           SizedBox(width: 20,)
         ],
       ),
@@ -213,8 +209,15 @@ class ListCustomerLimoPageState extends State<ListCustomerLimoPage> {
   Widget buildListItem(ListOfGroupLimoCustomerResponseBody item,int index) {
     return GestureDetector(
         onTap: () {
-          Navigator.push(context, MaterialPageRoute(builder: (context)=>DetailTripsLimoPage(dateTime: format.parse(item.ngayChay).toString(),idTrips: item.idTuyenDuong,idTime: item.idKhungGio,tenTuyenDuong: item.tenTuyenDuong,thoiGianDi:(item.ngayChay +' - ' + item.thoiGianDi)))).then((value){
-            _bloc.add(GetListCustomerLimo(parseDate));
+          _mainBloc.dateTimeDetailLimoTrips = format.parse(item.ngayChay).toString();
+          _mainBloc.idLimoTrips = item.idTuyenDuong;
+          _mainBloc.idLimoTime = item.idKhungGio;
+          Navigator.push(context, MaterialPageRoute(builder: (context)=>DetailTripsLimoPage(typeHistory: 1,dateTime: format.parse(item.ngayChay).toString(),idTrips: item.idTuyenDuong,idTime: item.idKhungGio,tenTuyenDuong: item.tenTuyenDuong,thoiGianDi:(item.ngayChay +' - ' + item.thoiGianDi)))).then((value){
+            print('checking');
+            _mainBloc.dateTimeDetailLimoTrips = null;
+            _mainBloc.idLimoTrips = 0;
+            _mainBloc.idLimoTime = 0;
+            _bloc.add(GetListCustomerLimo(dateTime));
           });
         },
         child: Padding(
@@ -281,14 +284,27 @@ class ListCustomerLimoPageState extends State<ListCustomerLimoPage> {
                       SizedBox(
                         height: 5,
                       ),
-                      Text(
-                        '${item.thoiGianDi??''}' + " / " + '${item.ngayChay??''}',
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                        style: Theme.of(this.context).textTheme.subtitle.copyWith(
-                          fontWeight: FontWeight.normal,
-                          color: Theme.of(this.context).textTheme.title.color,
-                        ),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            '${item.thoiGianDi??''}',
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: Theme.of(this.context).textTheme.subtitle.copyWith(
+                              fontWeight: FontWeight.normal,
+                              color: Theme.of(this.context).textTheme.title.color,
+                            ),
+                          ),Text(
+                            '${item.ngayChay??''}',
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: Theme.of(this.context).textTheme.subtitle.copyWith(
+                              fontWeight: FontWeight.normal,
+                              color: Theme.of(this.context).textTheme.title.color,
+                            ),
+                          ),
+                        ],
                       ),
                     ],
                   ),

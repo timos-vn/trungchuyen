@@ -11,14 +11,11 @@ import 'package:intl/intl.dart';
 import 'package:overlay_support/overlay_support.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:get/get.dart' as libGetX;
-import 'package:trungchuyen/models/entity/customer.dart';
 import 'package:trungchuyen/models/network/response/detail_trips_limo_reponse.dart';
-import 'package:trungchuyen/models/network/response/detail_trips_repose.dart';
 import 'package:trungchuyen/models/network/response/login_response.dart';
 import 'package:trungchuyen/themes/colors.dart';
 import 'package:trungchuyen/themes/font.dart';
 import 'package:trungchuyen/themes/images.dart';
-import 'package:trungchuyen/widget/text_field_widget.dart';
 import 'const.dart';
 import 'dart:convert';
 import 'dart:io';
@@ -139,7 +136,7 @@ class Utils {
       print('--->>>> ${convertMoney.split('.')[0].toString()}');
     }
     if (money <= 0) return "0K";
-    return formatNumber(money / 1000) + "K";
+    return formatNumber(money) + "K";
   }
 
   static bool isNumeric(String text) {
@@ -190,6 +187,7 @@ class Utils {
       }
     return date;
   }
+
   // static void selectDatePicker(
   //     BuildContext context, ValueChanged<DateTime> chooseDate,
   //     {DateTime initDate}) async {
@@ -221,17 +219,17 @@ class Utils {
   static void saveDataLogin(SharedPreferences _prefs, LoginResponseData data,String accessToken, String refreshToken,String username,String pass) {
     String currentUsername = _prefs.getString(Const.USER_NAME);
     if (!Utils.isEmpty(currentUsername) &&
-        currentUsername?.trim() != data.taiKhoan.hoTen?.trim()) {
+        currentUsername?.trim() != data.taiKhoan.hoTen?.trim()??"") {
       // DatabaseHelper db = DatabaseHelper();
       // db.deleteAllProduct();
     }
-    _prefs.setString(Const.USER_ID, data.taiKhoan.id.toString());
+    _prefs.setString(Const.USER_ID, data.taiKhoan.id.toString()??"");
     _prefs.setString(Const.ACCESS_TOKEN, accessToken);
     _prefs.setString(Const.REFRESH_TOKEN, refreshToken);
-    _prefs.setString(Const.CHUC_VU, data.taiKhoan.chucVu?.toString());
-    _prefs.setString(Const.FULL_NAME, data.taiKhoan.hoTen?.toString());
-    _prefs.setString(Const.PHONE_NUMBER, data.taiKhoan.dienThoai?.trim());
-    _prefs.setString(Const.NHA_XE, data.taiKhoan.nhaXe?.toString());
+    _prefs.setString(Const.CHUC_VU, data.taiKhoan.chucVu?.toString()??"");
+    _prefs.setString(Const.FULL_NAME, data.taiKhoan.hoTen?.toString()??"");
+    _prefs.setString(Const.PHONE_NUMBER, data.taiKhoan.dienThoai?.trim()??"");
+    _prefs.setString(Const.NHA_XE, data.taiKhoan.idNhaXe?.toString()??"");
 
     _prefs.setString(Const.USER_NAME, data.taiKhoan.tenDangNhap?.trim());
     _prefs.setString(Const.PASS_WORD, pass);

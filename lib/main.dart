@@ -4,7 +4,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:intl/date_symbol_data_local.dart';
 import 'package:get/get_navigation/src/root/get_material_app.dart';
 import 'package:get/get_navigation/src/routes/get_route.dart';
 import 'package:overlay_support/overlay_support.dart';
@@ -12,16 +12,14 @@ import 'package:trungchuyen/page/login/login_page.dart';
 import 'package:trungchuyen/page/splash/splash_page.dart';
 import 'package:trungchuyen/service/app_binding.dart';
 import 'package:trungchuyen/themes/colors.dart';
-import 'package:trungchuyen/utils/const.dart';
 import 'package:trungchuyen/utils/translations.dart';
-import 'package:trungchuyen/utils/utils.dart';
 import 'package:wakelock/wakelock.dart';
 
 void main()async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp();
   runZoned(() {
-    runApp(MyApp());
+    initializeDateFormatting().then((_) => runApp(MyApp()));
   });
 }
 

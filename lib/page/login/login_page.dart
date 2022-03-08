@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:get/get.dart';
 import 'package:get/get.dart' as libGetX;
+import 'package:in_app_update/in_app_update.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:new_version/new_version.dart';
 import 'package:trungchuyen/page/main/main_page.dart';
@@ -11,8 +12,10 @@ import 'package:trungchuyen/themes/colors.dart';
 import 'package:trungchuyen/themes/font.dart';
 import 'package:trungchuyen/themes/images.dart';
 import 'package:trungchuyen/utils/utils.dart';
+import 'package:trungchuyen/widget/confirm_update_version.dart';
 import 'package:trungchuyen/widget/pending_action.dart';
 import 'package:trungchuyen/widget/text_field_widget.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'login_bloc.dart';
 import 'login_event.dart';
 import 'login_sate.dart';
@@ -30,9 +33,29 @@ class _LoginPageState extends State<LoginPage> {
   FocusNode passwordFocus;
   bool isChecked = false;
   LoginBloc _loginBloc;
-
+  bool showLoading = false;
   String errorPass, errorUsername, errorHotId;
   String _selectedLang;
+  AppUpdateInfo _updateInfo;bool _flexibleUpdateAvailable = false;
+  GlobalKey<ScaffoldState> _scaffoldKey = new GlobalKey();
+
+  Future<void> checkForUpdate() async {
+    InAppUpdate.checkForUpdate().then((info) {
+      setState(() {
+        _updateInfo = info;
+      });
+    }).catchError((e) {
+      showSnack(e.toString());
+    });
+  }
+
+  void showSnack(String text) {
+    if (_scaffoldKey.currentContext != null) {
+      ScaffoldMessenger.of(_scaffoldKey.currentContext)
+          .showSnackBar(SnackBar(content: Text(text)));
+    }
+  }
+
 
   void _checkVersion() async {
     final newVersion = NewVersion(
@@ -40,30 +63,47 @@ class _LoginPageState extends State<LoginPage> {
         androidId: 'takecare.hn.trungchuyen',
         iOSId: 'takecare.hn.trungchuyen',
         dialogTitle: 'Thông báo cập nhật',
-        dialogText: 'Đã có phiên bản mới xin vui lòng cập nhật để có thể sử dụng những tính năng mới nhất.',
+        dialogText: 'Đã có phiên bản mới vui lòng cập nhật để sử dụng những tính năng mới nhất.',
         dismissText: 'Để sau',
         updateText:'Cập nhật'
     );
     final status = await newVersion.getVersionStatus();
-    print(status.appStoreLink);
+    setState(() {
+      showLoading = false;
+    });
     print(status.localVersion);
     print(status.storeVersion);
     List<String> localVersion = status.localVersion.split('.');
     List<String> storeVersion = status.storeVersion.split('.');
     if(int.parse(localVersion[0]) < int.parse(storeVersion[0])){
-      newVersion.showUpdateDialog(status);
+      showUpdate();
     }else if((int.parse(localVersion[0]) == int.parse(storeVersion[0])) && (int.parse(localVersion[1]) < int.parse(storeVersion[1]))){
-      newVersion.showUpdateDialog(status);
-    }else if((int.parse(localVersion[0]) == int.parse(storeVersion[0])) && (int.parse(localVersion[1]) == int.parse(storeVersion[1])) && (int.parse(localVersion[0]) < int.parse(storeVersion[0]))){
-      newVersion.showUpdateDialog(status);
+      showUpdate();
+    }else if((int.parse(localVersion[0]) == int.parse(storeVersion[0])) && (int.parse(localVersion[1]) == int.parse(storeVersion[1])) && (int.parse(localVersion[2]) < int.parse(storeVersion[2]))){
+      showUpdate();
     }
+  }
 
+  void showUpdate(){
+    showDialog(
+        context: context,
+        builder: (context) {
+          return WillPopScope(
+            onWillPop: () async => true,
+            child: ConfirmSuccessPage(
+              title: 'Đã có phiên bản mới',
+              content: 'Cập nhật ứng dụng của bạn để có trải nghiệm tốt nhất',
+              type: 0,
+            ),
+          );
+        });
   }
 
   @override
   void initState() {
     // TODO: implement initState
     super.initState();
+    showLoading = true;
     _checkVersion();
     _loginBloc = LoginBloc(context);
     _loginBloc.add(SaveUserNamePassWordEvent());
@@ -78,6 +118,7 @@ class _LoginPageState extends State<LoginPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+        key: _scaffoldKey,
         backgroundColor: white,
         body: BlocProvider(
           create: (context) => _loginBloc,
@@ -90,7 +131,7 @@ class _LoginPageState extends State<LoginPage> {
                 _loginBloc.add(UpdateTokenDiveEvent(state.tokenFCM));
                 Navigator.push(context, (MaterialPageRoute(builder: (context)=>MainPage(roleTC: _loginBloc.roleTC,roleAccount: _loginBloc.roleAccount,tokenFCM: state.tokenFCM,))));
               }
-              else if (state is UpdateTokenSuccessState) {
+              else if (state is CheckVersionSuccess) {
 
               }
               else if(state is ChangeLanguageSuccess){
@@ -112,6 +153,7 @@ class _LoginPageState extends State<LoginPage> {
         ));
   }
 
+
   Stack buildPage(BuildContext context, LoginState state){
     return Stack(
       children: [
@@ -125,7 +167,6 @@ class _LoginPageState extends State<LoginPage> {
               mainAxisAlignment: MainAxisAlignment.end,
               children: <Widget>[
                 Expanded(
-
                   child: SingleChildScrollView(
                     child: Column(
                       children: [
@@ -152,15 +193,20 @@ class _LoginPageState extends State<LoginPage> {
                 ),
                 Padding(
                   padding: const EdgeInsets.only(left: 40,right: 40,bottom:30,top: 0),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text('Cần trợ giúp?',style: TextStyle(color: Colors.grey,),),
-                      SizedBox(width: 3,),
-                      Text(
-                        'Liên hệ với chúng tôi',style: TextStyle(color: Colors.blue,),
-                      ),
-                    ],
+                  child: GestureDetector(
+                    onTap: (){
+                      launch("https://www.facebook.com/timos.vn");
+                    },
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text('Cần trợ giúp?',style: TextStyle(color: Colors.grey,),),
+                        SizedBox(width: 3,),
+                        Text(
+                          'Liên hệ với chúng tôi',style: TextStyle(color: Colors.blue,),
+                        ),
+                      ],
+                    ),
                   ),
                 )
               ],
@@ -215,7 +261,6 @@ class _LoginPageState extends State<LoginPage> {
   Widget buildButtonLogin(){
     return  GestureDetector(
       onTap: (){
-        //page.login(hostIdController.text,usernameController.text,passwordController.text,isChecked);
         _loginBloc.add(Login(usernameController.text,passwordController.text,isChecked));
       },
       child: Container(
@@ -223,12 +268,12 @@ class _LoginPageState extends State<LoginPage> {
         height: 40.0,
         decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(18.0),
-            color: Colors.blue
+            color: Colors.orange
         ),
         child: Center(
           child: Text(
             'Đăng nhập',
-            style: TextStyle(fontFamily: fontSub, fontSize: 16, color: white,),
+            style: TextStyle(fontFamily: fontSub, fontSize: 16, color: Colors.black,),
             textAlign: TextAlign.left,
           ),
         ),

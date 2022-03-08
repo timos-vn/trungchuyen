@@ -353,3 +353,14 @@ class GetListDetailTripsTC extends MainEvent {
   @override
   String toString() => 'GetListDetailTripsTC {date: $date }';
 }
+class GetListDetailTripsLimoMain extends MainEvent {
+
+  final String date;
+  final int idTrips;
+  final int idTime;
+
+  GetListDetailTripsLimoMain({this.date,this.idTrips,this.idTime});
+
+  @override
+  String toString() => 'GetListDetailTripsLimoMain {date: $date }';
+}

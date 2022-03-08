@@ -2,12 +2,10 @@ import 'package:adaptive_dialog/adaptive_dialog.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:liquid_pull_to_refresh/liquid_pull_to_refresh.dart';
 import 'package:get/get.dart' as libGetX;
 import 'package:trungchuyen/models/network/response/notification_response.dart';
 import 'package:trungchuyen/themes/colors.dart';
 import 'package:trungchuyen/themes/font.dart';
-import 'package:trungchuyen/themes/images.dart';
 import 'package:trungchuyen/utils/const.dart';
 import 'package:trungchuyen/utils/utils.dart';
 import 'package:trungchuyen/widget/pending_action.dart';
@@ -73,19 +71,19 @@ class _NotificationPageState extends State<NotificationPage> {
               backgroundColor: Colors.white,
               title: Text(
                 'Notification'.tr,
-                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20, fontFamily: fontApp, color: Colors.black),
+                style: TextStyle(fontWeight: FontWeight.bold, fontFamily: fontApp, color: Colors.black),
               ),
               leading: new IconButton(
                 icon: new Icon(Icons.arrow_back, color: Colors.black),
                 onPressed: () async {
-                  Navigator.of(context).pop();
+                  Navigator.of(context).pop(['Reload UnNotification']);
                 },
               ),
               actions: [
                 Padding(
                   padding: const EdgeInsets.only(right: 5),
                   child: IconButton(
-                      icon: Icon(Icons.delete_forever,color: Colors.black,),
+                    icon: Icon(Icons.delete_forever,color: Colors.black,),
                     onPressed: () async {
                       if(!Utils.isEmpty(_list)){
                         final result = await showOkCancelAlertDialog(
@@ -105,11 +103,11 @@ class _NotificationPageState extends State<NotificationPage> {
                 Padding(
                   padding: const EdgeInsets.only(right: 10),
                   child: IconButton(
-                      icon: Icon(Icons.mark_chat_read,color: Colors.black,),
+                    icon: Icon(Icons.mark_chat_read,color: Colors.black,),
                     onPressed: () {
-                        _bloc.add(UpdateAllNotificationEvent());
-                        _bloc.add(GetListNotification());
-                        },
+                      _bloc.add(UpdateAllNotificationEvent());
+                      _bloc.add(GetListNotification());
+                    },
                   ),
                 )
               ],
@@ -128,6 +126,7 @@ class _NotificationPageState extends State<NotificationPage> {
       _hasReachedMax = length < _bloc.currentPage * 20;
     }
     return Scaffold(
+      backgroundColor: dark_text.withOpacity(0.1),
       body: Stack(
         children: [
           Container(
@@ -135,14 +134,14 @@ class _NotificationPageState extends State<NotificationPage> {
             width: double.infinity,
             child: Stack(
               children: [
-                LiquidPullToRefresh(
-                  showChildOpacityTransition: false,
+                RefreshIndicator(
+                  color: Colors.orange,
                   onRefresh: () => Future.delayed(Duration.zero).then((_) => _bloc.add(GetListNotification(isRefresh: true))),
                   child: ListView.separated(
                     controller: _scrollController,
                     physics: AlwaysScrollableScrollPhysics(),
-                    padding: EdgeInsets.only(top: 5),
-                    separatorBuilder: (context, index) => Container(),
+                    padding: EdgeInsets.only(top: 5,bottom: MediaQuery.of(context).size.height * 0.1),
+                    separatorBuilder: (context, index) => Container(height: 10,),
                     shrinkWrap: true,
                     itemCount: length == 0 ? length : _hasReachedMax ? length : length + 1,
                     itemBuilder: (BuildContext context, int index) {
@@ -153,10 +152,20 @@ class _NotificationPageState extends State<NotificationPage> {
                         child: PendingAction(),
                       )
                           :
-                      Card(
-                        child: SlidableWidget(
-                          child: buildListTile(_list[index]),
-                          onDismissed: (action) => dismissSlidableItem(context, index, action,_list[index]),
+                      Padding(
+                        padding: const EdgeInsets.only(left: 6,right: 6),
+                        child: Container(
+                          decoration: BoxDecoration(
+                              borderRadius: BorderRadius.all(Radius.circular(25))
+                          ),
+                          child: Card(
+                            borderOnForeground: true,
+                            elevation: 5,
+                            child: SlidableWidget(
+                              child: buildListTile(_list[index]),
+                              onDismissed: (action) => dismissSlidableItem(context, index, action,_list[index]),
+                            ),
+                          ),
                         ),
                       );
                     },
@@ -181,43 +190,44 @@ class _NotificationPageState extends State<NotificationPage> {
   }
 
   Widget buildListTile(NotificationDataResponse item) => Container(
-    color: item.daDoc == true ? white : Colors.grey.withOpacity(0.7),
+    color: item.daDoc == true ? white : Colors.grey.withOpacity(0.3),
     child: ListTile(
       onTap: (){
         _bloc.add(UpdateNotificationEvent(item.id));
         _bloc.add(GetListNotification());
       },
       contentPadding: EdgeInsets.symmetric(
-        horizontal: 16,
-        vertical: 16,
+        horizontal: 8,
+        vertical: 6,
       ),
       leading: CircleAvatar(
-        radius: 28,
-        backgroundImage: AssetImage(notify),
+        radius: 24,
+        backgroundColor: Colors.red,
+        child: Icon(Icons.email_rounded,color: white,),
       ),
       title: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            item.tieuDe,
-            style: TextStyle(color: black,
+            item.tieuDe?.toString()??'',
+            style: TextStyle(color: black,fontSize: 14,
                 fontWeight:
                 item.daDoc == true ? FontWeight.normal : FontWeight.bold),
             overflow: TextOverflow.fade,
           ),
           const SizedBox(height: 4),
-          Text(item.noiDung)
+          Text(item.noiDung,style: TextStyle(fontSize: 12,),)
         ],
       ),
       trailing:Text(
         Utils.parseDateTToString(
-            item?.ngayTao,
-            Const.DATE_SV,).split('T')[0].toString() + '\n' + '  '+ Utils.parseDateTToString(
+          item?.ngayTao,
+          Const.DATE_SV,).split('T')[0].toString() + '\n' + '  '+ Utils.parseDateTToString(
           item?.ngayTao,
           Const.DATE_SV,).split('T')[1].toString(),
         style: TextStyle(
-            fontSize: 12.0,
-            color: grey,
+            fontSize: 11.0,
+            color: Colors.black,
             fontWeight: FontWeight.normal),
       ),
     ),
@@ -225,9 +235,6 @@ class _NotificationPageState extends State<NotificationPage> {
 
   void dismissSlidableItem(BuildContext context, int index, SlidableAction action,NotificationDataResponse item) {
     switch (action) {
-      case SlidableAction.more:
-        print('Selected more');
-        break;
       case SlidableAction.delete:
         showDialog( item,index);
         break;

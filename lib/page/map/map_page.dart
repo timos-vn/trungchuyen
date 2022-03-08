@@ -145,10 +145,10 @@ class MapPageState extends State<MapPage>{
           _mainBloc.listOfGroupAwaitingCustomer.clear();
           _mapBloc.add(UpdateStatusCustomerMapEvent(status: 10,idTrungChuyen: state.listIDTC.split(','),note: ''));
           _mainBloc.showDialogTransferCustomer(context: context);
-
         }
         else if(state is UpdateStatusCustomerMapSuccess){
-         if(state.status == 10 || state.status == 8){
+          print('state.status: ${state.status}');
+         if(state.status == 10 || state.status == 11){
            // DateTime parseDate = new DateFormat("yyyy-MM-dd").parse(DateTime.now().toString());
            // _waitingBloc.add(GetListGroupAwaitingCustomer(parseDate));
            _mainBloc.db.deleteAllDriverLimo();
@@ -164,7 +164,7 @@ class MapPageState extends State<MapPage>{
            }else{
              Utils.showToast('Xác nhận thành công');
            }
-           _limoConfirmBloc.add(GetListCustomerConfirmEvent());
+           // _limoConfirmBloc.add(GetListCustomerConfirmEvent());
          }
         }
         else if(state is GetListOfDetailTripsSuccess){
@@ -194,7 +194,7 @@ class MapPageState extends State<MapPage>{
                 backgroundColor: Theme.of(context).scaffoldBackgroundColor,
                 automaticallyImplyLeading: false,
                 title: !isOnline ?  InkWell(
-                  //onTap: ()=>_mainBloc.firebaseMessaging.deleteInstanceID(),
+                  onTap: ()=>_mainBloc.listCustomer.length,
                   child: Text(
                     'OffLine',
                     style: Theme.of(context).textTheme.title.copyWith(
@@ -205,15 +205,13 @@ class MapPageState extends State<MapPage>{
                   ),
                 )
                     :
-                InkWell(
-                  child: Text(
-                    'Online',
-                    style: Theme.of(context).textTheme.title.copyWith(
-                      fontWeight: FontWeight.bold,
-                      color: Theme.of(context).textTheme.title.color,
-                    ),
-                    textAlign: TextAlign.center,
+                Text(
+                  'Online',
+                  style: Theme.of(context).textTheme.title.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: Theme.of(context).textTheme.title.color,
                   ),
+                  textAlign: TextAlign.center,
                 ),
                 centerTitle: true,
                 actions: [
@@ -230,11 +228,10 @@ class MapPageState extends State<MapPage>{
                           if(value == true){
                             _mapBloc.add(UpdateStatusDriverEvent(1));
                           }else{
-
                             _mapBloc.add(UpdateStatusDriverEvent(0));
                           }
                           isOnline = value;
-                          isInProcessPickup = true;
+                          //isInProcessPickup = true;
                           print(isOnline);
                         });
                       },
@@ -250,7 +247,7 @@ class MapPageState extends State<MapPage>{
                 ],
               ) :
               SnappingSheet(
-                lockOverflowDrag: true,
+                lockOverflowDrag: false,
                 snappingPositions: [
                   SnappingPosition.factor(
                     positionFactor: 0.0,
@@ -259,9 +256,9 @@ class MapPageState extends State<MapPage>{
                   SnappingPosition.factor(
                     snappingCurve: Curves.elasticOut,
                     snappingDuration: Duration(milliseconds: 1750),
-                    positionFactor: 0.4,
+                    positionFactor: 0.0,
                   ),
-                  SnappingPosition.factor(positionFactor: 0.9),
+                  SnappingPosition.factor(positionFactor: 0.95),
                 ],
                 child: Stack(
                   children: <Widget>[
@@ -280,25 +277,20 @@ class MapPageState extends State<MapPage>{
                         // onLineModeDetail()
                       ],
                     )
-
                   ],
                 ),
                 grabbingHeight: 50,
                 grabbing: DefaultGrabbing(),
                 sheetBelow: SnappingSheetContent(
                   childScrollController: scrollController,
-                  draggable: true,
+                  draggable: false,
                   child: Container(
                     height: double.infinity,
                     width: double.infinity,
                     color: Colors.white,
                     child: Utils.isEmpty(_mainBloc.listCustomer)?
                     Container(
-                      child: Center(child: Align(alignment: Alignment.center,child: InkWell(
-                          onTap: (){
-                            print(_mainBloc.listCustomer.length);
-                          },
-                          child: Text('Hiện tại chưa có khách \n Hoặc \n Sang nhóm khách và chọn khách để đón nhé.')))),
+                      child: Center(child: Align(alignment: Alignment.center,child: Text('Hiện tại chưa có khách \n Hoặc \n Sang nhóm khách và chọn khách để đón.',textAlign: TextAlign.center,))),
                     )
                     :
                     SingleChildScrollView(
@@ -306,7 +298,7 @@ class MapPageState extends State<MapPage>{
                       padding: EdgeInsets.zero,
                       //padding: EdgeInsets.all(20).copyWith(top: 30),
                       controller: scrollController,
-                      child:  _mainBloc.soKhachDaDonDuoc == (Utils.isEmpty(_mainBloc.listCustomer) ? 10 :  _mainBloc.listCustomer.length)
+                      child:  _mainBloc.soKhachDaDonDuoc == (Utils.isEmpty(_mainBloc.listCustomer) ? 100 :  _mainBloc.listCustomer.length)
                           ?
                       Padding(
                         padding: const EdgeInsets.only(left: 10,right: 10,top: 2),
@@ -327,7 +319,7 @@ class MapPageState extends State<MapPage>{
                                         child: Padding(
                                           padding: const EdgeInsets.all(8.0),
                                           child: Text(_mainBloc.listCustomer[0].loaiKhach == 1 ?
-                                            'Điểm đến:' : 'Điểm nhận khách:',
+                                            'Điểm trả khách:' : 'Điểm nhận khách:',
                                             style: TextStyle(fontWeight: FontWeight.bold),
                                           ),
                                         ),
@@ -336,7 +328,8 @@ class MapPageState extends State<MapPage>{
                                         child: Padding(
                                           padding: const EdgeInsets.all(8.0),
                                           child: Text(_mainBloc.listCustomer[0].loaiKhach == 1 ?
-                                              _mainBloc.listCustomer[0].diaChiLimoDi.toString() : _mainBloc.listCustomer[0].diaChiLimoDen.toString()
+                                              _mainBloc.listCustomer[0].vanPhongDi.toString() : _mainBloc.listCustomer[0].vanPhongDen.toString(),
+                                            style: TextStyle(color: Colors.black),
                                           ),
                                         ),
                                       ),
@@ -594,113 +587,112 @@ class MapPageState extends State<MapPage>{
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
-                          Column(
-                            children: [
-                              ClipRRect(
-                                borderRadius: BorderRadius.circular(12),
-                                child: Column(
-                                  children: <Widget>[
-                                    Container(
-                                      padding: const EdgeInsets.only(left: 14, top: 14, right: 14, bottom: 0),
-                                      child: Row(
-                                        crossAxisAlignment: CrossAxisAlignment.start,
-                                        children: <Widget>[
-                                          Expanded(
-                                            child: Row(
-                                              children: [
-                                                ClipRRect(
-                                                  borderRadius: BorderRadius.circular(30),
-                                                  child: Image.asset(
-                                                    icLogo,
-                                                    height: 50,
-                                                    width: 50,
-                                                  ),
-                                                ),
-                                                SizedBox(
-                                                  width: 10,
-                                                ),
-                                                Expanded(
-                                                  child: Column(
-                                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                                    children: <Widget>[
-                                                      Row(
-                                                        children: [
-                                                          Expanded(
-                                                              child: MarqueeWidget(
-                                                                direction: Axis.horizontal,
-                                                                child: Text(
-                                                                  _mainBloc.listCustomer[0].diaChiLimoDi?.toString()??'Không có địa chỉ chuyến',
-                                                                  style: TextStyle(
-                                                                      fontSize: 18,
-                                                                      color: primaryColor,
-                                                                      fontWeight: FontWeight.bold
-                                                                  ),
-                                                                  overflow: TextOverflow.ellipsis,
-                                                                  maxLines: 1,
-                                                                ),
-                                                              )),
-                                                          SizedBox(
-                                                            width: 10,
-                                                          ),
-                                                        ],
-                                                      ),
+                          ClipRRect(
+                            borderRadius: BorderRadius.circular(12),
+                            child: Column(
+                              children: <Widget>[
+                                Container(
+                                  padding: const EdgeInsets.only(left: 10, top: 10, right: 10, bottom: 10),
+                                  child: Row(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: <Widget>[
+                                      Expanded(
+                                        child: Row(
+                                          children: [
+                                            ClipRRect(
+                                              borderRadius: BorderRadius.circular(30),
+                                              child: Image.asset(
+                                                icLogo,
+                                                height: 50,
+                                                width: 50,
+                                              ),
+                                            ),
+                                            SizedBox(
+                                              width: 10,
+                                            ),
+                                            Expanded(
+                                              child: Column(
+                                                crossAxisAlignment: CrossAxisAlignment.start,
+                                                children: <Widget>[
+                                                  Row(
+                                                    children: [
+                                                      Expanded(
+                                                          child: MarqueeWidget(
+                                                            direction: Axis.horizontal,
+                                                            child: Text(
+                                                              _mainBloc.listCustomer[0].loaiKhach == 1 ?
+                                                              _mainBloc.listCustomer[0].vanPhongDi?.toString()??'Không có địa chỉ chuyến'
+                                                                  :
+                                                              _mainBloc.listCustomer[0].vanPhongDen?.toString()??'Không có địa chỉ chuyến',
+                                                              style: TextStyle(
+                                                                  fontSize: 18,
+                                                                  color: primaryColor,
+                                                                  fontWeight: FontWeight.bold
+                                                              ),
+                                                              overflow: TextOverflow.ellipsis,
+                                                              maxLines: 1,
+                                                            ),
+                                                          )),
                                                       SizedBox(
-                                                        height: 4,
-                                                      ),
-                                                      Text("Chuyến: " + _mainBloc.listCustomer[0].chuyen?.toString()??'', style: TextStyle(fontSize: 12, color: Colors.grey)),
-                                                      SizedBox(
-                                                        height: 5,
+                                                        width: 10,
                                                       ),
                                                     ],
                                                   ),
-                                                ),
-                                              ],
-                                            ),
-                                          ),
-                                          Container(
-                                            padding: EdgeInsets.all(8),
-                                            decoration: BoxDecoration(color: Colors.orange, borderRadius: BorderRadius.all(Radius.circular(8))),
-                                            child: Column(
-                                              crossAxisAlignment: CrossAxisAlignment.center,
-                                              mainAxisAlignment: MainAxisAlignment.center,
-                                              children: <Widget>[
-                                                Text(
-                                                  '${_mainBloc.soKhachDaDonDuoc.toString()}/${_mainBloc.listCustomer.length.toString()}',
-                                                  style: Theme.of(context).textTheme.title.copyWith(
-                                                    fontWeight: FontWeight.bold,
-                                                    color: Colors.white,
+                                                  SizedBox(
+                                                    height: 4,
                                                   ),
-                                                ),
-                                                Text(
-                                                  'N-K',
-                                                  style: Theme.of(context).textTheme.caption.copyWith(
-                                                    color: Theme.of(context).disabledColor,
-                                                    fontWeight: FontWeight.normal,
-                                                  ),
-                                                ),
-                                              ],
+                                                  Text("Chuyến: " + _mainBloc.listCustomer[0].chuyen?.toString()??'', style: TextStyle(fontSize: 12, color: Colors.grey)),
+                                                  // SizedBox(
+                                                  //   height: 5,
+                                                  // ),
+                                                ],
+                                              ),
                                             ),
-                                          ),
-                                        ],
+                                          ],
+                                        ),
                                       ),
-                                    ),
-                                  ],
+                                      InkWell(
+                                        onTap: ()=>print(_mainBloc.listCustomer.length),
+                                        child: Container(
+                                          padding: EdgeInsets.all(8),
+                                          decoration: BoxDecoration(color: Colors.orange, borderRadius: BorderRadius.all(Radius.circular(8))),
+                                          child: Column(
+                                            crossAxisAlignment: CrossAxisAlignment.center,
+                                            mainAxisAlignment: MainAxisAlignment.center,
+                                            children: <Widget>[
+                                              Text(
+                                                '${_mainBloc.soKhachDaDonDuoc.toString()}/${_mainBloc.listCustomer.length.toString()}',
+                                                style: Theme.of(context).textTheme.title.copyWith(
+                                                  fontWeight: FontWeight.bold,
+                                                  color: Colors.white,
+                                                ),
+                                              ),
+                                              Text(
+                                                'N-K',
+                                                style: Theme.of(context).textTheme.caption.copyWith(
+                                                  color: Theme.of(context).disabledColor,
+                                                  fontWeight: FontWeight.normal,
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
                                 ),
-                              ),
-                              // SizedBox(
-                              //   height: 35,
-                              // ),
-                            ],
+                              ],
+                            ),
                           ),
                           Container(
-                            height: 600,
+                            height: MediaQuery.of(context).size.height*0.7,
                             child: Column(
                               children: [
-                                // SizedBox(height: 35,),
                                 Row(
                                   children: [
                                     Expanded(child: Divider()),
-                                    Text('Danh sách Khách Đón/Trả',style: TextStyle(color: Colors.grey),),
+                                    Utils.isEmpty(_mainBloc.listCustomer) ? Container() :
+                                    Text('Danh sách Khách ${_mainBloc.listCustomer[0].loaiKhach == 1 ? 'Đón' : 'Trả'}',style: TextStyle(color: Colors.purple),),
                                     Expanded(child: Divider()),
                                   ],
                                 ),
@@ -709,17 +701,17 @@ class MapPageState extends State<MapPage>{
                                 ),
                                 Expanded(
                                   child: ListView.separated(
-                                      padding: EdgeInsets.zero,
+                                      padding: EdgeInsets.only(bottom: 100),
                                       itemBuilder: (BuildContext context, int index) {
                                         return Padding(
-                                          padding: const EdgeInsets.only(left: 10, right: 16),
+                                          padding: const EdgeInsets.only(left: 10, right: 10,bottom: 0),
                                           child: Container(
                                             width: double.infinity,
                                             decoration: BoxDecoration(
                                               color:  Theme.of(this.context).scaffoldBackgroundColor,
                                               borderRadius: BorderRadius.circular(0),
                                               border: Border.all(
-                                                  color: ((_mainBloc.listCustomer[index].trangThaiTC == 2 || _mainBloc.listCustomer[index].trangThaiTC == 5 || _mainBloc.listCustomer[index].trangThaiTC == 4 || _mainBloc.listCustomer[index].trangThaiTC == 7) ? Colors.transparent : Colors.red ),
+                                                  color: ((_mainBloc.listCustomer[index].trangThaiTC == 2 || _mainBloc.listCustomer[index].trangThaiTC == 5 || _mainBloc.listCustomer[index].trangThaiTC == 4 || _mainBloc.listCustomer[index].trangThaiTC == 8) ? Colors.transparent : Colors.red ),
                                                   width: 2
                                               ),
                                               boxShadow: [
@@ -733,7 +725,7 @@ class MapPageState extends State<MapPage>{
                                               crossAxisAlignment: CrossAxisAlignment.start,
                                               children: <Widget>[
                                                 Container(
-                                                  padding: const EdgeInsets.all(14),
+                                                  padding: const EdgeInsets.only(left: 8,top: 10,right: 10,bottom: 10),
                                                   color: Colors.grey.withOpacity(0.2),
                                                   child: Row(
                                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -743,11 +735,22 @@ class MapPageState extends State<MapPage>{
                                                         children: [
                                                           ClipRRect(
                                                             borderRadius: BorderRadius.circular(10),
-                                                            child: Image.asset(
-                                                              icLogo,
-                                                              height: 40,
-                                                              width: 40,
-                                                            ),
+                                                            child: Container(
+                                                                padding: EdgeInsets.all(5),
+                                                                height: 50,
+                                                                width: 50,
+                                                                decoration: BoxDecoration(
+                                                                    color: Colors.blueAccent
+                                                                ),
+                                                                child: Center(child: Column(
+                                                                  crossAxisAlignment: CrossAxisAlignment.center,
+                                                                  mainAxisAlignment: MainAxisAlignment.center,
+                                                                  children: [
+                                                                    Text('Mã',style: TextStyle(color: Colors.white),),
+                                                                    SizedBox(height: 2,),
+                                                                    Text(_mainBloc.listCustomer[index].maVe?.toString()??'',style: TextStyle(color: Colors.white,fontSize: 12),maxLines: 1,overflow: TextOverflow.ellipsis,),
+                                                                  ],
+                                                                ))),
                                                           ),
                                                           SizedBox(
                                                             width: 8,
@@ -788,42 +791,77 @@ class MapPageState extends State<MapPage>{
                                                   height: 0.5,
                                                   color: Theme.of(context).disabledColor,
                                                 ),
+
                                                 Padding(
-                                                  padding: const EdgeInsets.only(right: 16, left: 16, top: 10, bottom: 5),
+                                                  padding: const EdgeInsets.only(right: 8, left: 8, top: 10, bottom: 5),
                                                   child: Column(
                                                     crossAxisAlignment: CrossAxisAlignment.start,
                                                     children: <Widget>[
-                                                      Text(
-                                                        'Pickup point (Điểm đón)',
-                                                        style: Theme.of(context).textTheme.caption.copyWith(
-                                                          color: Theme.of(context).disabledColor,
-                                                          fontWeight: FontWeight.bold,
-                                                        ),
+                                                      Row(
+                                                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                                        children: [
+                                                          Text(
+                                                            'Điểm đón: ',
+                                                            style: Theme.of(context).textTheme.caption.copyWith(
+                                                              color: Theme.of(context).disabledColor,
+                                                              fontWeight: FontWeight.bold,
+                                                            ),
+                                                          ),
+                                                          Expanded(
+                                                            child: Text( _mainBloc.listCustomer[index].loaiKhach == 1 ? _mainBloc.listCustomer[index].diaChiKhachDi?.toString()??'' :
+                                                              _mainBloc.listCustomer[index].vanPhongDen?.toString()??'',textAlign: TextAlign.right,
+                                                              maxLines: 2,
+                                                              overflow: TextOverflow.ellipsis,
+                                                              style: Theme.of(context).textTheme.subtitle.copyWith(
+                                                                fontWeight: FontWeight.bold,
+                                                                color: _mainBloc.listCustomer[index].loaiKhach == 2 ? Colors.black : Colors.red,
+                                                              ),
+                                                            ),
+                                                          ),
+                                                        ],
                                                       ),
                                                       SizedBox(
-                                                        height: 5,
+                                                        height: 2,
                                                       ),
-                                                      Text(
-                                                        _mainBloc.listCustomer[index].diaChiKhachDi?.toString()??'',
-                                                        maxLines: 2,
-                                                        overflow: TextOverflow.ellipsis,
-                                                        style: Theme.of(context).textTheme.subtitle.copyWith(
-                                                          fontWeight: FontWeight.bold,
-                                                          color: Theme.of(context).textTheme.title.color,
-                                                        ),
+                                                      Divider(),
+                                                      SizedBox(
+                                                        height: 2,
+                                                      ),
+                                                      Row(
+                                                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                                        children: [
+                                                          Text(
+                                                            'Điểm trả  : ',
+                                                            style: Theme.of(context).textTheme.caption.copyWith(
+                                                              color: Theme.of(context).disabledColor,
+                                                              fontWeight: FontWeight.bold,
+                                                            ),
+                                                          ),
+                                                          Expanded(
+                                                            child: Text( _mainBloc.listCustomer[index].loaiKhach == 1 ? _mainBloc.listCustomer[index].vanPhongDi?.toString()??'' :
+                                                              _mainBloc.listCustomer[index].diaChiKhachDen?.toString()??'',
+                                                              maxLines: 2,textAlign: TextAlign.right,
+                                                              overflow: TextOverflow.ellipsis,
+                                                              style: TextStyle(
+                                                                fontWeight: FontWeight.bold,fontStyle:FontStyle.italic ,
+                                                                color: _mainBloc.listCustomer[index].loaiKhach == 1 ? Colors.black : Colors.red,
+                                                              ),
+                                                            ),
+                                                          ),
+                                                        ],
                                                       ),
                                                     ],
                                                   ),
                                                 ),
                                                 Padding(
-                                                  padding: const EdgeInsets.only(right: 16, left: 16, top: 0, bottom: 0),
+                                                  padding: const EdgeInsets.only(right: 8, left: 8, top: 0, bottom: 0),
                                                   child: Divider(
                                                     height: 0.5,
                                                     color: Theme.of(context).disabledColor,
                                                   ),
                                                 ),
                                                 Padding(
-                                                  padding: const EdgeInsets.only(right: 8, left: 16, top: 10, bottom: 10),
+                                                  padding: const EdgeInsets.only(right: 0, left: 8, top: 10, bottom: 10),
                                                   child: Row(
                                                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                                     children: <Widget>[
@@ -880,16 +918,16 @@ class MapPageState extends State<MapPage>{
                                                   ),
                                                 ),
                                                 Padding(
-                                                  padding: const EdgeInsets.only(right: 16, left: 16, top: 0, bottom: 0),
+                                                  padding: const EdgeInsets.only(right: 8, left: 8, top: 0, bottom: 0),
                                                   child: Divider(
                                                     height: 0.5,
                                                     color: Theme.of(context).disabledColor,
                                                   ),
                                                 ),
                                                 Padding(
-                                                  padding: const EdgeInsets.only(right: 14, left: 14, top: 15, bottom: 12),
+                                                  padding: const EdgeInsets.only(right: 14, left: 14, top: 5, bottom: 5),
                                                   child:
-                                                  (_mainBloc.listCustomer[index].trangThaiTC == 4 || _mainBloc.listCustomer[index].trangThaiTC == 7 )?
+                                                  (_mainBloc.listCustomer[index].trangThaiTC == 4 || _mainBloc.listCustomer[index].trangThaiTC == 8 )?
                                                   GestureDetector(
                                                     onTap: () {
                                                     },
@@ -992,7 +1030,10 @@ class MapPageState extends State<MapPage>{
                                                                       totalCustomer: _mainBloc.currentNumberCustomerOfList,
                                                                       idKhungGio:  _mainBloc.idKhungGio,
                                                                       idVanPhong:  _mainBloc.idVanPhong,
-                                                                      ngayTC:_mainBloc.ngayTC
+                                                                      ngayTC:_mainBloc.ngayTC,
+                                                                      maVe: _mainBloc.listCustomer[index].maVe,
+                                                                      vanPhongDi: _mainBloc.listCustomer[index].vanPhongDi,
+                                                                      vanPhongDen: _mainBloc.listCustomer[index].vanPhongDen
                                                                   );
                                                                   _mapBloc.add(UpdateTaiXeLimos(customer));
                                                                   _mainBloc.soKhachDaDonDuoc++;
@@ -1021,7 +1062,7 @@ class MapPageState extends State<MapPage>{
                                                                 else if(_mainBloc.listCustomer[index].trangThaiTC == 6){
                                                                   /// Đã trả
                                                                   _mainBloc.isLock = false;
-                                                                  _mapBloc.add(UpdateStatusCustomerMapEvent(status: 7,idTrungChuyen: _mainBloc.listCustomer[index].idTrungChuyen.split(',')));
+                                                                  _mapBloc.add(UpdateStatusCustomerMapEvent(status: 8,idTrungChuyen: _mainBloc.listCustomer[index].idTrungChuyen.split(',')));
                                                                   _mapBloc.add(GetListDetailTripsCustomer(format.parse(_mainBloc.ngayTC),_mainBloc.idVanPhong,_mainBloc.idKhungGio,_mainBloc.loaiKhach));
                                                                   _mainBloc.soKhachDaDonDuoc++;
                                                                   Utils.showToast('Trả khách thành công');
@@ -1072,7 +1113,7 @@ class MapPageState extends State<MapPage>{
                                 ),
                               ],
                             ),
-                          )
+                          ),
                         ],
                       )
                     ),
@@ -1093,7 +1134,7 @@ class MapPageState extends State<MapPage>{
 
   changeOnline() {
     try {
-      LocationService locationService = new LocationService();
+      // LocationService locationService = new LocationService();
       isOnline = !isOnline;
       if (isOnline) {
         //locationService.startListenChangeLocation();

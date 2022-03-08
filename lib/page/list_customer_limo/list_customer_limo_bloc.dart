@@ -53,6 +53,7 @@ class ListCustomerLimoBloc extends Bloc<ListCustomerLimoEvent,ListCustomerLimoSt
     }
     if(event is GetListCustomerLimo){
       yield ListCustomerLimoLoading();
+      print(event.date);
       ListCustomerLimoState state = _handleAwaitingCustomer(await _networkFactory.getListCustomerLimo(_accessToken,event.date));
       yield state;
     }

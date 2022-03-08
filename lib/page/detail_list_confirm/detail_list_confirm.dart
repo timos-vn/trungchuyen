@@ -116,6 +116,18 @@ class _DetailListConfirmState extends State<DetailListConfirm> {
                       ),
                     ],
                   ),
+                  TableRow(
+                    children: [
+                      Container(
+                        height: 35,
+                        child: Center(child: Text('Thời gian',style: TextStyle(fontStyle: FontStyle.italic),)),
+                      ),
+                      Container(
+                        height: 35,
+                        child: Center(child: Text('${widget.timeStart} - ${widget.dateStart}')),
+                      ),
+                    ],
+                  ),
                 ],
               ),
             ),
@@ -175,49 +187,56 @@ class _DetailListConfirmState extends State<DetailListConfirm> {
                       SizedBox(
                         width: 8,
                       ),
-                      InkWell(
-                        onTap: () => launch("tel://${item.soDienThoaiKhach}"),
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.start,
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Row(
-                              children: [
-                                Text(
-                                  '${item.tenKhachHang??''}',
-                                  style: TextStyle(fontWeight: FontWeight.bold),
+                      Column(
+                        mainAxisAlignment: MainAxisAlignment.start,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Text(
+                                '${item.tenKhachHang??''}',
+                                style: TextStyle(fontWeight: FontWeight.bold),
+                              ),
+                              SizedBox(width: 5,),
+                              Text(
+                                '(${item.soDienThoaiKhach??''})',
+                                style: TextStyle(fontWeight: FontWeight.normal,color: Colors.grey,fontSize: 11),
+                              ),
+                            ],
+                          ),
+                          SizedBox(height: 5,),
+                          Row(
+                            children: [
+                              Text(
+                                'Số khách:',
+                                style: TextStyle(color:Colors.red,fontSize: 12,fontStyle: FontStyle.italic),
+                              ),
+                              SizedBox(width: 4,),
+                              Text(
+                                '${item.soKhach??''}',
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                                style: Theme.of(this.context).textTheme.subtitle.copyWith(
+                                  fontWeight: FontWeight.normal,
+                                  color: Colors.red,fontSize: 12,fontStyle: FontStyle.italic
                                 ),
-                                SizedBox(width: 5,),
-                                Text(
-                                  '(${item.soDienThoaiKhach??''})',
-                                  style: TextStyle(fontWeight: FontWeight.normal,color: Colors.grey,fontSize: 11),
-                                ),
-                              ],
-                            ),
-                            SizedBox(height: 5,),
-                            Row(
-                              children: [
-                                Text(
-                                  'Số khách:',
-                                  style: TextStyle(color:Colors.red,fontSize: 12,fontStyle: FontStyle.italic),
-                                ),
-                                SizedBox(width: 4,),
-                                Text(
-                                  '${item.soKhach??''}',
-                                  maxLines: 2,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: Theme.of(this.context).textTheme.subtitle.copyWith(
-                                    fontWeight: FontWeight.normal,
-                                    color: Colors.red,fontSize: 12,fontStyle: FontStyle.italic
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ],
-                        ),
+                              ),
+                            ],
+                          ),
+                        ],
                       ),
                     ],
                   ),
+                  InkWell(
+                    onTap: () => launch("tel://${item.soDienThoaiKhach}"),
+                    child: Container(
+                        decoration: BoxDecoration(
+                          color: Colors.orange,
+                          borderRadius: BorderRadius.all(Radius.circular(24))
+                        ),
+                        padding: EdgeInsets.all(10),
+                        child: Icon(Icons.phone_callback_outlined,size: 18,color: Colors.white,)),
+                  )
                 ],
               ),
             ),

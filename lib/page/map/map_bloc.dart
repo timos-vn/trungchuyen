@@ -1,5 +1,4 @@
 import 'dart:convert';
-
 import 'package:flutter/cupertino.dart';
 import 'package:flutter_animarker/lat_lng_interpolation.dart';
 import 'package:flutter_animarker/models/lat_lng_info.dart';
@@ -9,7 +8,6 @@ import 'package:google_maps_controller/google_maps_controller.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:trungchuyen/models/database/dbhelper.dart';
 import 'package:trungchuyen/models/entity/customer.dart';
-import 'package:trungchuyen/models/network/request/push_location_request.dart';
 import 'package:trungchuyen/models/network/request/tranfer_customer_request.dart';
 import 'package:trungchuyen/models/network/request/update_status_customer_request.dart';
 import 'package:trungchuyen/models/network/response/detail_trips_repose.dart';
@@ -200,7 +198,6 @@ class MapBloc extends Bloc<MapEvent,MapState> {
 
     else if(event is UpdateStatusCustomerMapEvent){
       yield MapLoading();
-
       UpdateStatusCustomerRequestBody request = UpdateStatusCustomerRequestBody(
           id:event.idTrungChuyen,
           status: event.status,
@@ -210,7 +207,7 @@ class MapBloc extends Bloc<MapEvent,MapState> {
       yield state;
     }else if(event is GetListDetailTripsCustomer){
       yield MapLoading();
-      MapState state = _handleGetListOfDetailTrips(await _networkFactory.getDetailTrips(_accessToken,event.date,event.idRoom.toString(),event.idTime.toString(),event.typeCustomer.toString()));
+      MapState state = _handleGetListOfDetailTrips(await _networkFactory.getDetailTrips(event.date.toString(),_accessToken,event.date,event.idRoom.toString(),event.idTime.toString(),event.typeCustomer.toString()));
       yield state;
     }
   }
@@ -305,17 +302,11 @@ class MapBloc extends Bloc<MapEvent,MapState> {
     int countPush = 0;
     if (await checkPermission()) {
       locationSubscription = location.onLocationChanged.listen((LocationData currentLocation) {
-        // print(currentLocation.toString());
         currentLocationTC = currentLocation.latitude.toString() + "," + currentLocation.longitude.toString() ;//{'lat': , 'lng': currentLocation.longitude};
         countPush++;
         latLngStream.addLatLng(LatLngInfo(currentLocation.latitude, currentLocation.longitude, "DriverMarker"));
-        //add(GetCurrentLocationEvent(currentLocationTC));
         currentLocations(currentLocationTC);
-        // print(countPush);
-        if(countPush == 5){
-
-        }
-        if(countPush == 1){
+        if(countPush == 45){
           countPush=0;
           var obj = {
             'lat':currentLocation.latitude,
@@ -370,9 +361,6 @@ class MapBloc extends Bloc<MapEvent,MapState> {
   Future<List<Customer>> getListTXLimoFromDb() {
     return db.fetchAllDriverLimo();
   }
-
-
-
 
   void getMainBloc(BuildContext context) {
     _mainBloc = BlocProvider.of<MainBloc>(context);

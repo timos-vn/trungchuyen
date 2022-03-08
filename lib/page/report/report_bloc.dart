@@ -22,6 +22,7 @@ class ReportBloc extends Bloc<ReportEvent,ReportState> {
   List<DsKhachs> listReport = new List<DsKhachs>();
   ReportReponseDetail reponseDetail;
   int tongKhach = 0;
+  String idNhaXe;
 
   ReportBloc(this.context)  {
     _networkFactory = NetWorkFactory(context);
@@ -37,10 +38,11 @@ class ReportBloc extends Bloc<ReportEvent,ReportState> {
       _prefs = await SharedPreferences.getInstance();
       _accessToken = _prefs.getString(Const.ACCESS_TOKEN) ?? "";
       _refreshToken = _prefs.getString(Const.REFRESH_TOKEN) ?? "";
+      idNhaXe = _prefs.getString(Const.NHA_XE)??"";
     }
     if(event is GetReportEvent){
       yield ReportLoading();
-      ReportState state = _handleGetReport(await _networkFactory.getReport(_accessToken, event.dateFrom,event.dateTo));
+      ReportState state = _handleGetReport(await _networkFactory.getReport(_accessToken, event.dateFrom,event.dateTo,idNhaXe));
       yield state;
     }
   }
@@ -49,6 +51,7 @@ class ReportBloc extends Bloc<ReportEvent,ReportState> {
   ReportState _handleGetReport(Object data) {
     if (data is String) return ReportFailure(data);
     try {
+      listReport.clear();
       ReportReponse reponse = ReportReponse.fromJson(data);
       reponseDetail = reponse.data;
       tongKhach = reponseDetail.tongKhach;

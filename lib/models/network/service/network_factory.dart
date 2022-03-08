@@ -2,6 +2,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:get/get.dart' as libGetX;
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:trungchuyen/models/network/request/change_password_request.dart';
 import 'package:trungchuyen/models/network/request/login_request.dart';
 import 'package:trungchuyen/models/network/request/push_location_request.dart';
 import 'package:trungchuyen/models/network/request/tranfer_customer_request.dart';
@@ -42,7 +43,8 @@ class NetWorkFactory {
 
   void _setupLoggingInterceptor() {
     int maxCharactersPerLine = 200;
-    _dio.interceptors.add(InterceptorsWrapper(onRequest: (RequestOptions options) async {
+    _dio.interceptors.add(InterceptorsWrapper(
+        onRequest: (RequestOptions options) async {
       // Do something before request is sent
       logger.d("--> ${options.method} ${options.path}");
       logger.d("Content type: ${options.contentType}");
@@ -216,9 +218,19 @@ class NetWorkFactory {
     }));
   }
 
-  Future<Object> getDetailTrips(String token, DateTime date, String idRoom, String idTime, String typeCustomer) async {
+  Future<Object> getDetailTrips(String ngayChay,String token, DateTime date, String idRoom, String idTime, String typeCustomer) async {
     return await requestApi(_dio.get('/api/v1/trungchuyen/dskhachcho', options: Options(headers: {"Authorization": "Bearer $token"}),queryParameters: {
+      "ngayChay": ngayChay,
       "ngayTrungChuyen": date,
+      "idVanPhong": idRoom,
+      "idKhungGio": idTime,
+      "loaiKhachTC": typeCustomer,
+    })); //["Authorization"] = "Bearer " + token
+  }
+
+  Future<Object> getDetailTripsHistory(String token, String idRoom, String idTime, String typeCustomer,String ngayChay) async {
+    return await requestApi(_dio.get('/api/v1/trungchuyen/dskhach-trongngay', options: Options(headers: {"Authorization": "Bearer $token"}),queryParameters: {
+      "ngayChay": ngayChay,
       "idVanPhong": idRoom,
       "idKhungGio": idTime,
       "loaiKhachTC": typeCustomer,
@@ -232,23 +244,30 @@ class NetWorkFactory {
   /// 1. Từ chối
   /// 2. Chấp nhận (Chờ đón - Nếu là khách cần đón)
   /// 5. Chấp nhận (Chờ nhận - Nếu là khách cần trả)
-  Future<Object> updateStatusCustomer(UpdateStatusCustomerRequestBody request,String token) async {
-    return await requestApi(_dio.post('/api/v1/trungchuyen/capnhat-trangthai', options: Options(headers: {"Authorization": "Bearer $token"}), data: request.toJson()));
-  }
+  // Future<Object> updateStatusCustomer(UpdateStatusCustomerRequestBody request,String token) async {
+  //   return await requestApi(_dio.post('/api/v1/trungchuyen/capnhat-trangthai', options: Options(headers: {"Authorization": "Bearer $token"}), data: request.toJson()));
+  // }
   Future<Object> updateGroupStatusCustomer(UpdateStatusCustomerRequestBody request,String token) async {
     return await requestApi(_dio.post('/api/v1/trungchuyen/capnhat-trangthai-nhom', options: Options(headers: {"Authorization": "Bearer $token"}), data: request.toJson()));
   }
-  Future<Object> getReport(String token,String dateTimeFrom, String dateTimeTo) async {
-    return await requestApi(_dio.get('/api/v1/thongke/taixe-trungchuyen/khach-trung-chuyen/' + dateTimeFrom.toString() + '/' + dateTimeTo.toString(), options: Options(headers: {"Authorization": "Bearer $token"}))); //["Authorization"] = "Bearer " + token
+  Future<Object> getReport(String token,String dateTimeFrom, String dateTimeTo,String idNhaXe) async {
+    return await requestApi(_dio.get('/api/v1/thongke/taixe-trungchuyen/khach-trung-chuyen/' + idNhaXe + "/" + dateTimeFrom.toString() + '/' + dateTimeTo.toString(), options: Options(headers: {"Authorization": "Bearer $token"}))); //["Authorization"] = "Bearer " + token
   }
-  Future<Object> getReportLimo(String token,String dateTimeFrom, String dateTimeTo) async {
-    return await requestApi(_dio.get('/api/v1/thongke/taixe-limo/thongkekhach/' + dateTimeFrom.toString() + '/' + dateTimeTo.toString(), options: Options(headers: {"Authorization": "Bearer $token"}))); //["Authorization"] = "Bearer " + token
+  Future<Object> getReportLimo(String token,String dateTimeFrom, String dateTimeTo,String idNhaXe) async {
+    return await requestApi(_dio.get('/api/v1/thongke/taixe-limo/thongkekhach/' + idNhaXe + "/" + dateTimeFrom.toString() + '/' + dateTimeTo.toString(), options: Options(headers: {"Authorization": "Bearer $token"}))); //["Authorization"] = "Bearer " + token
   }
 
   Future<Object> getListCustomerLimo(String token,DateTime dateTime) async {
     return await requestApi(_dio.get('/api/v1/limo/nhomkhachcho', options: Options(headers: {"Authorization": "Bearer $token"}), queryParameters: {
       "ngayChay": dateTime,
     })); //["Authorization"] = "Bearer " + token
+  }
+
+  Future<Object> getListHistoryLimo(String token,String dateTime) async {
+    return await requestApi(_dio.get('/api/v1/limo/nhomkhach-xuly-trongngay/'+ dateTime, options: Options(headers: {"Authorization": "Bearer $token"}))); //["Authorization"] = "Bearer " + token
+  }
+  Future<Object> getListHistoryTC(String token,String dateTime) async {
+    return await requestApi(_dio.get('/api/v1/trungchuyen/nhomkhach-xuly-trongngay/' + dateTime, options: Options(headers: {"Authorization": "Bearer $token"}))); //["Authorization"] = "Bearer " + token
   }
 
   Future<Object> getDetailTripsLimo(String token, String date, String idTrips, String idTime) async {
@@ -302,7 +321,7 @@ class NetWorkFactory {
   }
 
   Future<Object> updateNotification(String token,String idNotification) async {
-    return await requestApi(_dio.put('/api/v1/thongbao/' + idNotification, options: Options(headers: {"Authorization": "Bearer $token"}))); //["Authorization"] = "Bearer " + token
+    return await requestApi(_dio.put('/api/v1/thongbao/' + idNotification, options: Options(headers: {"Authorization": "Bearer $token"},))); //["Authorization"] = "Bearer " + token
   }
 
   Future<Object> deleteNotification(String token,String idNotification) async {
@@ -317,4 +336,9 @@ class NetWorkFactory {
   Future<Object> updateInfo(String token,UpdateInfoRequestBody updateInfoRequestBody) async {
     return await requestApi(_dio.put('/api/v1/taikhoan/capnhat', options: Options(headers: {"Authorization": "Bearer $token"}), data: updateInfoRequestBody.toJson()));
   }
+
+  Future<Object> changePassword(ChangePasswordRequest request,String token) async {
+    return await requestApi(_dio.post('/api/v1/taikhoan/capnhat-matkhau', options: Options(headers: {"Authorization": "Bearer $token"}), data: request.toJson()));
+  }
+
 }

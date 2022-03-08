@@ -16,9 +16,10 @@ class Const {
   static const String HOST_GOOGLE_MAP_URL = "https://maps.googleapis.com/maps/api/";
 
   static const WAITING= 0;
-  static const MAP = 1;
-  static const CONFIRM = 2;
-  static const ACCOUNT = 3;
+  // static const MAP = 1;
+  static const CONFIRM = 1;
+  // static const HISTORY = 3;
+  static const ACCOUNT = 2;
 
   static const String ACTION_UPDATE = '1';
   static const String ACTION_DELETE = '4';

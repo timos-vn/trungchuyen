@@ -1,6 +1,8 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:jiffy/jiffy.dart';
 import 'package:liquid_pull_to_refresh/liquid_pull_to_refresh.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:trungchuyen/extension/customer_clip_path.dart';
@@ -11,6 +13,7 @@ import 'package:trungchuyen/models/network/response/list_of_group_awaiting_custo
 import 'package:trungchuyen/page/detail_trips/detail_trips_page.dart';
 import 'package:trungchuyen/page/main/main_bloc.dart';
 import 'package:trungchuyen/page/main/main_event.dart';
+import 'package:trungchuyen/page/main/main_page.dart';
 import 'package:trungchuyen/page/waiting/waiting_bloc.dart';
 import 'package:trungchuyen/page/waiting/waiting_event.dart';
 import 'package:trungchuyen/page/waiting/waiting_sate.dart';
@@ -18,6 +21,8 @@ import 'package:trungchuyen/themes/colors.dart';
 import 'package:trungchuyen/themes/images.dart';
 import 'package:intl/intl.dart';
 import 'package:trungchuyen/utils/utils.dart';
+
+import '../notification_api.dart';
 
 class WaitingPage extends StatefulWidget {
 
@@ -33,7 +38,10 @@ class WaitingPageState extends State<WaitingPage> {
   WaitingBloc _bloc;
   MainBloc _mainBloc;
   DatabaseHelper db = DatabaseHelper();
-  DateTime dateTime;
+  DateTime dateTime = new DateFormat("yyyy-MM-dd").parse(DateTime.now().toString());
+  bool viewDetail = false;
+  String tenChuyen;
+  String thoiGian;
   @override
   void initState() {
     // TODO: implement initState
@@ -44,14 +52,16 @@ class WaitingPageState extends State<WaitingPage> {
     DateTime parseDate = new DateFormat("yyyy-MM-dd").parse(DateTime.now().toString());
     _bloc.add(GetListGroupAwaitingCustomer(parseDate));
     if(!Utils.isEmpty(_mainBloc.idKhungGio) && !Utils.isEmpty(_mainBloc.ngayTC) && !Utils.isEmpty(_mainBloc.idVanPhong) && !Utils.isEmpty(_mainBloc.idKhungGio) && !Utils.isEmpty(_mainBloc.loaiKhach)){
-      _bloc.add(GetListDetailTripsOfPageWaiting(format.parse(_mainBloc.ngayTC),_mainBloc.idVanPhong,_mainBloc.idKhungGio,_mainBloc.loaiKhach));
+      //_bloc.add(GetListDetailTripsOfPageWaiting(format.parse(_mainBloc.ngayTC),_mainBloc.idVanPhong,_mainBloc.idKhungGio,_mainBloc.loaiKhach));
     }
   }
+
+
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: dark_text.withOpacity(0.7),
       appBar: AppBar(
         title: Text(
           'Lịch Khách Chờ',
@@ -101,6 +111,17 @@ class WaitingPageState extends State<WaitingPage> {
            _mainBloc.listOfGroupAwaitingCustomer = _bloc.listOfGroupAwaitingCustomer;
           }
           else if(state is GetListOfDetailTripsOfWaitingPageSuccess){
+            if(viewDetail == true){
+              _mainBloc.viewDetailTC = true;
+              DateTime parseDate = new DateFormat("yyyy-MM-dd").parse(Jiffy(_mainBloc.ngayTC, "dd/MM/yyyy").format("yyyy-MM-dd"));
+              Navigator.push(context, MaterialPageRoute(builder: (context)=>DetailTripsPage(
+                tenChuyen: tenChuyen,
+                typeDetail: 1,dateTime: parseDate,idRoom: _mainBloc.idVanPhong,idTime: _mainBloc.idKhungGio,typeCustomer: _mainBloc.loaiKhach,thoiGian: thoiGian,))).then((value){
+                  viewDetail = false;
+                  _mainBloc.viewDetailTC = false;
+                  _bloc.add(GetListGroupAwaitingCustomer(parseDate));
+              });
+            }
           }
         },
         child: BlocBuilder<WaitingBloc,WaitingState>(
@@ -128,7 +149,7 @@ class WaitingPageState extends State<WaitingPage> {
                   children: <Widget>[
                     Text(
                       _mainBloc.listOfGroupAwaitingCustomer.length <= 0 ?
-                      'Bạn có không có Cuốc chờ nào!!!' : 'Bạn có ${_mainBloc.listOfGroupAwaitingCustomer.length} Cuốc chờ',
+                      'Bạn có không có Cuốc chờ nào!!!' : 'Bạn có ${_mainBloc.listOfGroupAwaitingCustomer.length} Cuốc chờ / ${Jiffy(dateTime, "yyyy-MM-dd").format("dd-MM-yyyy")}',
                       style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15, color: Colors.white),
                     ),
                   ],
@@ -165,7 +186,7 @@ class WaitingPageState extends State<WaitingPage> {
         )
             : Container(
           child: Center(
-            child: Text('Chưa có chuyến nào'),
+            child: Text('${Jiffy(dateTime, "yyyy-MM-dd").format("dd-MM-yyyy")} \n Chưa có chuyến nào',textAlign: TextAlign.center,),
           ),
         ),
         Visibility(
@@ -179,35 +200,45 @@ class WaitingPageState extends State<WaitingPage> {
   }
 
   Widget buildListItem(ListOfGroupAwaitingCustomerBody item,int index) {
-    print('----------' + _mainBloc.listInfo.length.toString());
-    print(_mainBloc.ngayTC);print(_mainBloc.idVanPhong);print(_mainBloc.idKhungGio);print(_mainBloc.trips);
-    print(_mainBloc.blocked);
     return GestureDetector(
         onTap: () {
-          if( _mainBloc.listCustomer.length == 0){
-            Utils.showDialogAssign(context: context,titleHintText: 'Bạn sẽ đón nhóm Khách này?').then((value){
-              if(!Utils.isEmpty(value)){
-                _mainBloc.trips = item.thoiGianDi + ' - ' + item.ngayChay;
-                _bloc.add(GetListDetailTripsOfPageWaiting(format.parse(item.ngayChay),item.idVanPhong,item.idKhungGio,item.loaiKhach));
-                _mainBloc.blocked = true;
-                _mainBloc.idKhungGio = item.idKhungGio;
-                _mainBloc.loaiKhach = item.loaiKhach;
-                _mainBloc.idVanPhong = item.idVanPhong;
-                _mainBloc.ngayTC = item.ngayChay;
-                _mainBloc.currentNumberCustomerOfList = item.soKhach;
-                Utils.showToast( 'Chạy thôi nào bạn ơi !!!');
-                Future.delayed(Duration(seconds: 1), () {
-                  _mainBloc.add(NavigateProfile());
-                });
-              }
-              else{
-                print('Click huỷ');
-              }
-            });
-          } else{
-            print('đi đón nốt người đi thằng ngu');
-            Utils.showToast( 'Bạn vẫn đang trong tuyến hoặc chưa trả khách xong.');
-          }
+          viewDetail = true;
+          tenChuyen = item.tenVanPhong;
+          thoiGian = "${item.loaiKhach == 1 ? "${item.thoiGianDi}->${item.thoiGianDen}" : "${item.thoiGianDen}->${item.thoiGianDi}"}";// "${item.thoiGianDi}->${item.thoiGianDen}";
+          _mainBloc.trips = "${item.loaiKhach == 1 ? item.thoiGianDi : item.thoiGianDen} - ${item.ngayChay}";
+          _mainBloc.idKhungGio = item.idKhungGio;
+          _mainBloc.loaiKhach = item.loaiKhach;
+          _mainBloc.blocked = true;
+          _mainBloc.idVanPhong = item.idVanPhong;
+          _mainBloc.ngayTC = item.ngayChay;
+          _mainBloc.currentNumberCustomerOfList = item.soKhach;
+          _bloc.add(GetListDetailTripsOfPageWaiting(format.parse(item.ngayChay),item.idVanPhong,item.idKhungGio,item.loaiKhach));
+
+          // if( _mainBloc.listCustomer.length == 0){
+          //   Utils.showDialogAssign(context: context,titleHintText: 'Bạn sẽ đón nhóm Khách này?').then((value){
+          //     if(!Utils.isEmpty(value)){
+          //       // _mainBloc.trips = item.thoiGianDi + ' - ' + item.ngayChay;
+          //       // _bloc.add(GetListDetailTripsOfPageWaiting(format.parse(item.ngayChay),item.idVanPhong,item.idKhungGio,item.loaiKhach));
+          //       // _mainBloc.blocked = true;
+          //       // _mainBloc.idKhungGio = item.idKhungGio;
+          //       // _mainBloc.loaiKhach = item.loaiKhach;
+          //       // _mainBloc.idVanPhong = item.idVanPhong;
+          //       // _mainBloc.ngayTC = item.ngayChay;
+          //       // _mainBloc.currentNumberCustomerOfList = item.soKhach;
+          //       Utils.showToast( 'Chạy thôi nào bạn ơi !!!');
+          //       // Future.delayed(Duration(seconds: 1), () {
+          //       //   _mainBloc.add(NavigateProfile());
+          //       // });
+          //       /// New EPX
+          //     }
+          //     else{
+          //       print('Click huỷ');
+          //     }
+          //   });
+          // } else{
+          //   print('đi đón nốt người đi thằng ngu');
+          //   Utils.showToast( 'Bạn vẫn đang trong tuyến hoặc chưa trả khách xong.');
+          // }
         },
         child: Padding(
           padding: const EdgeInsets.only(left: 10, right: 16, top: 8, bottom: 8),
@@ -247,12 +278,13 @@ class WaitingPageState extends State<WaitingPage> {
                             SizedBox(
                               width: 8,
                             ),
-                            Text(item.tenVanPhong??
-                              '',
-                              style: TextStyle(fontWeight: FontWeight.bold),
-                            ),
                             Expanded(
-                              child: SizedBox(),
+                              child: Text(item.tenVanPhong??
+                                '',
+                                style: TextStyle(fontWeight: FontWeight.bold),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
                             ),
                             Container(
                               height: 45,
@@ -293,15 +325,29 @@ class WaitingPageState extends State<WaitingPage> {
                             SizedBox(
                               height: 5,
                             ),
-                            Text(
-                              //'dateStartingOrFinishing',
-                              '${item.thoiGianDi??''}' + " / " + '${item.ngayChay??''}',
-                              maxLines: 2,
-                              overflow: TextOverflow.ellipsis,
-                              style: Theme.of(this.context).textTheme.subtitle.copyWith(
-                                fontWeight: FontWeight.normal,
-                                color: Theme.of(this.context).textTheme.title.color,
-                              ),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Text(
+                                  'Xuất bến:  ${item.loaiKhach == 1 ? item.thoiGianDi??'' : item.thoiGianDen??''}',//${item.thoiGianDi??''}',
+                                  maxLines: 2,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: Theme.of(this.context).textTheme.subtitle.copyWith(
+                                    fontWeight: FontWeight.normal,
+                                    color: Theme.of(this.context).textTheme.title.color,
+                                  ),
+                                ),
+                                Icon(Icons.arrow_forward),
+                                Text(//${item.thoiGianDen??''}
+                                  'Tới bến: Loading',//${item.loaiKhach == 1 ? item.thoiGianDen??'' : item.thoiGianDi??''}
+                                  maxLines: 2,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: Theme.of(this.context).textTheme.subtitle.copyWith(
+                                    fontWeight: FontWeight.normal,
+                                    color: Theme.of(this.context).textTheme.title.color,
+                                  ),
+                                ),
+                              ],
                             ),
                           ],
                         ),
@@ -314,49 +360,47 @@ class WaitingPageState extends State<WaitingPage> {
                         ),
                       ),
                       Padding(
-                        padding: const EdgeInsets.only(right: 8, left: 16, top: 10, bottom: 10),
+                        padding: const EdgeInsets.only(right: 16, left: 16, top: 10, bottom: 10),
                         child: Row(
                           children: [
                             Expanded(
-                              child: Column(
+                              child: Row(
                                 crossAxisAlignment: CrossAxisAlignment.start,
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                 children: <Widget>[
                                   Text(
-                                    'Số khách',
+                                    'Số khách cần xử lý',
                                     style: Theme.of(this.context).textTheme.caption.copyWith(
-                                      color: Theme.of(this.context).disabledColor,
-                                      fontWeight: FontWeight.normal,
+                                      color: Theme.of(this.context).textTheme.title.color,
+                                      fontWeight: FontWeight.bold,
                                     ),
                                   ),
-                                  SizedBox(
-                                    height: 5,
-                                  ),
                                   Text(
-                                    '${item.soKhach??''}',
-                                    maxLines: 2,
+                                    '${item.soKhach??''} Khách',
+                                    maxLines: 1,
                                     overflow: TextOverflow.ellipsis,
                                     style: Theme.of(this.context).textTheme.subtitle.copyWith(
-                                      fontWeight: FontWeight.normal,
+                                      fontWeight: FontWeight.bold,
                                       color: Theme.of(this.context).textTheme.title.color,
                                     ),
                                   ),
                                 ],
                               ),
                             ),
-                            GestureDetector(
-                              onTap: () {
-                                DateTime parseDate = new DateFormat("yyyy-MM-dd").parse(DateTime.now().toString());
-                                Navigator.push(context, MaterialPageRoute(builder: (context)=>DetailTripsPage(dateTime: parseDate,idRoom: item.idVanPhong,idTime: item.idKhungGio,typeCustomer: item.loaiKhach,)));///item.idTuyenDuong.toString()
-                              },
-                              child: Container(
-                                padding: EdgeInsets.all(8),
-                                decoration: BoxDecoration(
-                                  color: (item.idKhungGio == _mainBloc.idKhungGio && item.loaiKhach == _mainBloc.loaiKhach && _mainBloc.blocked == true&& item.idVanPhong == _mainBloc.idVanPhong) ? Colors.purple.withOpacity(0.5): Colors.purple,
-                                  borderRadius: BorderRadius.all(Radius.circular(16))
-                                ),
-                                child: Text('Xem thêm',style: TextStyle(color: (item.idKhungGio == _mainBloc.idKhungGio && item.loaiKhach == _mainBloc.loaiKhach && _mainBloc.blocked == true && item.idVanPhong == _mainBloc.idVanPhong) ? Colors.white.withOpacity(0.5) : Colors.white,fontSize: 10),),
-                              ),
-                            ),
+                            // GestureDetector(
+                            //   onTap: () {
+                            //     DateTime parseDate = new DateFormat("yyyy-MM-dd").parse(Jiffy(item.ngayChay, "dd/MM/yyyy").format("yyyy-MM-dd"));
+                            //     Navigator.push(context, MaterialPageRoute(builder: (context)=>DetailTripsPage(typeDetail: 1,dateTime: parseDate,idRoom: item.idVanPhong,idTime: item.idKhungGio,typeCustomer: item.loaiKhach,thoiGian: thoiGian,)));///item.idTuyenDuong.toString()
+                            //   },
+                            //   child: Container(
+                            //     padding: EdgeInsets.all(8),
+                            //     decoration: BoxDecoration(
+                            //       color: (item.idKhungGio == _mainBloc.idKhungGio && item.loaiKhach == _mainBloc.loaiKhach && _mainBloc.blocked == true&& item.idVanPhong == _mainBloc.idVanPhong) ? Colors.purple.withOpacity(0.5): Colors.purple,
+                            //       borderRadius: BorderRadius.all(Radius.circular(16))
+                            //     ),
+                            //     child: Text('Xem thêm',style: TextStyle(color: (item.idKhungGio == _mainBloc.idKhungGio && item.loaiKhach == _mainBloc.loaiKhach && _mainBloc.blocked == true && item.idVanPhong == _mainBloc.idVanPhong) ? Colors.white.withOpacity(0.5) : Colors.white,fontSize: 10),),
+                            //   ),
+                            // ),
                           ],
                         ),
                       ),
@@ -372,7 +416,7 @@ class WaitingPageState extends State<WaitingPage> {
                   right: 0,
                   bottom: 0,
                   child: Center(
-                    child: Text('Đang đón',style: TextStyle(color: Colors.white,fontWeight: FontWeight.bold,fontSize: 20),),
+                    child: Text( "${item.loaiKhach == 1 ? 'Đang đón' : 'Đang trả'}",style: TextStyle(color: Colors.white,fontWeight: FontWeight.bold,fontSize: 20),),
                   ),
                 ),
               )

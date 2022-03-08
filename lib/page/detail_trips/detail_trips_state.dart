@@ -28,3 +28,18 @@ class GetListOfDetailTripsSuccess extends DetailTripsState {
   @override
   String toString() => 'GetListOfWaitingCustomerSuccess }';
 }
+class UpdateStatusCustomerSuccess extends DetailTripsState {
+  final int status;
+
+  UpdateStatusCustomerSuccess(this.status);
+  @override
+  String toString() => 'UpdateStatusCustomerSuccess }';
+}
+
+class TCTransferCustomerToLimoSuccess extends DetailTripsState {
+  final String listIDTC;
+
+  TCTransferCustomerToLimoSuccess(this.listIDTC);
+  @override
+  String toString() => 'TCTransferCustomerToLimoSuccess {listIDTC: $listIDTC}';
+}
