@@ -30,3 +30,10 @@ class ReportLimoLoading extends ReportLimoState {
   @override
   String toString() => 'ReportLimoLoading';
 }
+class GetPrefsSuccess extends ReportLimoState{
+
+  @override
+  String toString() {
+    return 'GetPrefsSuccess{}';
+  }
+}

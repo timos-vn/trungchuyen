@@ -1,10 +1,3 @@
-import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import 'package:trungchuyen/page/main/main_bloc.dart';
-import 'package:trungchuyen/page/main/main_event.dart';
-import 'package:trungchuyen/utils/const.dart';
-import 'package:trungchuyen/utils/log.dart';
 //
 // appBar(context){
 //   MainBloc _mainBloc;

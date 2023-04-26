@@ -26,3 +26,8 @@ class GetListDetailTripsOfPageWaiting extends WaitingEvent {
   @override
   String toString() => 'GetListDetailTripsOfPageWaiting {date: $date }';
 }
+class GetPrefs extends WaitingEvent {
+
+  @override
+  String toString() => 'GetPrefs';
+}

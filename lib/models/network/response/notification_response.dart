@@ -1,11 +1,11 @@
 class NotificationResponse {
-  List<NotificationDataResponse> data;
-  int statusCode;
-  Null message;
-  int pageIndex;
-  int pageSize;
-  int totalRecords;
-  int pageCount;
+  List<NotificationDataResponse>? data;
+  int? statusCode;
+  String? message;
+  int? pageIndex;
+  int? pageSize;
+  int? totalRecords;
+  int? pageCount;
 
   NotificationResponse(
       {this.data,
@@ -16,11 +16,11 @@ class NotificationResponse {
         this.totalRecords,
         this.pageCount});
 
-  NotificationResponse.fromJson(Map<String, dynamic> json) {
+  NotificationResponse.fromJson(Map<String?, dynamic> json) {
     if (json['data'] != null) {
-      data = new List<NotificationDataResponse>();
+      data = <NotificationDataResponse>[];
       json['data'].forEach((v) {
-        data.add(new NotificationDataResponse.fromJson(v));
+        data?.add(new NotificationDataResponse.fromJson(v));
       });
     }
     statusCode = json['statusCode'];
@@ -31,10 +31,10 @@ class NotificationResponse {
     pageCount = json['pageCount'];
   }
 
-  Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = new Map<String, dynamic>();
+  Map<String?, dynamic> toJson() {
+    final Map<String?, dynamic> data = new Map<String?, dynamic>();
     if (this.data != null) {
-      data['data'] = this.data.map((v) => v.toJson()).toList();
+      data['data'] = this.data?.map((v) => v.toJson()).toList();
     }
     data['statusCode'] = this.statusCode;
     data['message'] = this.message;
@@ -47,14 +47,14 @@ class NotificationResponse {
 }
 
 class NotificationDataResponse {
-  String id;
-  String idTaiKhoan;
-  String tieuDe;
-  String noiDung;
-  String duLieu;
-  bool daDoc;
-  String ngayTao;
-  String nguoiTao;
+  String? id;
+  String? idTaiKhoan;
+  String? tieuDe;
+  String? noiDung;
+  String? duLieu;
+  bool? daDoc;
+  String? ngayTao;
+  String? nguoiTao;
 
   NotificationDataResponse(
       {this.id,
@@ -66,7 +66,7 @@ class NotificationDataResponse {
         this.ngayTao,
         this.nguoiTao});
 
-  NotificationDataResponse.fromJson(Map<String, dynamic> json) {
+  NotificationDataResponse.fromJson(Map<String?, dynamic> json) {
     id = json['id'];
     idTaiKhoan = json['idTaiKhoan'];
     tieuDe = json['tieuDe'];
@@ -77,8 +77,8 @@ class NotificationDataResponse {
     nguoiTao = json['nguoiTao'];
   }
 
-  Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = new Map<String, dynamic>();
+  Map<String?, dynamic> toJson() {
+    final Map<String?, dynamic> data = new Map<String?, dynamic>();
     data['id'] = this.id;
     data['idTaiKhoan'] = this.idTaiKhoan;
     data['tieuDe'] = this.tieuDe;

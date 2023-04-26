@@ -1,12 +1,12 @@
 import 'package:equatable/equatable.dart';
 
 class NotificationOfLimo extends Equatable {
-  final String idTrungChuyen;
-  final String nameTC;
-  final String phoneTC;
-  final String numberCustomer;
-  final String listIdTAIXELIMO;
-  final String idDriverTC;
+  final String? idTrungChuyen;
+  final String? nameTC;
+  final String? phoneTC;
+  final String? numberCustomer;
+  final String? listIdTAIXELIMO;
+  final String? idDriverTC;
 
 
   NotificationOfLimo(
@@ -18,7 +18,7 @@ class NotificationOfLimo extends Equatable {
         this.idDriverTC
       });
 
-  NotificationOfLimo.fromDb(Map<String, dynamic> map)
+  NotificationOfLimo.fromDb(Map<String?, dynamic> map)
       :
         idTrungChuyen = map['idTrungChuyen'],
         nameTC = map['nameTC'],
@@ -40,11 +40,11 @@ class NotificationOfLimo extends Equatable {
 
   @override
   List<Object> get props => [
-    idTrungChuyen,
-    nameTC,
-    phoneTC,
-    numberCustomer,
-    listIdTAIXELIMO,
-    idDriverTC,
+    idTrungChuyen!,
+    nameTC!,
+    phoneTC!,
+    numberCustomer!,
+    listIdTAIXELIMO!,
+    idDriverTC!,
   ];
 }

@@ -1,7 +1,5 @@
 import 'package:equatable/equatable.dart';
-import 'package:trungchuyen/models/entity/customer.dart';
 import 'package:trungchuyen/models/entity/notification_of_limo.dart';
-import 'package:trungchuyen/models/entity/notification_trung_chuyen.dart';
 import 'package:trungchuyen/models/network/response/detail_trips_repose.dart';
 
 
@@ -18,7 +16,11 @@ class NavigateBottomNavigation extends MainEvent {
   @override
   String toString() => 'NavigateBottomNavigation: $position';
 }
+class GetPrefsMain extends MainEvent {
 
+  @override
+  String toString() => 'GetPrefs';
+}
 class NavigateProfile extends MainEvent {
 
   @override
@@ -52,7 +54,7 @@ class GetListGroupCustomer extends MainEvent {
 }
 
 class ChangeTitleAppbarEvent extends MainEvent {
-  final String title;
+  final String? title;
 
   ChangeTitleAppbarEvent({this.title});
 
@@ -153,9 +155,9 @@ class GetCountNotiSMS extends MainEvent{
 }
 
 class UpdateStatusCustomerEvent extends MainEvent{
-  final int status;
-  final List<String> idTrungChuyen;
-  final String note;
+  final int? status;
+  final List<String>? idTrungChuyen;
+  final String? note;
   UpdateStatusCustomerEvent({this.status,this.idTrungChuyen,this.note});
 
   @override
@@ -355,9 +357,9 @@ class GetListDetailTripsTC extends MainEvent {
 }
 class GetListDetailTripsLimoMain extends MainEvent {
 
-  final String date;
-  final int idTrips;
-  final int idTime;
+  final String? date;
+  final int? idTrips;
+  final int? idTime;
 
   GetListDetailTripsLimoMain({this.date,this.idTrips,this.idTime});
 

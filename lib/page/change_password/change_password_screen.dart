@@ -11,8 +11,8 @@ import 'change_password_state.dart';
 
 
 class ChangePassWordScreen extends StatefulWidget {
-  ChangePassWordScreen({Key key, this.title}) : super(key: key);
-  final String title;
+  ChangePassWordScreen({Key? key, this.title}) : super(key: key);
+  final String? title;
 
   @override
   _ChangePassWordScreenState createState() => _ChangePassWordScreenState();
@@ -26,11 +26,11 @@ class _ChangePassWordScreenState extends State<ChangePassWordScreen> with Single
   final passwordOldFocus = FocusNode();
   final passwordNewFocus = FocusNode();
   final againPasswordFocus = FocusNode();
-  String verificationCode;
+  String? verificationCode;
 
-  String errorPass, errorUsername, errorAgainPass;
+  String? errorPass, errorUsername, errorAgainPass;
 
-  ChangePasswordBloc _bloc;
+  late ChangePasswordBloc _bloc;
 
   bool showLoading = false;
 
@@ -40,14 +40,15 @@ class _ChangePassWordScreenState extends State<ChangePassWordScreen> with Single
   void initState() {
     super.initState();
     _bloc = ChangePasswordBloc(context);
+    _bloc.add(GetPrefs());
   }
 
   Widget _entryField(String title, TextEditingController textEditingController, String textHint,
       { bool isPassword = false, bool isPhone = false,
-        FocusNode currentFocus, FocusNode nextFocus,
-        TextInputAction textInputAction,
-        int checkErr,
-        String err,
+        FocusNode? currentFocus, FocusNode? nextFocus,
+        TextInputAction? textInputAction,
+        int? checkErr,
+        String? err,
       }) {
     return Container(
       margin: EdgeInsets.symmetric(vertical: 10),
@@ -85,7 +86,7 @@ class _ChangePassWordScreenState extends State<ChangePassWordScreen> with Single
                 fillColor: Colors.white,
                 filled: true,
                 hintText: textHint),
-            onSubmitted: (text) => Utils.navigateNextFocusChange(context,  currentFocus,  nextFocus),
+            onSubmitted: (text) => Utils.navigateNextFocusChange(context,  currentFocus!,  nextFocus!),
           )
         ],
       ),
@@ -132,7 +133,7 @@ class _ChangePassWordScreenState extends State<ChangePassWordScreen> with Single
       text: TextSpan(
           text: 'Timo',
           style: GoogleFonts.openSans(
-            textStyle: Theme.of(context).textTheme.display1,
+            textStyle: Theme.of(context).textTheme.titleMedium,
             fontSize: 30,
             fontWeight: FontWeight.w700,
             color: Color(0xffe46b10),

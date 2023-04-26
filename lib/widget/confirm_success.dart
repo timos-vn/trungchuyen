@@ -1,14 +1,12 @@
 import 'package:flutter/material.dart';
-import 'package:get/get.dart' as libGetX;
-import 'package:google_fonts/google_fonts.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 
 class ConfirmSuccessPage extends StatefulWidget {
-  final String title;
-  final String content;
-  final int type;
+  final String? title;
+  final String? content;
+  final int? type;
 
-  const ConfirmSuccessPage({Key key, this.title, this.content, this.type}) : super(key: key);
+  const ConfirmSuccessPage({ Key? key, this.title, this.content, this.type}) : super(key: key);
   @override
   _ConfirmSuccessPageState createState() => _ConfirmSuccessPageState();
 }
@@ -36,11 +34,11 @@ class _ConfirmSuccessPageState extends State<ConfirmSuccessPage> {
                       SizedBox(height: 20,),
                       Icon(  MdiIcons.alertCircleOutline ,color: Colors.orange,size: 70,),
                       SizedBox(height: 15,),
-                      Text(widget.title,style:  TextStyle(fontWeight: FontWeight.w600,),),
+                      Text(widget.title.toString(),style:  TextStyle(fontWeight: FontWeight.w600,),),
                       SizedBox(height: 10,),
                       Padding(
                         padding: const EdgeInsets.only(left: 10,right: 10),
-                        child: Text(widget.content,style:  TextStyle(color: Colors.grey,fontSize: 12),textAlign: TextAlign.center,),
+                        child: Text(widget.content.toString(),style:  TextStyle(color: Colors.grey,fontSize: 12),textAlign: TextAlign.center,),
                       ),
                       SizedBox(height: 30,),
                       Padding(

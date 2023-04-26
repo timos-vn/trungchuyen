@@ -16,71 +16,72 @@ import 'limo_confirm_state.dart';
 class LimoConfirmBloc extends Bloc<LimoConfirmEvent,LimoConfirmState> {
 
   // ignore: close_sinks
-  MainBloc _mainBloc;
+  late MainBloc _mainBloc;
   MainBloc get mainBloc => _mainBloc;
   BuildContext context;
-  NetWorkFactory _networkFactory;
-  String _accessToken;
-  String get accessToken => _accessToken;
-  String _refreshToken;
-  String get refreshToken => _refreshToken;
-  SharedPreferences _prefs;
-  SharedPreferences get prefs => _prefs;
-  SocketIOService socketIOService;
-  List<CustomerLimoConfirmBody> listCustomerConfirmLimos = new List<CustomerLimoConfirmBody>();
-  String role;
-  LimoConfirmBloc(this.context){
+  NetWorkFactory? _networkFactory;
+  String? _accessToken;
+  String? get accessToken => _accessToken;
+  String? _refreshToken;
+  String? get refreshToken => _refreshToken;
+  SharedPreferences? _prefs;
+  SharedPreferences? get prefs => _prefs;
+  late SocketIOService socketIOService;
+  List<CustomerLimoConfirmBody> listCustomerConfirmLimos = [];
+  String role = '';
+
+
+  LimoConfirmBloc(this.context) : super(LimoConfirmInitial()){
     _networkFactory = NetWorkFactory(context);
     socketIOService = Get.find<SocketIOService>();
+    on<GetPrefs>(_getPrefs,);
+    on<GetListCustomerConfirmEvent>(_getListCustomerConfirmEvent);
+    on<UpdateStatusCustomerConfirmMapEvent>(_updateStatusCustomerConfirmMapEvent);
+    on<LimoConfirm>(_limoConfirm);
   }
 
-  @override
-  Stream<LimoConfirmState> mapEventToState(LimoConfirmEvent event)async* {
-    // TODO: implement mapEventToState
-    if (_prefs == null) {
-      _prefs = await SharedPreferences.getInstance();
-      _accessToken = _prefs.getString(Const.ACCESS_TOKEN) ?? "";
-      _refreshToken = _prefs.getString(Const.REFRESH_TOKEN) ?? "";
-      role = _prefs.getString(Const.CHUC_VU) ?? "";
-    }
-
-    if(event is GetListCustomerConfirmEvent){
-      yield LimoConfirmLoading();
-      LimoConfirmState state = _handleGetListConfirmLimo(await _networkFactory.getListCustomerConfirmLimo(_accessToken));
-      yield state;
-    }
-    if(event is UpdateStatusCustomerConfirmMapEvent){
-      yield LimoConfirmLoading();
-
-      UpdateStatusCustomerRequestBody request = UpdateStatusCustomerRequestBody(
-          id:event.idTrungChuyen.split(','),
-          status: event.status,
-          ghiChu:""
-      );
-      LimoConfirmState state = _handleUpdateStatusCustomer(await _networkFactory.updateGroupStatusCustomer(request,_accessToken),event.idLaiXeTC);
-      yield state;
-    }
-    else if(event is LimoConfirm){
-      yield LimoConfirmLoading();
-      var objData = {
-        'EVENT':'TAIXE_LIMO_XACNHAN',
-      };
-      List<String> idLXTC = new List<String>();
-      idLXTC.add(event.listTaiXeTC);
-      TranferCustomerRequestBody request = TranferCustomerRequestBody(
-          title: event.title,
-          body: event.body,
-          data:objData,
-          idTaiKhoans: idLXTC
-      );
-      LimoConfirmState state =  _handleTransferCustomerLimo(await _networkFactory.sendNotification(request,_accessToken));
-      yield state;
-    }
+  void _getPrefs(GetPrefs event, Emitter<LimoConfirmState> emitter)async{
+    emitter(LimoConfirmLoading());
+    _prefs = await SharedPreferences.getInstance();
+    _accessToken = _prefs!.getString(Const.ACCESS_TOKEN) ?? "";
+    _refreshToken = _prefs!.getString(Const.REFRESH_TOKEN) ?? "";
+    emitter(GetPrefsSuccess());
   }
 
-  @override
-  // TODO: implement initialState
-  LimoConfirmState get initialState => LimoConfirmInitial();
+  void _getListCustomerConfirmEvent(GetListCustomerConfirmEvent event, Emitter<LimoConfirmState> emitter)async{
+    emitter(LimoConfirmLoading());
+    LimoConfirmState state = _handleGetListConfirmLimo(await _networkFactory!.getListCustomerConfirmLimo(_accessToken!));
+    emitter(state);
+  }
+
+  void _updateStatusCustomerConfirmMapEvent(UpdateStatusCustomerConfirmMapEvent event, Emitter<LimoConfirmState> emitter)async{
+    emitter(LimoConfirmLoading());
+    UpdateStatusCustomerRequestBody request = UpdateStatusCustomerRequestBody(
+        id:event.idTrungChuyen.toString().split(','),
+        status: event.status,
+        ghiChu:""
+    );
+    LimoConfirmState state = _handleUpdateStatusCustomer(await _networkFactory!.updateGroupStatusCustomer(request,_accessToken!),event.idLaiXeTC.toString());
+    emitter(state);
+  }
+
+  void _limoConfirm(LimoConfirm event, Emitter<LimoConfirmState> emitter)async{
+    emitter(LimoConfirmLoading());
+    var objData = {
+      'EVENT':'TAIXE_LIMO_XACNHAN',
+    };
+    List<String> idLXTC = [];
+    idLXTC.add(event.listTaiXeTC);
+    TranferCustomerRequestBody request = TranferCustomerRequestBody(
+        title: event.title,
+        body: event.body,
+        data:objData,
+        idTaiKhoans: idLXTC
+    );
+    LimoConfirmState state =  _handleTransferCustomerLimo(await _networkFactory!.sendNotification(request,_accessToken!));
+    emitter(state);
+  }
+
 
   LimoConfirmState _handleTransferCustomerLimo(Object data) {
     if (data is String) return LimoConfirmFailure(data);
@@ -112,9 +113,9 @@ class LimoConfirmBloc extends Bloc<LimoConfirmEvent,LimoConfirmState> {
       _mainBloc.tongKhachXacNhan = 0;
       _mainBloc.tongChuyenXacNhan = 0;
       _mainBloc.listCustomerConfirmLimo.clear();
-      CustomerLimoConfirm response = CustomerLimoConfirm.fromJson(data);
-      _mainBloc.listCustomerConfirm = response.data;
-      response.data.forEach((element) {
+      CustomerLimoConfirm response = CustomerLimoConfirm.fromJson(data as Map<String,dynamic>);
+      _mainBloc.listCustomerConfirm = response.data!;
+      response.data!.forEach((element) {
         CustomerLimoConfirmBody customer = new CustomerLimoConfirmBody(
             idTrungChuyen: element.idTrungChuyen,
             hoTenTaiXe: element.hoTenTaiXe,
@@ -153,18 +154,16 @@ class LimoConfirmBloc extends Bloc<LimoConfirmEvent,LimoConfirmState> {
               &&
               item.tenTuyenDuong == element.tenTuyenDuong
           ));
-          if (customerNews != null){
-            customerNews.soKhach = customerNews.soKhach + 1;
-            String listIdTC = customerNews.idTrungChuyen + ',' + customer.idTrungChuyen;
-            customerNews.idTrungChuyen = listIdTC;
-          }
+          customerNews.soKhach = customerNews.soKhach! + 1;
+          String listIdTC = customerNews.idTrungChuyen.toString() + ',' + customer.idTrungChuyen.toString();
+          customerNews.idTrungChuyen = listIdTC;
           listCustomerConfirmLimos.removeWhere((rm) => rm.idTaiXe == customerNews.idTaiXe && rm.ngayChay == customerNews.ngayChay && rm.thoiGianDi == customerNews.thoiGianDi && rm.tenTuyenDuong == customerNews.tenTuyenDuong);
           listCustomerConfirmLimos.add(customerNews);
         }
       });
       _mainBloc.listCustomerConfirmLimo = listCustomerConfirmLimos;
       _mainBloc.tongChuyenXacNhan = listCustomerConfirmLimos.length;
-      _mainBloc.tongKhachXacNhan = response.data.length;
+      _mainBloc.tongKhachXacNhan = response.data!.length;
       return GetListCustomerConfirmLimoSuccess();
     } catch (e) {
       return LimoConfirmFailure(e.toString());

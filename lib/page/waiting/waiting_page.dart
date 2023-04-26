@@ -1,19 +1,13 @@
-import 'package:flutter/cupertino.dart';
+import 'package:date_time_picker/date_time_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:jiffy/jiffy.dart';
-import 'package:liquid_pull_to_refresh/liquid_pull_to_refresh.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:trungchuyen/extension/customer_clip_path.dart';
-import 'package:trungchuyen/extension/popup_picker.dart';
 import 'package:trungchuyen/models/database/dbhelper.dart';
-import 'package:trungchuyen/models/entity/customer.dart';
 import 'package:trungchuyen/models/network/response/list_of_group_awaiting_customer_response.dart';
 import 'package:trungchuyen/page/detail_trips/detail_trips_page.dart';
 import 'package:trungchuyen/page/main/main_bloc.dart';
-import 'package:trungchuyen/page/main/main_event.dart';
-import 'package:trungchuyen/page/main/main_page.dart';
 import 'package:trungchuyen/page/waiting/waiting_bloc.dart';
 import 'package:trungchuyen/page/waiting/waiting_event.dart';
 import 'package:trungchuyen/page/waiting/waiting_sate.dart';
@@ -22,11 +16,11 @@ import 'package:trungchuyen/themes/images.dart';
 import 'package:intl/intl.dart';
 import 'package:trungchuyen/utils/utils.dart';
 
-import '../notification_api.dart';
+import '../../utils/const.dart';
 
 class WaitingPage extends StatefulWidget {
 
-  WaitingPage({Key key}) : super(key: key);
+  WaitingPage({Key? key}) : super(key: key);
 
   @override
   WaitingPageState createState() => WaitingPageState();
@@ -35,25 +29,21 @@ class WaitingPage extends StatefulWidget {
 
 class WaitingPageState extends State<WaitingPage> {
   DateFormat format = DateFormat("dd/MM/yyyy");
-  WaitingBloc _bloc;
-  MainBloc _mainBloc;
+  late WaitingBloc _bloc;
+  late MainBloc _mainBloc;
   DatabaseHelper db = DatabaseHelper();
   DateTime dateTime = new DateFormat("yyyy-MM-dd").parse(DateTime.now().toString());
   bool viewDetail = false;
-  String tenChuyen;
-  String thoiGian;
+  String? tenChuyen;
+  String? thoiGian;
+
   @override
   void initState() {
     // TODO: implement initState
     super.initState();
-    _bloc = WaitingBloc(context);
-    _bloc.getMainBloc(context);
     _mainBloc = BlocProvider.of<MainBloc>(context);
-    DateTime parseDate = new DateFormat("yyyy-MM-dd").parse(DateTime.now().toString());
-    _bloc.add(GetListGroupAwaitingCustomer(parseDate));
-    if(!Utils.isEmpty(_mainBloc.idKhungGio) && !Utils.isEmpty(_mainBloc.ngayTC) && !Utils.isEmpty(_mainBloc.idVanPhong) && !Utils.isEmpty(_mainBloc.idKhungGio) && !Utils.isEmpty(_mainBloc.loaiKhach)){
-      //_bloc.add(GetListDetailTripsOfPageWaiting(format.parse(_mainBloc.ngayTC),_mainBloc.idVanPhong,_mainBloc.idKhungGio,_mainBloc.loaiKhach));
-    }
+    _bloc = WaitingBloc(context);
+    _bloc.add(GetPrefs());
   }
 
 
@@ -68,29 +58,63 @@ class WaitingPageState extends State<WaitingPage> {
           style: TextStyle(color: Colors.black),
         ),
         actions: [
-          InkWell(
-            onTap: ()async {
-              final DateTime result = await showDialog<dynamic>(
-                  context: context,
-                  builder: (BuildContext context) {
-                    return DateRangePicker(
-                      dateTime ?? DateTime.now(),
-                      null,
-                      minDate: DateTime.now(),
-                      maxDate: DateTime.now().add(const Duration(days: 10000)),
-                      displayDate: dateTime ?? DateTime.now(),
-                    );
-                  });
-              if (result != null) {
-                print(result);
-                dateTime = result;
+          SizedBox(
+            // height: 40,
+            width: 50,
+            child: DateTimePicker(
+              type: DateTimePickerType.date,
+              // dateMask: 'd MMM, yyyy',
+              initialValue: DateTime.now().toString(),
+              firstDate: DateTime(2000),
+              lastDate: DateTime(2100),
+              decoration:const InputDecoration(
+                suffixIcon: Icon(Icons.event,color: Colors.orange,size: 22,),
+                contentPadding: EdgeInsets.only(left: 12),
+                border: InputBorder.none,
+              ),
+              style:const TextStyle(fontSize: 13),
+              locale: const Locale("vi", "VN"),
+              // icon: Icon(Icons.event),
+              selectableDayPredicate: (date) {
+                return true;
+              },
+              onChanged: (result){
+                DateTime? dateOrder = result as DateTime?;
+                dateTime = Utils.parseStringToDate(dateOrder.toString(), Const.DATE_SV_FORMAT_2);
                 _bloc.add(GetListGroupAwaitingCustomer(dateTime));
-              }},
-            child: Icon(
-                Icons.event,
-              color: Colors.black,
+              },
+              validator: (result) {
+
+                return null;
+              },
+              onSaved: (val){
+                print('asd$val');
+              },
             ),
           ),
+          // InkWell(
+          //   onTap: ()async {
+          //     final DateTime result = await showDialog<dynamic>(
+          //         context: context,
+          //         builder: (BuildContext context) {
+          //           return DateRangePicker(
+          //             dateTime ?? DateTime.now(),
+          //             null,
+          //             minDate: DateTime.now(),
+          //             maxDate: DateTime.now().add(const Duration(days: 10000)),
+          //             displayDate: dateTime ?? DateTime.now(),
+          //           );
+          //         });
+          //     if (result != null) {
+          //       print(result);
+          //       dateTime = result;
+          //       _bloc.add(GetListGroupAwaitingCustomer(dateTime));
+          //     }},
+          //   child: Icon(
+          //       Icons.event,
+          //     color: Colors.black,
+          //   ),
+          // ),
           SizedBox(width: 20,),
           InkWell(
               onTap: (){
@@ -107,6 +131,14 @@ class WaitingPageState extends State<WaitingPage> {
       body:BlocListener<WaitingBloc,WaitingState>(
         bloc: _bloc,
         listener:  (context, state){
+          if(state is GetPrefsSuccess){
+            _bloc.getMainBloc(context);
+            DateTime parseDate = new DateFormat("yyyy-MM-dd").parse(DateTime.now().toString());
+            _bloc.add(GetListGroupAwaitingCustomer(parseDate));
+            if(!Utils.isEmpty(_mainBloc.idKhungGio) && !Utils.isEmpty(_mainBloc.ngayTC) && !Utils.isEmpty(_mainBloc.idVanPhong) && !Utils.isEmpty(_mainBloc.idKhungGio) && !Utils.isEmpty(_mainBloc.loaiKhach)){
+              //_bloc.add(GetListDetailTripsOfPageWaiting(format.parse(_mainBloc.ngayTC),_mainBloc.idVanPhong,_mainBloc.idKhungGio,_mainBloc.loaiKhach));
+            }
+          }
           if(state is GetListOfWaitingCustomerSuccess){
            _mainBloc.listOfGroupAwaitingCustomer = _bloc.listOfGroupAwaitingCustomer;
           }
@@ -160,8 +192,8 @@ class WaitingPageState extends State<WaitingPage> {
               height: 10,
             ),
             Expanded(
-              child: LiquidPullToRefresh(
-                showChildOpacityTransition: false,
+              child: RefreshIndicator(
+                color: Colors.orange,
                 onRefresh: () => Future.delayed(Duration.zero).then(
                         (_) {
                           if(Utils.isEmpty(dateTime)){
@@ -206,13 +238,13 @@ class WaitingPageState extends State<WaitingPage> {
           tenChuyen = item.tenVanPhong;
           thoiGian = "${item.loaiKhach == 1 ? "${item.thoiGianDi}->${item.thoiGianDen}" : "${item.thoiGianDen}->${item.thoiGianDi}"}";// "${item.thoiGianDi}->${item.thoiGianDen}";
           _mainBloc.trips = "${item.loaiKhach == 1 ? item.thoiGianDi : item.thoiGianDen} - ${item.ngayChay}";
-          _mainBloc.idKhungGio = item.idKhungGio;
-          _mainBloc.loaiKhach = item.loaiKhach;
+          _mainBloc.idKhungGio = item.idKhungGio!;
+          _mainBloc.loaiKhach = item.loaiKhach!;
           _mainBloc.blocked = true;
-          _mainBloc.idVanPhong = item.idVanPhong;
-          _mainBloc.ngayTC = item.ngayChay;
-          _mainBloc.currentNumberCustomerOfList = item.soKhach;
-          _bloc.add(GetListDetailTripsOfPageWaiting(format.parse(item.ngayChay),item.idVanPhong,item.idKhungGio,item.loaiKhach));
+          _mainBloc.idVanPhong = item.idVanPhong!;
+          _mainBloc.ngayTC = item.ngayChay.toString();
+          _mainBloc.currentNumberCustomerOfList = item.soKhach!;
+          _bloc.add(GetListDetailTripsOfPageWaiting(format.parse(item.ngayChay.toString()),item.idVanPhong!,item.idKhungGio!,item.loaiKhach!));
 
           // if( _mainBloc.listCustomer.length == 0){
           //   Utils.showDialogAssign(context: context,titleHintText: 'Bạn sẽ đón nhóm Khách này?').then((value){
@@ -296,7 +328,7 @@ class WaitingPageState extends State<WaitingPage> {
                               child: Center(
                                 child: Text(
                                  '${item.loaiKhach == 1 ? 'Đón' : 'Trả'}',
-                                  style: Theme.of(this.context).textTheme.caption.copyWith(
+                                  style: Theme.of(this.context).textTheme.caption?.copyWith(
                                     color: (item.idKhungGio == _mainBloc.idKhungGio && item.loaiKhach == _mainBloc.loaiKhach && _mainBloc.blocked == true&& item.idVanPhong == _mainBloc.idVanPhong)? Colors.white.withOpacity(0.5) :Colors.white,
                                     fontWeight: FontWeight.bold,
                                   ),
@@ -317,7 +349,7 @@ class WaitingPageState extends State<WaitingPage> {
                           children: <Widget>[
                             Text(
                               'Thông tin chuyến',
-                              style: Theme.of(this.context).textTheme.caption.copyWith(
+                              style: Theme.of(this.context).textTheme.caption?.copyWith(
                                 color: Theme.of(this.context).disabledColor,
                                 fontWeight: FontWeight.normal,
                               ),
@@ -332,20 +364,14 @@ class WaitingPageState extends State<WaitingPage> {
                                   'Xuất bến:  ${item.loaiKhach == 1 ? item.thoiGianDi??'' : item.thoiGianDen??''}',//${item.thoiGianDi??''}',
                                   maxLines: 2,
                                   overflow: TextOverflow.ellipsis,
-                                  style: Theme.of(this.context).textTheme.subtitle.copyWith(
-                                    fontWeight: FontWeight.normal,
-                                    color: Theme.of(this.context).textTheme.title.color,
-                                  ),
+                                  style: TextStyle(color: Colors.black,),
                                 ),
                                 Icon(Icons.arrow_forward),
                                 Text(//${item.thoiGianDen??''}
                                   'Tới bến: Loading',//${item.loaiKhach == 1 ? item.thoiGianDen??'' : item.thoiGianDi??''}
                                   maxLines: 2,
                                   overflow: TextOverflow.ellipsis,
-                                  style: Theme.of(this.context).textTheme.subtitle.copyWith(
-                                    fontWeight: FontWeight.normal,
-                                    color: Theme.of(this.context).textTheme.title.color,
-                                  ),
+                                  style: TextStyle(color: Colors.black,)
                                 ),
                               ],
                             ),
@@ -370,19 +396,13 @@ class WaitingPageState extends State<WaitingPage> {
                                 children: <Widget>[
                                   Text(
                                     'Số khách cần xử lý',
-                                    style: Theme.of(this.context).textTheme.caption.copyWith(
-                                      color: Theme.of(this.context).textTheme.title.color,
-                                      fontWeight: FontWeight.bold,
-                                    ),
+                                    style: TextStyle(color: Colors.black,fontWeight: FontWeight.bold),
                                   ),
                                   Text(
                                     '${item.soKhach??''} Khách',
                                     maxLines: 1,
                                     overflow: TextOverflow.ellipsis,
-                                    style: Theme.of(this.context).textTheme.subtitle.copyWith(
-                                      fontWeight: FontWeight.bold,
-                                      color: Theme.of(this.context).textTheme.title.color,
-                                    ),
+                                    style: TextStyle(color: Colors.black,fontWeight: FontWeight.bold),
                                   ),
                                 ],
                               ),

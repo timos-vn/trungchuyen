@@ -29,3 +29,8 @@ class UpdateInfo extends AccountEvent {
   @override
   String toString() => 'LogOut {}';
 }
+class GetPrefs extends AccountEvent {
+
+  @override
+  String toString() => 'GetPrefs';
+}

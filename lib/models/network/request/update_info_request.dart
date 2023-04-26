@@ -1,10 +1,10 @@
 class UpdateInfoRequestBody {
 
-  String phone;
-  String email;
-  String fullName;
-  String companyId;
-  String role;
+  String? phone;
+  String? email;
+  String? fullName;
+  String? companyId;
+  String? role;
 
 
   UpdateInfoRequestBody({this.phone, this.email,this.fullName, this.companyId, this.role,});

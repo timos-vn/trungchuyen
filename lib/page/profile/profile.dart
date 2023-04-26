@@ -2,13 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:trungchuyen/themes/colors.dart';
 
-import 'my_profile.dart';
 
 class Profile extends StatefulWidget {
-  final String userName;
-  final String phone;
+  final String? userName;
+  final String? phone;
 
-  const Profile({Key key, this.userName, this.phone}) : super(key: key);
+  const Profile({Key? key, this.userName, this.phone}) : super(key: key);
   @override
   _ProfileState createState() => _ProfileState();
 }

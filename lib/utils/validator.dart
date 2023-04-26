@@ -1,5 +1,4 @@
 import 'package:flutter/cupertino.dart';
-import 'package:get/get.dart';
 import 'package:trungchuyen/utils/utils.dart';
 
 class Validators{
@@ -7,61 +6,53 @@ class Validators{
   static final RegExp _emailRegex = RegExp(
       r'^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$');
 
-  String checkHotId(BuildContext context, String username) {
+  String? checkHotId(BuildContext context, String username) {
     if (Utils.isEmpty(username)) {
-      return 'HotIdIsNotEmpty'.tr;
+      return 'HotIdIsNotEmpty';
     }  else {
       return null;
     }
   }
 
-  String checkUsername(BuildContext context, String username) {
+  String? checkUsername(BuildContext context, String username) {
     if (Utils.isEmpty(username)) {
-      return 'PleaseInputUserName'.tr;
-    } else if (username.length < 4) {
-      return 'UsernameNotValid'.tr;
+      return 'Vui lòng nhập số điện thoại';
+    } else if (username.length < 10) {
+      return 'Số điện thoại không đúng định dạn';
+    } else if (!Utils.isEmpty(username) && username.substring(0,1) != '0') {
+      return 'Số điện thoại không đúng định dạn';
     } else {
       return null;
     }
   }
 
-  String checkPass(BuildContext context, String password) {
+  String? checkPass(BuildContext context, String password) {
     if (Utils.isEmpty(password)) {
-      return 'PleaseInputPassword'.tr;
+      return 'Vui lòng nhập mật khẩu';
     } else if (password.length < 6) {
-      return 'PasswordLeastCharacter'.tr;
+      return 'Mật khẩu phải nhiều hơn 6 ký tự';
     } else {
       return null;
     }
   }
 
-  String checkPassAgain(BuildContext context, String currentPassword, String newPassword) {
+  String? checkPassAgain(BuildContext context, String currentPassword, String newPassword) {
     if (Utils.isEmpty(newPassword)) {
-      return 'PleaseInputPassword'.tr;
+      return 'Vui lòng nhập mật khẩu';
     } else if (newPassword.length < 6) {
-      return 'PasswordLeastCharacter'.tr;
+      return 'Mật khẩu không đúng định dạng';
     }else if (currentPassword != newPassword){
-      return 'Các mật khẩu đã nhập không khớp. Hãy thử lại.'.tr;
+      return 'Các mật khẩu đã nhập không khớp. Hãy thử lại.';
     }
     else {
       return null;
     }
   }
 
-  String checkPhoneNumber2(BuildContext context, String phoneNumber) {
+  String? checkPhoneNumber2(BuildContext context, String phoneNumber) {
     if (Utils.isEmpty(phoneNumber)) return null;
     if (!_phoneRegex.hasMatch(phoneNumber)) {
-      return 'PhoneNotValid'.tr;
-    } else {
-      return null;
-    }
-  }
-
-  String checkEmail(BuildContext context, String email) {
-    if (Utils.isEmpty(email)) {
-      return 'PlsInputEmail'.tr;
-    } else if (!_emailRegex.hasMatch(email)) {
-      return 'EmailNotValid'.tr;
+      return 'Số điện thoại không đúng định dạng';
     } else {
       return null;
     }

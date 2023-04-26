@@ -1,15 +1,14 @@
 import 'package:flutter/material.dart';
-import 'package:get/get.dart' as libGetX;
-import 'package:open_appstore/open_appstore.dart';
+import 'package:open_store/open_store.dart';
 import 'dart:io' show Platform;
 import 'package:url_launcher/url_launcher.dart';
 
 class ConfirmSuccessPage extends StatefulWidget {
-  final String title;
-  final String content;
-  final int type;
+  final String? title;
+  final String? content;
+  final int? type;
 
-  const ConfirmSuccessPage({Key key, this.title, this.content, this.type}) : super(key: key);
+  const ConfirmSuccessPage({ Key? key, this.title, this.content, this.type}) : super(key: key);
   @override
   _ConfirmSuccessPageState createState() => _ConfirmSuccessPageState();
 }
@@ -53,11 +52,11 @@ class _ConfirmSuccessPageState extends State<ConfirmSuccessPage> {
                           ),
                         ),
                         SizedBox(height: 30,),
-                        Text(widget.title,style:  TextStyle(fontWeight: FontWeight.bold,fontSize: 20),),
+                        Text(widget.title.toString(),style:  TextStyle(fontWeight: FontWeight.bold,fontSize: 20),),
                         SizedBox(height: 12,),
                         Padding(
                           padding: const EdgeInsets.only(left: 10,right: 10),
-                          child: Text(widget.content,style:  TextStyle(color: Colors.grey,fontSize: 11),textAlign: TextAlign.center,),
+                          child: Text(widget.content.toString(),style:  TextStyle(color: Colors.grey,fontSize: 11),textAlign: TextAlign.center,),
                         ),
                         SizedBox(height: 35,),
                        _submitButton(context),
@@ -76,7 +75,12 @@ class _ConfirmSuccessPageState extends State<ConfirmSuccessPage> {
          launch('https://play.google.com/store/apps/details?id=takecare.hn.trungchuyen');
         } else{
           print('ios');
-          OpenAppstore.launch(androidAppId: "takecare.hn.trungchuyen", iOSAppId: "1573580926");
+          OpenStore.instance.open(
+            appStoreId: '1573580926', // AppStore id of your app for iOS
+            appStoreIdMacOS: '1573580926', // AppStore id of your app for MacOS (appStoreId used as default)
+            androidAppBundleId: 'takecare.hn.trungchuyen', // Android app bundle package name
+            //windowsProductId: '9NZTWSQNTD0S' // Microsoft store id for Widnows apps
+          );
         }
         Navigator.pop(context);
       },

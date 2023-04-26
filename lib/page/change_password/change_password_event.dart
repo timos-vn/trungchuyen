@@ -14,6 +14,13 @@ class ChangePassword extends ChangePasswordEvent{
     return 'ChangePassword{passOld: $passOld, passNew: $passNew}';
   }
 }
+
+class GetPrefs extends ChangePasswordEvent {
+
+  @override
+  String toString() => 'GetPrefs';
+}
+
 class ValidateAgainPasswordNewEvent extends ChangePasswordEvent {
   final String currentPassword;
   final String newPassword;

@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
 import 'package:trungchuyen/utils/utils.dart';
 
 class ReasonCancelPage extends StatefulWidget {
@@ -77,7 +76,7 @@ class _ReasonCancelPageState extends State<ReasonCancelPage> {
                                               groupValue: groupValue,
                                               onChanged: (val) {
                                                 setState(() {
-                                                  groupValue = val;
+                                                  groupValue = int.parse(val.toString());
                                                   print(val);
                                                 });
                                               },
@@ -115,7 +114,7 @@ class _ReasonCancelPageState extends State<ReasonCancelPage> {
                                               groupValue: groupValue,
                                               onChanged: (val) {
                                                 setState(() {
-                                                  groupValue = val;
+                                                  groupValue = int.parse(val.toString());
                                                   print(val);
                                                 });
                                               },
@@ -153,7 +152,7 @@ class _ReasonCancelPageState extends State<ReasonCancelPage> {
                                             groupValue: groupValue,
                                             onChanged: (val) {
                                               setState(() {
-                                                groupValue = val;
+                                                groupValue = int.parse(val.toString());
                                                 print(val);
                                               });
                                             },

@@ -1,23 +1,22 @@
+import 'package:date_time_picker/date_time_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
 import 'package:jiffy/jiffy.dart';
-import 'package:liquid_pull_to_refresh/liquid_pull_to_refresh.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
-import 'package:trungchuyen/extension/popup_picker.dart';
 import 'package:trungchuyen/models/network/response/list_of_group_limo_customer_response.dart';
 import 'package:trungchuyen/page/detail_trips_limo/detail_trips_limo_page.dart';
-import 'package:trungchuyen/themes/colors.dart';
 import 'package:trungchuyen/themes/images.dart';
 import 'package:trungchuyen/utils/utils.dart';
 
+import '../../utils/const.dart';
 import 'list_history_limo_bloc.dart';
 import 'list_history_limo_event.dart';
 import 'list_history_limo_state.dart';
 
 class ListHistoryLimoPage extends StatefulWidget {
 
-  ListHistoryLimoPage({Key key}) : super(key: key);
+  ListHistoryLimoPage({Key? key}) : super(key: key);
 
   @override
   ListHistoryLimoPageState createState() => ListHistoryLimoPageState();
@@ -26,17 +25,18 @@ class ListHistoryLimoPage extends StatefulWidget {
 
 class ListHistoryLimoPageState extends State<ListHistoryLimoPage> {
 
-  ListHistoryLimoBloc _bloc;
+  late ListHistoryLimoBloc _bloc;
   DateTime dateTime = DateFormat("yyyy-MM-dd").parse(DateTime.now().toString());
   DateFormat format = DateFormat("dd/MM/yyyy");
+
   @override
   void initState() {
     // TODO: implement initState
     super.initState();
     dateTime = DateTime.now();
     _bloc = ListHistoryLimoBloc(context);
-    DateTime parseDate = new DateFormat("yyyy-MM-dd").parse(DateTime.now().toString());
-    _bloc.add(GetListHistoryLimo(parseDate.toString()));
+    _bloc.add(GetPrefs());
+
   }
 
   @override
@@ -58,30 +58,64 @@ class ListHistoryLimoPageState extends State<ListHistoryLimoPage> {
         ),
         backgroundColor: Colors.white,
         actions: [
-          InkWell(
-            onTap: ()async {
-              final DateTime result = await showDialog<dynamic>(
-                  context: context,
-                  builder: (BuildContext context) {
-                    return DateRangePicker(
-                      dateTime ?? DateTime.now(),
-                      null,
-                      minDate: DateTime.now().add(Duration(days: -365)),
-                      maxDate: DateTime.now().add(const Duration(days: 10000)),
-                      displayDate: dateTime ?? DateTime.now(),
-                    );
-                  });
-              if (result != null) {
-                print(result);
-                dateTime = DateFormat("yyyy-MM-dd").parse(result.toString());
+          SizedBox(
+            // height: 40,
+            width: 50,
+            child: DateTimePicker(
+              type: DateTimePickerType.date,
+              // dateMask: 'd MMM, yyyy',
+              initialValue: DateTime.now().toString(),
+              firstDate: DateTime(2000),
+              lastDate: DateTime(2100),
+              decoration:const InputDecoration(
+                suffixIcon: Icon(Icons.event,color: Colors.orange,size: 22,),
+                contentPadding: EdgeInsets.only(left: 12),
+                border: InputBorder.none,
+              ),
+              style:const TextStyle(fontSize: 13),
+              locale: const Locale("vi", "VN"),
+              // icon: Icon(Icons.event),
+              selectableDayPredicate: (date) {
+                return true;
+              },
+              onChanged: (result){
+                DateTime? dateOrder = result as DateTime?;
+                dateTime = Utils.parseStringToDate(dateOrder.toString(), Const.DATE_SV_FORMAT_2);
                 _bloc.add(GetListHistoryLimo(dateTime.toString()));
-              }
-            },
-            child: Icon(
-              Icons.event,
-              color: Colors.black,
+              },
+              validator: (result) {
+
+                return null;
+              },
+              onSaved: (val){
+                print('asd$val');
+              },
             ),
           ),
+          // InkWell(
+          //   onTap: ()async {
+          //     final DateTime result = await showDialog<dynamic>(
+          //         context: context,
+          //         builder: (BuildContext context) {
+          //           return DateRangePicker(
+          //             dateTime ?? DateTime.now(),
+          //             null,
+          //             minDate: DateTime.now().add(Duration(days: -365)),
+          //             maxDate: DateTime.now().add(const Duration(days: 10000)),
+          //             displayDate: dateTime ?? DateTime.now(),
+          //           );
+          //         });
+          //     if (result != null) {
+          //       print(result);
+          //       dateTime = DateFormat("yyyy-MM-dd").parse(result.toString());
+          //
+          //     }
+          //   },
+          //   child: Icon(
+          //     Icons.event,
+          //     color: Colors.black,
+          //   ),
+          // ),
           SizedBox(width: 20,),
           InkWell(
               onTap: (){
@@ -100,6 +134,9 @@ class ListHistoryLimoPageState extends State<ListHistoryLimoPage> {
         // 1. Khách trung chuyển
         // 0: Không cần TC
         listener:  (context, state){
+          if(state is GetPrefsSuccess){
+            _bloc.add(GetListHistoryLimo(DateFormat("yyyy-MM-dd").parse(DateTime.now().toString()).toString()));
+          }
         },
         child: BlocBuilder<ListHistoryLimoBloc,ListHistoryLimoState>(
           bloc: _bloc,
@@ -114,7 +151,7 @@ class ListHistoryLimoPageState extends State<ListHistoryLimoPage> {
   Stack buildPage(BuildContext context,ListHistoryLimoState state){
     return Stack(
       children: [
-        _bloc.listCustomerLimo == null ? Container() : Column(
+        _bloc.listCustomerLimo.isEmpty ? Container() : Column(
           children: <Widget>[
             Padding(
               padding: const EdgeInsets.all(10),
@@ -135,7 +172,7 @@ class ListHistoryLimoPageState extends State<ListHistoryLimoPage> {
                       ),
                       Container(
                         height: 35,
-                        child: Center(child: Text(_bloc.listCustomerLimo.length?.toString()??'0')),
+                        child: Center(child: Text(_bloc.listCustomerLimo.length.toString())),
                       ),
                     ],
                   ),TableRow(
@@ -147,7 +184,7 @@ class ListHistoryLimoPageState extends State<ListHistoryLimoPage> {
                       ),
                       Container(
                         height: 35,
-                        child: Center(child: Text('${_bloc.tongSoKhach?.toString()??'0'}' + " Khách")),
+                        child: Center(child: Text('${_bloc.tongSoKhach.toString()}' + " Khách")),
                       ),
                     ],
                   ),
@@ -159,7 +196,7 @@ class ListHistoryLimoPageState extends State<ListHistoryLimoPage> {
                       ),
                       Container(
                         height: 35,
-                        child: Center(child: Text(Jiffy(dateTime, "yyyy-MM-dd").format("dd-MM-yyyy")?.toString()??'')),
+                        child: Center(child: Text(Jiffy(dateTime, "yyyy-MM-dd").format("dd-MM-yyyy").toString())),
                       ),
                     ],
                   ),
@@ -205,7 +242,7 @@ class ListHistoryLimoPageState extends State<ListHistoryLimoPage> {
   Widget buildListItem(ListOfGroupLimoCustomerResponseBody item,int index) {
     return GestureDetector(
         onTap: () {
-          Navigator.push(context, MaterialPageRoute(builder: (context)=>DetailTripsLimoPage(typeHistory: 2,dateTime: format.parse(item.ngayChay).toString(),idTrips: item.idTuyenDuong,idTime: item.idKhungGio,tenTuyenDuong: item.tenTuyenDuong,thoiGianDi:(item.ngayChay +' - ' + item.thoiGianDi))));
+          Navigator.push(context, MaterialPageRoute(builder: (context)=>DetailTripsLimoPage(typeHistory: 2,dateTime: format.parse(item.ngayChay.toString()).toString(),idTrips: item.idTuyenDuong,idTime: item.idKhungGio,tenTuyenDuong: item.tenTuyenDuong,thoiGianDi:(item.ngayChay.toString() +' - ' + item.thoiGianDi.toString()))));
         },
         child: Padding(
           padding: const EdgeInsets.only(left: 10, right: 16, top: 8, bottom: 8),
@@ -263,7 +300,7 @@ class ListHistoryLimoPageState extends State<ListHistoryLimoPage> {
                     children: <Widget>[
                       Text(
                         'Thông tin chuyến',
-                        style: Theme.of(this.context).textTheme.caption.copyWith(
+                        style: TextStyle(
                           color: Theme.of(this.context).disabledColor,
                           fontWeight: FontWeight.normal,
                         ),
@@ -275,9 +312,9 @@ class ListHistoryLimoPageState extends State<ListHistoryLimoPage> {
                         '${item.thoiGianDi??''}' + " / " + '${item.ngayChay??''}',
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
-                        style: Theme.of(this.context).textTheme.subtitle.copyWith(
+                        style: TextStyle(
                           fontWeight: FontWeight.normal,
-                          color: Theme.of(this.context).textTheme.title.color,
+                          color: Colors.black,
                         ),
                       ),
                     ],
@@ -300,7 +337,7 @@ class ListHistoryLimoPageState extends State<ListHistoryLimoPage> {
                           children: <Widget>[
                             Text(
                               'Số khách',
-                              style: Theme.of(this.context).textTheme.caption.copyWith(
+                              style: TextStyle(
                                 color: Theme.of(this.context).disabledColor,
                                 fontWeight: FontWeight.normal,
                               ),
@@ -314,7 +351,7 @@ class ListHistoryLimoPageState extends State<ListHistoryLimoPage> {
                                   '${item.khachCanXuLy??''} khách / ',
                                   maxLines: 1,
                                   overflow: TextOverflow.ellipsis,
-                                  style: Theme.of(this.context).textTheme.subtitle.copyWith(
+                                  style: TextStyle(
                                     fontWeight: FontWeight.normal,
                                     color: Colors.blue,
                                   ),
@@ -323,7 +360,7 @@ class ListHistoryLimoPageState extends State<ListHistoryLimoPage> {
                                   'Xe ${item.tongSoGhe?.toString() ?? ''} chỗ',
                                   maxLines: 1,
                                   overflow: TextOverflow.ellipsis,
-                                  style: Theme.of(this.context).textTheme.subtitle.copyWith(
+                                  style: TextStyle(
                                     fontWeight: FontWeight.normal,
                                     color: Colors.black.withOpacity(0.8),
                                   ),

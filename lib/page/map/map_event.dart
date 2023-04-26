@@ -1,6 +1,5 @@
 import 'package:equatable/equatable.dart';
 import 'package:trungchuyen/models/entity/customer.dart';
-import 'package:trungchuyen/models/network/response/detail_trips_limo_reponse.dart';
 import 'package:trungchuyen/models/network/response/detail_trips_repose.dart';
 
 abstract class MapEvent extends Equatable {
@@ -108,10 +107,16 @@ class UpdateCustomerList extends MapEvent{
   }
 }
 
+class GetPrefs extends MapEvent {
+
+  @override
+  String toString() => 'GetPrefs';
+}
+
 class UpdateStatusCustomerMapEvent extends MapEvent{
-  final int status;
-  final List<String> idTrungChuyen;
-  final String note;
+  final int? status;
+  final List<String>? idTrungChuyen;
+  final String? note;
   UpdateStatusCustomerMapEvent({this.status,this.idTrungChuyen,this.note});
 
   @override

@@ -19,7 +19,11 @@ class DateFrom extends OptionsInputEvent {
     return 'DateFrom{}';
   }
 }
+class GetPrefs extends OptionsInputEvent {
 
+  @override
+  String toString() => 'GetPrefs';
+}
 class DateTo extends OptionsInputEvent {
   final DateTime date;
 

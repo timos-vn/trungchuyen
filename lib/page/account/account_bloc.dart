@@ -12,62 +12,67 @@ import 'account_state.dart';
 class AccountBloc extends Bloc<AccountEvent,AccountState> {
 
   BuildContext context;
-  NetWorkFactory _networkFactory;
-  SharedPreferences _prefs;
-  SharedPreferences get prefs => _prefs;
-  String _accessToken;
-  String get accessToken => _accessToken;
-  String _refreshToken;
-  String get refreshToken => _refreshToken;
-  String role;
-  String userName;
-  String phone;
+  NetWorkFactory? _networkFactory;
+  SharedPreferences? _prefs;
+  SharedPreferences? get prefs => _prefs;
+  String? _accessToken;
+  String? get accessToken => _accessToken;
+  String? _refreshToken;
+  String? get refreshToken => _refreshToken;
+  String? role;
+  String? userName;
+  String? phone;
 
-  AccountBloc(this.context){
+
+
+  AccountBloc(this.context) : super(AccountInitial()){
     _networkFactory = NetWorkFactory(context);
+
+    on<GetPrefs>(_getPrefs,);
+    on<GetInfoAccount>(_getInfoAccount);
+    on<LogOut>(_logOut);
+    on<UpdateInfo>(_updateInfo);
   }
 
-  @override
-  Stream<AccountState> mapEventToState(AccountEvent event) async*{
-    // TODO: implement mapEventToState
-    if (_prefs == null) {
-      _prefs = await SharedPreferences.getInstance();
-      _accessToken = _prefs.getString(Const.ACCESS_TOKEN) ?? "";
-      _refreshToken = _prefs.getString(Const.REFRESH_TOKEN) ?? "";
-      role = _prefs.getString(Const.CHUC_VU) ?? "";
-      userName = _prefs.getString(Const.FULL_NAME) ?? "";
-      phone = _prefs.getString(Const.PHONE_NUMBER) ?? "";
-    }
-    if(event is GetInfoAccount){
-      yield AccountLoading();
-      yield GetInfoAccountSuccess();
-    }
-    else if(event is LogOut){
-      yield AccountLoading();
-      AccountState state = _handleLogOut(await _networkFactory.logOut(_accessToken));
-      yield state;
-    }else if(event is UpdateInfo){
-      yield AccountLoading();
-      UpdateInfoRequestBody request = UpdateInfoRequestBody(
+  void _getPrefs(GetPrefs event, Emitter<AccountState> emitter)async{
+    emitter(AccountLoading());
+    _prefs = await SharedPreferences.getInstance();
+    _accessToken = _prefs!.getString(Const.ACCESS_TOKEN) ?? "";
+    _refreshToken = _prefs!.getString(Const.REFRESH_TOKEN) ?? "";
+    role = _prefs!.getString(Const.CHUC_VU) ?? "";
+    userName = _prefs!.getString(Const.FULL_NAME) ?? "";
+    phone = _prefs!.getString(Const.PHONE_NUMBER) ?? "";
+    emitter(GetPrefsSuccess());
+  }
+
+  void _getInfoAccount(GetInfoAccount event, Emitter<AccountState> emitter)async{
+    emitter(AccountLoading());
+    emitter(GetInfoAccountSuccess());
+  }
+
+  void _logOut(LogOut event, Emitter<AccountState> emitter)async{
+    emitter(AccountLoading());
+    AccountState state = _handleLogOut(await _networkFactory!.logOut(_accessToken!));
+    emitter(state);
+  }
+
+  void _updateInfo(UpdateInfo event, Emitter<AccountState> emitter)async{
+    emitter(AccountLoading());
+    UpdateInfoRequestBody request = UpdateInfoRequestBody(
         phone: event.phone,
         email: event.email,
         fullName: event.fullName,
         companyId: event.companyId,
         role: event.role
-      );
-      AccountState state = _handleUpdateInfo(await _networkFactory.updateInfo(_accessToken,request));
-      yield state;
-    }
+    );
+    AccountState state = _handleUpdateInfo(await _networkFactory!.updateInfo(_accessToken!,request));
+    emitter(state);
   }
-
-  @override
-  // TODO: implement initialState
-  AccountState get initialState => AccountInitial();
 
   AccountState _handleLogOut(Object data) {
     if (data is String) return AccountFailure(data);
     try {
-      Utils.removeData(_prefs);
+      Utils.removeData(_prefs!);
       return LogOutSuccess();
     } catch (e) {
       print(e.toString());

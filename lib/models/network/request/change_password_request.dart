@@ -1,7 +1,7 @@
 class ChangePasswordRequest {
 
-  String matKhauHienTai;
-  String matKhau;
+  String? matKhauHienTai;
+  String? matKhau;
 
 
   ChangePasswordRequest({this.matKhauHienTai,this.matKhau});

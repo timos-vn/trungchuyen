@@ -1,14 +1,9 @@
-import 'dart:convert';
 import 'dart:io';
 import 'dart:io' show Platform;
-import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
-import 'package:flutter_local_notifications/flutter_local_notifications.dart';
-import 'package:flutter_ringtone_player/flutter_ringtone_player.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:get/get.dart' as libGetX;
 import 'package:bloc/bloc.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:get/get.dart';
@@ -17,10 +12,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:trungchuyen/models/database/dbhelper.dart';
 import 'package:trungchuyen/models/entity/customer.dart';
 import 'package:trungchuyen/models/entity/notification_of_limo.dart';
-import 'package:trungchuyen/models/entity/notification_trung_chuyen.dart';
 import 'package:trungchuyen/models/network/request/tranfer_customer_request.dart';
 import 'package:trungchuyen/models/network/request/update_status_customer_request.dart';
-import 'package:trungchuyen/models/network/request/update_token_request.dart';
 import 'package:trungchuyen/models/network/response/detail_trips_limo_reponse.dart';
 import 'package:trungchuyen/models/network/response/detail_trips_repose.dart';
 import 'package:trungchuyen/models/network/response/list_customer_confirm_response.dart';
@@ -28,61 +21,49 @@ import 'package:trungchuyen/models/network/response/list_of_group_awaiting_custo
 import 'package:trungchuyen/models/network/response/list_of_group_limo_customer_response.dart';
 import 'package:trungchuyen/models/network/response/unread_count_response.dart';
 import 'package:trungchuyen/models/network/service/network_factory.dart';
-import 'package:trungchuyen/page/map_limo/map_limo_bloc.dart';
 import 'package:trungchuyen/page/waiting/waiting_bloc.dart';
-import 'package:trungchuyen/page/waiting/waiting_event.dart';
 import 'package:trungchuyen/service/soket_io_service.dart';
 import 'package:trungchuyen/themes/colors.dart';
 import 'package:trungchuyen/utils/const.dart';
-import 'package:trungchuyen/utils/log.dart';
 import 'package:trungchuyen/utils/utils.dart';
-import '../../test.dart';
 import '../notification_api.dart';
 import 'main_event.dart';
 import 'main_state.dart';
 
 
-Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
-  print("Background Notification");
-  NotificationApi.showNotification(
-      title:message.notification.title,
-      body: message.notification.body,
-      payload:'Background Notification'
-  );
-}
-BuildContext contexts;
+
 class MainBloc extends Bloc<MainEvent, MainState> {
-  int userId;
-  NetWorkFactory _networkFactory;
+  int userId = 0;
+  NetWorkFactory? _networkFactory;
   BuildContext context;
-  MapLimoBloc _mapLimoBloc;
+  // MapLimoBloc _mapLimoBloc;
 
-  SharedPreferences _pref;
+  SharedPreferences? _pref;
   int _prePosition = 0;
-  SharedPreferences get pref => _pref;
-  SocketIOService socketIOService;
-  String get token => _pref?.getString(Const.ACCESS_TOKEN) ?? "";
+  SharedPreferences? get pref => _pref;
+  late SocketIOService socketIOService;
+  String? get token => _pref?.getString(Const.ACCESS_TOKEN) ?? "";
 
-  List<ListOfGroupAwaitingCustomerBody> listOfGroupAwaitingCustomer = new List<ListOfGroupAwaitingCustomerBody>();
-  List<ListOfGroupLimoCustomerResponseBody> listCustomerLimo = new List<ListOfGroupLimoCustomerResponseBody>();
-  List<DetailTripsResponseBody> listOfDetailTrips = new List<DetailTripsResponseBody>();
-  List<DetailTripsResponseBody> listOfDetailTripsTC = new List<DetailTripsResponseBody>();
-  List<DetailTripsResponseBody> listCustomerToPickUpSuccess = new List<DetailTripsResponseBody>();
-  List<CustomerLimoConfirmBody> listCustomerConfirmLimo = new List<CustomerLimoConfirmBody>();
-  List<CustomerLimoConfirmBody> listCustomerConfirm = new List<CustomerLimoConfirmBody>();
-  List<DsKhachs> listOfDetailTripLimo = new List<DsKhachs>();
+  List<ListOfGroupAwaitingCustomerBody> listOfGroupAwaitingCustomer = [];
+  List<ListOfGroupLimoCustomerResponseBody> listCustomerLimo = [];
+  List<DetailTripsResponseBody> listOfDetailTrips = [];
+  List<DetailTripsResponseBody> listOfDetailTripsTC = [];
+  List<DetailTripsResponseBody> listCustomerToPickUpSuccess = [];
+  List<CustomerLimoConfirmBody> listCustomerConfirmLimo = [];
+  List<CustomerLimoConfirmBody> listCustomerConfirm = [];
+  List<DsKhachs> listOfDetailTripLimo = [];
 
-  List<Customer> listTaiXeLimo = new List<Customer>();
-  List<DsKhachs> listTaiXeTC = new List<DsKhachs>();
+  List<Customer> listTaiXeLimo = [];
+  List<DsKhachs> listTaiXeTC = [];
 
-  WaitingBloc _waitingBloc;
-  String trips;
-  String timeStart;
-  bool blocked;
-  int idKhungGio;
-  int idVanPhong;
-  String ngayTC;
-  int loaiKhach;
+  late WaitingBloc _waitingBloc;
+  String trips = '';
+  String timeStart = '';
+  bool blocked = false;
+  int idKhungGio = 0;
+  int idVanPhong = 0;
+  String ngayTC = '';
+  int loaiKhach = 0;
   bool isOnline = false;
   bool isInProcessPickup = false;
   int currentNumberCustomerOfList=0;
@@ -91,56 +72,52 @@ class MainBloc extends Bloc<MainEvent, MainState> {
   int soKhachHuy = 0;
   bool viewDetailTC = false;
 
-  FlutterLocalNotificationsPlugin _flutterLocalNotificationsPlugin;
-  FirebaseMessaging firebaseMessaging;
+  // FlutterLocalNotificationsPlugin _flutterLocalNotificationsPlugin;
+  // FirebaseMessaging firebaseMessaging;
+  static final _messaging = FirebaseMessaging.instance;
   int countNotifyUnRead=0;
-  String _deviceToken;
-  String _accessToken;
-  String get accessToken => _accessToken;
-  String _refreshToken;
-  String get refreshToken => _refreshToken;
+  String _deviceToken = '';
+  String? _accessToken;
+  String? get accessToken => _accessToken;
+  String? _refreshToken;
+  String? get refreshToken => _refreshToken;
   bool isLock = false;
-  int role;
-  String username;
-  List<String> listDriver = List<String>();
-  String idUser;
-  int tongKhachXacNhan;
-  int tongChuyenXacNhan;
-  List<Map<String, dynamic>> listLocation = new List<Map<String, dynamic>>();
+  int role = 0;
+  String username = '';
+  List<String> listDriver = [];
+  String idUser = '';
+  int tongKhachXacNhan  = 0;
+  int tongChuyenXacNhan = 0;
+  List<Map<String, dynamic>> listLocation = [];
   DatabaseHelper db = DatabaseHelper();
-  List<DetailTripsResponseBody> listCustomer = new List<DetailTripsResponseBody>();
-  List<DetailTripsResponseBody> listDriverLimo = new List<DetailTripsResponseBody>();
-  List<Customer> listInfo = new List<Customer>();
+  List<DetailTripsResponseBody> listCustomer = [];
+  List<DetailTripsResponseBody> listDriverLimo = [];
+  List<Customer> listInfo = [];
   DateFormat format = DateFormat("dd/MM/yyyy");
   DateTime parseDate = new DateFormat("yyyy-MM-dd").parse(DateTime.now().toString());
-  List<NotificationOfLimo> listNotificationOfLimo = new List<NotificationOfLimo>();
-  static final _messaging = FirebaseMessaging.instance;
+  List<NotificationOfLimo> listNotificationOfLimo = [];
 
-  String dateTimeDetailLimoTrips;int idLimoTrips;int idLimoTime;
-  List<DsKhachs> listOfDetailLimoTrips = new List<DsKhachs>();
-  int totalCustomerCancel;
-  int totalCustomer;
+  String? dateTimeDetailLimoTrips;
+  int idLimoTrips = 0;
+  int idLimoTime = 0;
+  List<DsKhachs> listOfDetailLimoTrips = [];
+  int totalCustomerCancel = 0;
+  int totalCustomer = 0;
 
-  MainBloc()   {
-    socketIOService = Get.find<SocketIOService>();
-    registerUpPushNotification();
-    _listenToPushNotifications();
-
-  }
 
   init(BuildContext context) async{
     _waitingBloc = WaitingBloc(context);
-    _mapLimoBloc = MapLimoBloc(context);
+    // _mapLimoBloc = MapLimoBloc(context);
     if (this.context == null) {
       this.context = context;
-      _networkFactory = NetWorkFactory(context);
     }
   }
 
+  Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
+    Utils.showForegroundNotification(context, message.notification!.title.toString(), message.notification!.body.toString(), onTapNotification: () {
+    },);
+  }
 
-
-  @override
-  MainState get initialState => InitialMainState();
 
   registerUpPushNotification() {
     //REGISTER REQUIRED FOR IOS
@@ -158,12 +135,11 @@ class MainBloc extends Bloc<MainEvent, MainState> {
 
   _listenToPushNotifications() {
     FirebaseMessaging.instance.setForegroundNotificationPresentationOptions(badge: true, alert: true, sound: true);
-    contexts = context;
     FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
 
     FirebaseMessaging.onMessage.listen((RemoteMessage message) {
       if (savedMessageId != message.messageId)
-        savedMessageId  = message.messageId;
+        savedMessageId  = message.messageId.toString();
       else
         return;
       print("onMessage$savedMessageId");
@@ -172,7 +148,7 @@ class MainBloc extends Bloc<MainEvent, MainState> {
 
     FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {
       if (savedMessageId != message.messageId)
-        savedMessageId  = message.messageId;
+        savedMessageId  = message.messageId.toString();
       else
         return;
       subscribeToTopic(message);
@@ -184,8 +160,8 @@ class MainBloc extends Bloc<MainEvent, MainState> {
     if(message.data['EVENT'] == 'LIMO_THONGBAO_TAIXE' || message.data['EVENT'] == 'THONGBAO_DANHSACHVE_THAYDOI_CHO_TAIXE_LIMO' ){
       if(role == 7){
         print('role: $role - $parseDate');
-        String title = message.notification.title;
-        String body = message.notification.body;
+        String title = message.notification!.title.toString();
+        String body = message.notification!.body!;
         add(GetListTripsLimo(parseDate));
         if(dateTimeDetailLimoTrips != null && idLimoTrips > 0 && idLimoTime > 0){
           print('TXLIMO Chức vụ = 7');
@@ -206,13 +182,11 @@ class MainBloc extends Bloc<MainEvent, MainState> {
       ///Unable to log event: analytics library is missing => đã fix
       if(role == 3){
         NotificationApi.showNotification(
-            title:message.notification.title,
-            body: message.notification.body,
+            title:message.notification!.title.toString(),
+            body: message.notification!.body!,
             payload:'LIMO_THONGBAO_TAIXETC'
         );
-        if(listOfGroupAwaitingCustomer != null){
-          listOfGroupAwaitingCustomer.clear();
-        }
+        listOfGroupAwaitingCustomer.clear();
         if(viewDetailTC == false){
          add(GetListGroupCustomer(parseDate));
         }else{
@@ -225,8 +199,8 @@ class MainBloc extends Bloc<MainEvent, MainState> {
       /// Điều hành Trung chuyển : Chuyển tài xế
      if(role == 3){
        NotificationApi.showNotification(
-           title:message.notification.title,
-           body: message.notification.body,
+           title:message.notification!.title.toString(),
+           body: message.notification!.body!,
            payload:'TRUNGCHUYEN_THONGBAO_TAIXE_TDK'
        );
        isLock = false;
@@ -265,7 +239,7 @@ class MainBloc extends Bloc<MainEvent, MainState> {
          }
        });
        NotificationApi.showNotification(
-           title:message.notification.title,
+           title:message.notification!.title.toString(),
            body: 'Bạn nhận được $soKhach khách từ $_nameTXTC',
            payload:'TAIXE_TRUNGCHUYEN_GIAOKHACH_LIMO'
        );
@@ -274,16 +248,16 @@ class MainBloc extends Bloc<MainEvent, MainState> {
     }
     else if(message.data['EVENT'] == 'TAIXE_LIMO_XACNHAN'){
       NotificationApi.showNotification(
-          title:message.notification.title,
-          body: message.notification.body,
+          title:message.notification!.title.toString(),
+          body: message.notification!.body!,
           payload:'TAIXE_LIMO_XACNHAN'
       );
       add(GetListCustomerConfirm());
     }
     else{
       NotificationApi.showNotification(
-          title:message.notification.title,
-          body: message.notification.body,
+          title:message.notification!.title.toString(),
+          body: message.notification!.body!,
           payload:"None"
       );
     }
@@ -296,250 +270,285 @@ class MainBloc extends Bloc<MainEvent, MainState> {
     }
   }
 
-  @override
-  Stream<MainState> mapEventToState(MainEvent event) async* {
-    if (_pref == null) {
-      _pref = await SharedPreferences.getInstance();
-      _accessToken = _pref.getString(Const.ACCESS_TOKEN) ?? "";
-      _refreshToken = _pref.getString(Const.REFRESH_TOKEN) ?? "";
-      username = _pref.getString(Const.PHONE_NUMBER) ?? "";
-      role = int.parse(_pref.getString(Const.CHUC_VU) ?? 0);
-      idUser = _pref.getString(Const.USER_ID) ??'';
+  MainBloc(this.context) : super(InitialMainState()){
+    _networkFactory = NetWorkFactory(context);
+    socketIOService = Get.find<SocketIOService>();
+    registerUpPushNotification();
+    _listenToPushNotifications();
+    on<GetPrefsMain>(_getPrefs);
+    on<GetListDetailTripsLimoMain>(_getListDetailTripsLimoMain);
+    on<GetListDetailTripsTC>(_getListDetailTripsTC);
+    on<AddNotificationOfLimo>(_addNotificationOfLimo);
+    on<GetListNotificationOfLimo>(_getListNotificationOfLimo);
+    on<AddOldCustomerItemList>(_addOldCustomerItemList);
+    on<DeleteCustomerFormDB>(_deleteCustomerFormDB);
+    on<GetListTaiXeLimo>(_getListTaiXeLimo);
+    on<UpdateTaiXeLimo>(_updateTaiXeLimo);
+    on<ConfirmWithTXTC>(_confirmWithTXTC);
+    on<GetListCustomerConfirm>(_getListCustomerConfirm);
+    on<GetListTripsLimo>(_getListTripsLimo);
+    on<GetLocationEvent>(_getLocationEvent);
+    on<UpdateStatusCustomerEvent>(_updateStatusCustomerEvent);
+    on<GetListGroupCustomer>(_getListGroupCustomer);
+    on<NavigateBottomNavigation>(_navigateBottomNavigation);
+    on<NavigateProfile>(_navigateProfile);
+    on<ChangeTitleAppbarEvent>(_changeTitleAppbarEvent);
+    on<NavigateToPay>(_navigateToPay);
+    on<NavigateToNotification>(_navigateToNotification);
+    on<GetCountNotificationUnRead>(_getCountNotificationUnRead);
+    on<LogoutMainEvent>(_logoutMainEvent);
 
-    }
-    if(event is GetListDetailTripsLimoMain){
-      yield MainLoading();
-      MainState state = _handleGetListOfDetailLimoTrips(await _networkFactory.getDetailTripsLimo(_accessToken,event.date,event.idTrips
-          .toString(),event.idTime.toString()));
-      yield state;
-    }
-    else if(event is GetListDetailTripsTC){
-      yield MainLoading();
-      MainState state = _handleGetListOfDetailTrips(
-          await _networkFactory.getDetailTrips(
-              event.date.toString(),_accessToken,event.date,event.idRoom.toString(),
-              event.idTime.toString(),event.typeCustomer.toString()
-          ),event.date,event.idRoom,event.idTime,event.typeCustomer
-      );
-      yield state;
-    }
-    else if(event is AddNotificationOfLimo) {
-      yield InitialMainState();
-      await db.addNotificationLimo(event.notificationOfLimo);
-      listNotificationOfLimo = await getListNotificationOfLimoFromDb();
-      yield GetListNotificationOfLimoSuccess();
-    }
+  }
 
-    else if(event is GetListNotificationOfLimo){
-      yield InitialMainState();
-      listNotificationOfLimo = await getListNotificationOfLimoFromDb();
-      if (!Utils.isEmpty(listNotificationOfLimo)) {
-        listNotificationOfLimo.forEach((element) {
-          Utils.showDialogReceiveCustomerFormTC(context: context, laiXeTC: element.nameTC,
-              sdtLaiXeTC:  element.phoneTC, soKhach:  element.numberCustomer,date: '').then((value){
-            if(value == true){
-              db.removeNotificationLimo(element.idTrungChuyen);
-              print('Xac Nhan');
-              add(UpdateStatusCustomerEvent(status: 10,idTrungChuyen: element.idTrungChuyen.split(',')));
-              add(ConfirmWithTXTC(
-                'Thông báo','Xác nhận thành công',element.idDriverTC.split(',')
-              ));
-            }else{
-              print('Update Huy');
-            }
-          });
-        });
-        yield GetListNotificationOfLimoSuccess();
-        return;
-      }
-      yield GetListNotificationOfLimoSuccess();
-    }
+  void _getPrefs(GetPrefsMain event, Emitter<MainState> emitter)async{
+    emitter(MainLoading());
+    _pref = await SharedPreferences.getInstance();
+    _accessToken = _pref!.getString(Const.ACCESS_TOKEN) ?? "";
+    _refreshToken = _pref!.getString(Const.REFRESH_TOKEN) ?? "";
+    username = _pref!.getString(Const.PHONE_NUMBER) ?? "";
+    role = int.parse(_pref!.getString(Const.CHUC_VU) ?? '0');
+    idUser = _pref!.getString(Const.USER_ID) ??'';
+    emitter(GetPrefsSuccess());
+  }
 
-    else if (event is AddOldCustomerItemList) {
-      yield InitialMainState();
-      Customer customer = new Customer(
-        idTrungChuyen: event.customer.idTrungChuyen,
-        idTaiXeLimousine : event.customer.idTaiXeLimousine,
-        hoTenTaiXeLimousine : event.customer.hoTenTaiXeLimousine,
-        dienThoaiTaiXeLimousine : event.customer.dienThoaiTaiXeLimousine,
-        tenXeLimousine : event.customer.tenXeLimousine,
-        bienSoXeLimousine : event.customer.bienSoXeLimousine,
-        tenKhachHang : event.customer.tenKhachHang,
-        soDienThoaiKhach :event.customer.soDienThoaiKhach,
-        diaChiKhachDi :event.customer.diaChiKhachDi,
-        toaDoDiaChiKhachDi:event.customer.toaDoDiaChiKhachDi,
-        diaChiKhachDen:event.customer.diaChiKhachDen,
-        toaDoDiaChiKhachDen:event.customer.toaDoDiaChiKhachDen,
-        diaChiLimoDi:event.customer.diaChiLimoDi,
-        toaDoLimoDi:event.customer.toaDoLimoDi,
-        diaChiLimoDen:event.customer.diaChiLimoDen,
-        toaDoLimoDen:event.customer.toaDoLimoDen,
-        loaiKhach:event.customer.loaiKhach,
-        trangThaiTC: event.customer.trangThaiTC,
-        soKhach:1,
-        chuyen: trips,
-        totalCustomer: event.customer.totalCustomer,
-        idKhungGio: idKhungGio,
-        idVanPhong: idVanPhong,
-        ngayTC: ngayTC,
-      );
-      await db.addNew(customer);
-      listInfo = await getListFromDb();
-      yield GetCustomerListSuccess();
-      add(GetCustomerItemList());
-    }
+  void _getListDetailTripsLimoMain(GetListDetailTripsLimoMain event, Emitter<MainState> emitter)async{
+    emitter(MainLoading());
+    MainState state = _handleGetListOfDetailLimoTrips(await _networkFactory!.getDetailTripsLimo(_accessToken!,event.date.toString(),event.idTrips
+        .toString(),event.idTime.toString()));
+    emitter(state);
+  }
 
-    else if (event is DeleteCustomerFormDB) {
-      yield InitialMainState();
-      await db.remove(event.idTC);
-      listInfo = await getListFromDb();
-      yield GetCustomerListSuccess();
-      add(GetCustomerItemList());
-    }
+  void _getListDetailTripsTC(GetListDetailTripsTC event, Emitter<MainState> emitter)async{
+    emitter(MainLoading());
+    MainState state = _handleGetListOfDetailTrips(
+        await _networkFactory!.getDetailTrips(
+            event.date.toString(),_accessToken!,event.date,event.idRoom.toString(),
+            event.idTime.toString(),event.typeCustomer.toString()
+        ),event.date,event.idRoom,event.idTime,event.typeCustomer
+    );
+    emitter(state);
+  }
 
-    else if(event is GetListTaiXeLimo){
-          yield MainLoading();
-          listTaiXeLimo = await getListTXLimoFromDb();
-          if (Utils.isEmpty(listTaiXeLimo)) {
-            yield GetListTaiXeLimoSuccess();
-            return;
+  void _addNotificationOfLimo(AddNotificationOfLimo event, Emitter<MainState> emitter)async{
+    emitter(MainLoading());
+    await db.addNotificationLimo(event.notificationOfLimo);
+    listNotificationOfLimo = await getListNotificationOfLimoFromDb();
+    emitter(GetListNotificationOfLimoSuccess());
+  }
+
+  void _getListNotificationOfLimo(GetListNotificationOfLimo event, Emitter<MainState> emitter)async{
+    emitter(MainLoading());
+    listNotificationOfLimo = await getListNotificationOfLimoFromDb();
+    if (!Utils.isEmpty(listNotificationOfLimo)) {
+      listNotificationOfLimo.forEach((element) {
+        Utils.showDialogReceiveCustomerFormTC(context: context, laiXeTC: element.nameTC.toString(),
+            sdtLaiXeTC:  element.phoneTC, soKhach:  element.numberCustomer,date: '').then((value){
+          if(value == true){
+            db.removeNotificationLimo(element.idTrungChuyen.toString());
+            print('Xac Nhan');
+            add(UpdateStatusCustomerEvent(status: 10,idTrungChuyen: element.idTrungChuyen?.split(',')));
+            add(ConfirmWithTXTC(
+                'Thông báo','Xác nhận thành công',element.idDriverTC!.split(',')
+            ));
+          }else{
+            print('Update Huy');
           }
-          yield GetListTaiXeLimoSuccess();
-        }
-
-    else if(event is UpdateTaiXeLimo){
-      yield InitialMainState();
-      Customer customer = new Customer(
-        idTrungChuyen: event.customer.idTrungChuyen,
-        idTaiXeLimousine : event.customer.idTaiXeLimousine,
-        hoTenTaiXeLimousine : event.customer.hoTenTaiXeLimousine,
-        dienThoaiTaiXeLimousine : event.customer.dienThoaiTaiXeLimousine,
-        tenXeLimousine : event.customer.tenXeLimousine,
-        bienSoXeLimousine : event.customer.bienSoXeLimousine,
-        tenKhachHang : event.customer.tenKhachHang,
-        soDienThoaiKhach :event.customer.soDienThoaiKhach,
-        diaChiKhachDi :event.customer.diaChiKhachDi,
-        toaDoDiaChiKhachDi:event.customer.toaDoDiaChiKhachDi,
-        diaChiKhachDen:event.customer.diaChiKhachDen,
-        toaDoDiaChiKhachDen:event.customer.toaDoDiaChiKhachDen,
-        diaChiLimoDi:event.customer.diaChiLimoDi,
-        toaDoLimoDi:event.customer.toaDoLimoDi,
-        diaChiLimoDen:event.customer.diaChiLimoDen,
-        toaDoLimoDen:event.customer.toaDoLimoDen,
-        loaiKhach:event.customer.loaiKhach,
-        trangThaiTC: event.customer.trangThaiTC,
-        soKhach:1,
-        chuyen: trips,
-        totalCustomer: event.customer.totalCustomer,
-        idKhungGio: event.customer.idKhungGio,
-        idVanPhong: event.customer.idVanPhong,
-        ngayTC: event.customer.ngayTC,
-      );
-      await db.addDriverLimo(customer);
-      listTaiXeLimo = await getListTXLimoFromDb();
-      yield GetListTaiXeLimoSuccess();
-      add(GetListTaiXeLimo());
+        });
+      });
+      emitter(GetListNotificationOfLimoSuccess());
+      return;
     }
+    emitter(GetListNotificationOfLimoSuccess());
+  }
 
-    else if(event is ConfirmWithTXTC){
-      yield MainLoading();
-      var objData = {
-        'EVENT':'TAIXE_LIMO_XACNHAN',
-        'idLimo':idUser
-      };
-      TranferCustomerRequestBody request = TranferCustomerRequestBody(
-          title: event.title,
-          body: event.body,
-          data: objData,
-          idTaiKhoans: event.listId
-      );
-      MainState state =  _handleLimoConfirmWithTC(await _networkFactory.sendNotification(request,_accessToken));
-      yield state;
+  void _addOldCustomerItemList(AddOldCustomerItemList event, Emitter<MainState> emitter)async{
+    emitter(MainLoading());
+    Customer customer = new Customer(
+      idTrungChuyen: event.customer.idTrungChuyen,
+      idTaiXeLimousine : event.customer.idTaiXeLimousine,
+      hoTenTaiXeLimousine : event.customer.hoTenTaiXeLimousine,
+      dienThoaiTaiXeLimousine : event.customer.dienThoaiTaiXeLimousine,
+      tenXeLimousine : event.customer.tenXeLimousine,
+      bienSoXeLimousine : event.customer.bienSoXeLimousine,
+      tenKhachHang : event.customer.tenKhachHang,
+      soDienThoaiKhach :event.customer.soDienThoaiKhach,
+      diaChiKhachDi :event.customer.diaChiKhachDi,
+      toaDoDiaChiKhachDi:event.customer.toaDoDiaChiKhachDi,
+      diaChiKhachDen:event.customer.diaChiKhachDen,
+      toaDoDiaChiKhachDen:event.customer.toaDoDiaChiKhachDen,
+      diaChiLimoDi:event.customer.diaChiLimoDi,
+      toaDoLimoDi:event.customer.toaDoLimoDi,
+      diaChiLimoDen:event.customer.diaChiLimoDen,
+      toaDoLimoDen:event.customer.toaDoLimoDen,
+      loaiKhach:event.customer.loaiKhach,
+      trangThaiTC: event.customer.trangThaiTC,
+      soKhach:1,
+      chuyen: trips,
+      totalCustomer: event.customer.totalCustomer,
+      idKhungGio: idKhungGio,
+      idVanPhong: idVanPhong,
+      ngayTC: ngayTC,
+    );
+    await db.addNew(customer);
+    listInfo = await getListFromDb();
+    emitter(GetCustomerListSuccess());
+    add(GetCustomerItemList());
+  }
+
+  void _deleteCustomerFormDB(DeleteCustomerFormDB event, Emitter<MainState> emitter)async{
+    emitter(MainLoading());
+    await db.remove(event.idTC);
+    listInfo = await getListFromDb();
+    emitter(GetCustomerListSuccess());
+    add(GetCustomerItemList());
+  }
+
+  void _getListTaiXeLimo(GetListTaiXeLimo event, Emitter<MainState> emitter)async{
+    emitter(MainLoading());
+    listTaiXeLimo = await getListTXLimoFromDb();
+    if (Utils.isEmpty(listTaiXeLimo)) {
+      emitter (GetListTaiXeLimoSuccess());
+      return;
     }
+    emitter(GetListTaiXeLimoSuccess());
+  }
 
-    else if(event is GetListCustomerConfirm){
-      yield MainLoading();
-      MainState state = _handleGetListConfirmLimo(await _networkFactory.getListCustomerConfirmLimo(_accessToken));
-      yield state;
-    }
+  void _updateTaiXeLimo(UpdateTaiXeLimo event, Emitter<MainState> emitter)async{
+    emitter(MainLoading());
+    Customer customer = new Customer(
+      idTrungChuyen: event.customer.idTrungChuyen,
+      idTaiXeLimousine : event.customer.idTaiXeLimousine,
+      hoTenTaiXeLimousine : event.customer.hoTenTaiXeLimousine,
+      dienThoaiTaiXeLimousine : event.customer.dienThoaiTaiXeLimousine,
+      tenXeLimousine : event.customer.tenXeLimousine,
+      bienSoXeLimousine : event.customer.bienSoXeLimousine,
+      tenKhachHang : event.customer.tenKhachHang,
+      soDienThoaiKhach :event.customer.soDienThoaiKhach,
+      diaChiKhachDi :event.customer.diaChiKhachDi,
+      toaDoDiaChiKhachDi:event.customer.toaDoDiaChiKhachDi,
+      diaChiKhachDen:event.customer.diaChiKhachDen,
+      toaDoDiaChiKhachDen:event.customer.toaDoDiaChiKhachDen,
+      diaChiLimoDi:event.customer.diaChiLimoDi,
+      toaDoLimoDi:event.customer.toaDoLimoDi,
+      diaChiLimoDen:event.customer.diaChiLimoDen,
+      toaDoLimoDen:event.customer.toaDoLimoDen,
+      loaiKhach:event.customer.loaiKhach,
+      trangThaiTC: event.customer.trangThaiTC,
+      soKhach:1,
+      chuyen: trips,
+      totalCustomer: event.customer.totalCustomer,
+      idKhungGio: event.customer.idKhungGio,
+      idVanPhong: event.customer.idVanPhong,
+      ngayTC: event.customer.ngayTC,
+    );
+    await db.addDriverLimo(customer);
+    listTaiXeLimo = await getListTXLimoFromDb();
+    emitter(GetListTaiXeLimoSuccess());
+    add(GetListTaiXeLimo());
+  }
 
-    else if(event is GetListTripsLimo){
-      yield MainLoading();
-      MainState state = _handleAwaitingCustomer(await _networkFactory.getListCustomerLimo(_accessToken,event.date));
-      yield state;
-    }
+  void _confirmWithTXTC(ConfirmWithTXTC event, Emitter<MainState> emitter)async{
+    emitter(MainLoading());
+    var objData = {
+      'EVENT':'TAIXE_LIMO_XACNHAN',
+      'idLimo':idUser
+    };
+    TranferCustomerRequestBody request = TranferCustomerRequestBody(
+        title: event.title,
+        body: event.body,
+        data: objData,
+        idTaiKhoans: event.listId
+    );
+    MainState state =  _handleLimoConfirmWithTC(await _networkFactory!.sendNotification(request,_accessToken!));
+    emitter(state);
+  }
 
-    else if(event is GetLocationEvent){
-      yield InitialMainState();
+  void _getListCustomerConfirm(GetListCustomerConfirm event, Emitter<MainState> emitter)async{
+    emitter(MainLoading());
+    MainState state = _handleGetListConfirmLimo(await _networkFactory!.getListCustomerConfirmLimo(_accessToken!));
+    emitter(state);
+  }
 
-      yield GetLocationSuccess(event.makerID,event.lat,event.lng);
-    }
+  void _getListTripsLimo(GetListTripsLimo event, Emitter<MainState> emitter)async{
+    emitter(MainLoading());
+    MainState state = _handleAwaitingCustomer(await _networkFactory!.getListCustomerLimo(_accessToken!,event.date));
+    emitter(state);
+  }
 
-    else if(event is UpdateStatusCustomerEvent){
-      yield MainLoading();
-      UpdateStatusCustomerRequestBody request = UpdateStatusCustomerRequestBody(
+  void _getLocationEvent(GetLocationEvent event, Emitter<MainState> emitter)async{
+    emitter(MainLoading());
+    emitter(GetLocationSuccess(event.makerID,event.lat,event.lng));
+  }
+
+  void _updateStatusCustomerEvent(UpdateStatusCustomerEvent event, Emitter<MainState> emitter)async{
+    emitter(MainLoading());
+    UpdateStatusCustomerRequestBody request = UpdateStatusCustomerRequestBody(
         id:event.idTrungChuyen,
         status: event.status,
         ghiChu: event.note
-      );
-      MainState state = _handleUpdateStatusCustomer(await _networkFactory.updateGroupStatusCustomer(request,_accessToken),event.status);
-      yield state;
-    }
-
-    else if(event is GetListGroupCustomer){
-      yield MainLoading();
-      MainState state = _handleGroupCustomer(await _networkFactory.groupCustomerAWaiting(_accessToken,event.date));
-      yield state;
-    }
-
-    else if (event is NavigateBottomNavigation) {
-      int position = event.position;
-      if (state is MainPageState) {
-        if (_prePosition == position) return;
-      }
-      _prePosition = position;
-      yield MainLoading();
-      yield MainPageState(position);
-    }
-    else if (event is NavigateProfile) {
-      // For background and terminal
-      yield MainLoading();
-      yield MainProfile();
-    }
-    else if (event is ChangeTitleAppbarEvent) {
-      yield ChangeTitleAppbarSuccess(title: event.title);
-    }
-
-    else if (event is NavigateToPay) {
-      yield MainLoading();
-      yield NavigateToPayState();
-    }
-
-    else if (event is NavigateToNotification) {
-      yield MainLoading();
-      yield NavigateToNotificationState();
-    }
-    else if (event is GetCountNotificationUnRead) {
-      yield InitialMainState();
-      MainState  state = _handleUnreadCountNotify(await _networkFactory.readNotification(_accessToken));
-      yield state;
-    }
-    else if (event is LogoutMainEvent) {
-        yield MainLoading();
-        Utils.removeData(_pref);
-        _prePosition = 0;
-        countNotifyUnRead = 0;
-        yield LogoutSuccess();
-      }
+    );
+    MainState state = _handleUpdateStatusCustomer(await _networkFactory!.updateGroupStatusCustomer(request,_accessToken!),event.status!);
+    emitter(state);
   }
+
+  void _getListGroupCustomer(GetListGroupCustomer event, Emitter<MainState> emitter)async{
+    emitter(MainLoading());
+    MainState state = _handleGroupCustomer(await _networkFactory!.groupCustomerAWaiting(_accessToken!,event.date));
+    emitter(state);
+  }
+
+  void _navigateBottomNavigation(NavigateBottomNavigation event, Emitter<MainState> emitter)async{
+    emitter(MainLoading());
+    int position = event.position;
+    if (state is MainPageState) {
+      if (_prePosition == position) return;
+    }
+    _prePosition = position;
+    emitter(MainPageState(position));
+  }
+
+  void _navigateProfile(NavigateProfile event, Emitter<MainState> emitter)async{
+    emitter(MainLoading());
+    emitter(MainProfile());
+  }
+
+  void _changeTitleAppbarEvent(ChangeTitleAppbarEvent event, Emitter<MainState> emitter)async{
+    emitter(MainLoading());
+    emitter(ChangeTitleAppbarSuccess(title: event.title));
+  }
+
+  void _navigateToPay(NavigateToPay event, Emitter<MainState> emitter)async{
+    emitter(MainLoading());
+    emitter(NavigateToPayState());
+  }
+
+  void _navigateToNotification(NavigateToNotification event, Emitter<MainState> emitter)async{
+    emitter(MainLoading());
+    emitter(NavigateToNotificationState());
+  }
+
+  void _getCountNotificationUnRead(GetCountNotificationUnRead event, Emitter<MainState> emitter)async{
+    emitter(MainLoading());
+    MainState  state = _handleUnreadCountNotify(await _networkFactory!.readNotification(_accessToken!));
+    emitter(state);
+  }
+
+  void _logoutMainEvent(LogoutMainEvent event, Emitter<MainState> emitter)async{
+    emitter(MainLoading());
+    Utils.removeData(_pref!);
+    _prePosition = 0;
+    countNotifyUnRead = 0;
+    emitter(LogoutSuccess());
+  }
+
 
   MainState _handleGetListOfDetailLimoTrips(Object data) {
     if (data is String) return MainFailure(data);
     try {
-      DetailTripsLimo response = DetailTripsLimo.fromJson(data);
-      listOfDetailLimoTrips = response.data.dsKhachs;
-      totalCustomerCancel = response.data.khachHuy;
-      totalCustomer = response.data.tongKhach;
+      DetailTripsLimo response = DetailTripsLimo.fromJson(data as Map<String,dynamic>);
+      listOfDetailLimoTrips = response.data!.dsKhachs!;
+      totalCustomerCancel = response.data!.khachHuy!;
+      totalCustomer = response.data!.tongKhach!;
       return GetListOfDetailLimoTripsSuccess();
     } catch (e) {
       return MainFailure(e.toString());
@@ -553,9 +562,9 @@ class MainBloc extends Bloc<MainEvent, MainState> {
       listCustomer.clear();
       soKhachDaDonDuoc = 0;
       db.deleteAll();
-      DetailTripsResponse response = DetailTripsResponse.fromJson(data);
+      DetailTripsResponse response = DetailTripsResponse.fromJson(data as Map<String,dynamic>);
       //listOfDetailTrips = response.data;
-      listCustomer = response.data;
+      listCustomer = response.data!;
       // listOfDetailTrips.forEach((element) {
       //   DetailTripsResponseBody customer = new DetailTripsResponseBody(
       //       idTrungChuyen: element.idTrungChuyen,
@@ -612,7 +621,7 @@ class MainBloc extends Bloc<MainEvent, MainState> {
           }
           if(element.trangThaiTC == 4 || element.trangThaiTC == 8 || element.trangThaiTC == 12){
             soKhachDaDonDuoc =  soKhachDaDonDuoc + 1;
-            tongKhach = tongKhach + element.soKhach;
+            tongKhach = tongKhach + element.soKhach!;
           }
         });
       }
@@ -622,7 +631,7 @@ class MainBloc extends Bloc<MainEvent, MainState> {
         if(b.trangThaiTC == 5) return 1;
         if(a.trangThaiTC == 2) return -1;
         if(b.trangThaiTC == 2) return 1;
-        if(a.trangThaiTC > b.trangThaiTC) return 1;
+        if(a.trangThaiTC! > b.trangThaiTC!) return 1;
         return 0;
       });
       print('131avb: ${soKhachHuy.toString()} / ${tongKhach.toString()}');
@@ -637,8 +646,8 @@ class MainBloc extends Bloc<MainEvent, MainState> {
   MainState _handleAwaitingCustomer(Object data) {
     if (data is String) return MainFailure(data);
     try {
-      ListOfGroupLimoCustomerResponse response = ListOfGroupLimoCustomerResponse.fromJson(data);
-      listCustomerLimo = response.data;
+      ListOfGroupLimoCustomerResponse response = ListOfGroupLimoCustomerResponse.fromJson(data as Map<String,dynamic>);
+      listCustomerLimo = response.data!;
       return GetListCustomerLimoSuccess();
     } catch (e) {
       print(e.toString());
@@ -652,9 +661,9 @@ class MainBloc extends Bloc<MainEvent, MainState> {
       tongKhachXacNhan = 0;
       tongChuyenXacNhan = 0;
       listCustomerConfirmLimo.clear();
-      CustomerLimoConfirm response = CustomerLimoConfirm.fromJson(data);
-      listCustomerConfirm = response.data;
-      response.data.forEach((element) {
+      CustomerLimoConfirm response = CustomerLimoConfirm.fromJson(data as Map<String,dynamic>);
+      listCustomerConfirm = response.data!;
+      response.data!.forEach((element) {
         CustomerLimoConfirmBody customer = new CustomerLimoConfirmBody(
             idTrungChuyen: element.idTrungChuyen,
             hoTenTaiXe: element.hoTenTaiXe,
@@ -693,17 +702,15 @@ class MainBloc extends Bloc<MainEvent, MainState> {
                   &&
                   item.tenTuyenDuong == element.tenTuyenDuong
           ));
-          if (customerNews != null){
-            customerNews.soKhach = customerNews.soKhach + 1;
-            String listIdTC = customerNews.idTrungChuyen + ',' + customer.idTrungChuyen;
-            customerNews.idTrungChuyen = listIdTC;
-          }
+          customerNews.soKhach = customerNews.soKhach! + 1;
+          String listIdTC = customerNews.idTrungChuyen.toString()+ ',' + customer.idTrungChuyen.toString();
+          customerNews.idTrungChuyen = listIdTC;
           listCustomerConfirmLimo.remove(customerNews);
           listCustomerConfirmLimo.add(customerNews);
         }
       });
       tongChuyenXacNhan = listCustomerConfirmLimo.length;
-      tongKhachXacNhan = response.data.length;
+      tongKhachXacNhan = response.data!.length;
       return GetListCustomerConfirmLimo();
     } catch (e) {
       print('Check: ${e.toString()}');
@@ -744,8 +751,8 @@ class MainBloc extends Bloc<MainEvent, MainState> {
   MainState _handleGroupCustomer(Object data) {
     if (data is String) return MainFailure(data);
     try {
-      ListOfGroupAwaitingCustomer response = ListOfGroupAwaitingCustomer.fromJson(data);
-      listOfGroupAwaitingCustomer = response.data;
+      ListOfGroupAwaitingCustomer response = ListOfGroupAwaitingCustomer.fromJson(data as Map<String,dynamic>);
+      listOfGroupAwaitingCustomer = response.data!;
       return GetListOfGroupCustomerSuccess();
     } catch (e) {
       print(e.toString());
@@ -766,7 +773,7 @@ class MainBloc extends Bloc<MainEvent, MainState> {
   MainState _handleUnreadCountNotify(Object data) {
     if (data is String) return MainFailure(data);
     try {
-      UnreadCountResponse response = UnreadCountResponse.fromJson(data);
+      UnreadCountResponse response = UnreadCountResponse.fromJson(data as Map<String,dynamic>);
       countNotifyUnRead = response.unreadTotal ?? 0;
       return CountNotificationSuccess();
     } catch (e) {
@@ -775,7 +782,7 @@ class MainBloc extends Bloc<MainEvent, MainState> {
     }
   }
 
-  Future<bool> showDialogTransferCustomer({@required BuildContext context, @required String content, Function accept, Function cancel, bool dismissible: false}) => showDialog(
+  Future showDialogTransferCustomer({required BuildContext context, required String content, Function? accept, Function? cancel, bool dismissible: false}) => showDialog(
       barrierDismissible: dismissible,
       context: context,
       builder: (context) {
@@ -907,7 +914,7 @@ class MainBloc extends Bloc<MainEvent, MainState> {
                                             ),
                                           ),
                                           Center(
-                                            child: SpinKitPouringHourglass(
+                                            child: SpinKitPouringHourGlass(
                                               color: Colors.orange,
                                               size: 40,
                                             ),

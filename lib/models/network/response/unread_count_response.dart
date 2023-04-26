@@ -1,7 +1,7 @@
 class UnreadCountResponse {
-  int unreadTotal;
-  int statusCode;
-  String message;
+  int? unreadTotal;
+  int? statusCode;
+  String? message;
 
 
   UnreadCountResponse({ this.unreadTotal, this.message, this.statusCode});

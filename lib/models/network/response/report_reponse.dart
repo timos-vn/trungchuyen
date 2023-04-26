@@ -1,20 +1,20 @@
 class ReportReponse {
-  ReportReponseDetail data;
-  int statusCode;
-  String message;
+  ReportReponseDetail? data;
+  int? statusCode;
+  String? message;
 
   ReportReponse({this.data, this.statusCode, this.message});
 
-  ReportReponse.fromJson(Map<String, dynamic> json) {
+  ReportReponse.fromJson(Map<String?, dynamic> json) {
     data = json['data'] != null ? new ReportReponseDetail.fromJson(json['data']) : null;
     statusCode = json['statusCode'];
     message = json['message'];
   }
 
-  Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = new Map<String, dynamic>();
+  Map<String?, dynamic> toJson() {
+    final Map<String?, dynamic> data = new Map<String?, dynamic>();
     if (this.data != null) {
-      data['data'] = this.data.toJson();
+      data['data'] = this.data?.toJson();
     }
     data['statusCode'] = this.statusCode;
     data['message'] = this.message;
@@ -23,52 +23,52 @@ class ReportReponse {
 }
 
 class ReportReponseDetail {
-  int tongKhach;
-  double tongTien;
-  List<DsKhachs> dsKhachs;
+  int? tongKhach;
+  double? tongTien;
+  List<DsKhachs>? dsKhachs;
 
   ReportReponseDetail({this.tongKhach, this.tongTien, this.dsKhachs});
 
-  ReportReponseDetail.fromJson(Map<String, dynamic> json) {
+  ReportReponseDetail.fromJson(Map<String?, dynamic> json) {
     tongKhach = json['tongKhach'];
     tongTien = json['tongTien'];
     if (json['dsKhachs'] != null) {
-      dsKhachs = new List<DsKhachs>();
+      dsKhachs = <DsKhachs>[];
       json['dsKhachs'].forEach((v) {
-        dsKhachs.add(new DsKhachs.fromJson(v));
+        dsKhachs?.add(new DsKhachs.fromJson(v));
       });
     }
   }
 
-  Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = new Map<String, dynamic>();
+  Map<String?, dynamic> toJson() {
+    final Map<String?, dynamic> data = new Map<String?, dynamic>();
     data['tongKhach'] = this.tongKhach;
     data['tongTien'] = this.tongTien;
     if (this.dsKhachs != null) {
-      data['dsKhachs'] = this.dsKhachs.map((v) => v.toJson()).toList();
+      data['dsKhachs'] = this.dsKhachs?.map((v) => v.toJson()).toList();
     }
     return data;
   }
 }
 
 class DsKhachs {
-  String ngayChay;
-  String tenTuyenDuong;
-  String gioBatDau;
-  String gioKetThuc;
-  String tenKhachHang;
-  String soDienThoaiKhach;
-  String hoTenTaiXeLimousine;
-  String dienThoaiTaiXeLimousine;
-  String tenXeLimousine;
-  String bienSoXeLimousine;
-  String hoTenTaiXeTrungChuyen;
-  String dienThoaiTaiXeTrungChuyen;
-  String tenXeTrungChuyen;
-  String bienSoXeTrungChuyen;
-  int loaiKhach;
-  int khachTrungChuyen;
-  int soKhach =1;
+  String? ngayChay;
+  String? tenTuyenDuong;
+  String? gioBatDau;
+  String? gioKetThuc;
+  String? tenKhachHang;
+  String? soDienThoaiKhach;
+  String? hoTenTaiXeLimousine;
+  String? dienThoaiTaiXeLimousine;
+  String? tenXeLimousine;
+  String? bienSoXeLimousine;
+  String? hoTenTaiXeTrungChuyen;
+  String? dienThoaiTaiXeTrungChuyen;
+  String? tenXeTrungChuyen;
+  String? bienSoXeTrungChuyen;
+  int? loaiKhach;
+  int? khachTrungChuyen;
+  int? soKhach =1;
 
   DsKhachs(
       {this.ngayChay,
@@ -85,7 +85,7 @@ class DsKhachs {
         this.hoTenTaiXeTrungChuyen,this.dienThoaiTaiXeTrungChuyen,this.tenXeTrungChuyen,this.bienSoXeTrungChuyen,this.khachTrungChuyen,
         this.soKhach});
 
-  DsKhachs.fromJson(Map<String, dynamic> json) {
+  DsKhachs.fromJson(Map<String?, dynamic> json) {
     ngayChay = json['ngayChay'];
     tenTuyenDuong = json['tenTuyenDuong'];
     gioBatDau = json['gioBatDau'];
@@ -103,8 +103,8 @@ class DsKhachs {
     bienSoXeTrungChuyen = json['bienSoXeTrungChuyen'];khachTrungChuyen = json['khachTrungChuyen'];
   }
 
-  Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = new Map<String, dynamic>();
+  Map<String?, dynamic> toJson() {
+    final Map<String?, dynamic> data = new Map<String?, dynamic>();
     data['ngayChay'] = this.ngayChay;
     data['tenTuyenDuong'] = this.tenTuyenDuong;
     data['gioBatDau'] = this.gioBatDau;

@@ -41,7 +41,13 @@ class MainFailure extends MainState {
     return 'MainFail{error: $error}';
   }
 }
+class GetPrefsSuccess extends MainState{
 
+  @override
+  String toString() {
+    return 'GetPrefsSuccess{}';
+  }
+}
 class MainSearchState extends MainState {
 
   @override
@@ -74,7 +80,7 @@ class LogoutFailure extends MainState {
 }
 
 class ChangeTitleAppbarSuccess extends MainState {
-  final String title;
+  final String? title;
 
   ChangeTitleAppbarSuccess({this.title});
 

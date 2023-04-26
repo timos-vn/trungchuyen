@@ -9,7 +9,13 @@ class LimoConfirmInitial extends LimoConfirmState {
   @override
   String toString() => 'LimoConfirmInitial';
 }
+class GetPrefsSuccess extends LimoConfirmState{
 
+  @override
+  String toString() {
+    return 'GetPrefsSuccess{}';
+  }
+}
 class LimoConfirmFailure extends LimoConfirmState {
   final String error;
 

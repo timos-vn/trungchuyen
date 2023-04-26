@@ -1,4 +1,3 @@
-import 'package:get/get.dart' as libGet;
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -15,72 +14,75 @@ import 'change_password_state.dart';
 class ChangePasswordBloc extends Bloc<ChangePasswordEvent,ChangePasswordState>with Validators{
 
 
-  NetWorkFactory _networkFactory;
+  NetWorkFactory? _networkFactory;
   BuildContext context;
-  String _accessToken;
-  String get accessToken => _accessToken;
-  String _refreshToken;
-  String get refreshToken => _refreshToken;
-  SharedPreferences _prefs;
-  String _username;
-  String get username => _username;
-  String _errorUsername, _errorPass, _errorAgainPass;
+  String? _accessToken;
+  String? get accessToken => _accessToken;
+  String? _refreshToken;
+  String? get refreshToken => _refreshToken;
+  SharedPreferences? _prefs;
+  String? _username;
+  String? get username => _username;
+  String? _errorUsername, _errorPass, _errorAgainPass;
 
 
-  ChangePasswordBloc(this.context) {
+  ChangePasswordBloc(this.context) : super(ChangePasswordInitial()){
     _networkFactory = NetWorkFactory(context);
+    on<GetPrefs>(_getPrefs,);
+    on<ChangePassword>(_changePassword);
+    on<ValidatePasswordOldEvent>(_validatePasswordOldEvent);
+    on<ValidatePasswordNewEvent>(_validatePasswordNewEvent);
+    on<ValidateAgainPasswordNewEvent>(_validateAgainPasswordNewEvent);
   }
 
-  @override
-  // TODO: implement initialState
-  ChangePasswordState get initialState => ChangePasswordInitial();
+  void _getPrefs(GetPrefs event, Emitter<ChangePasswordState> emitter)async{
+    emitter(ChangePasswordLoading());
+    _prefs = await SharedPreferences.getInstance();
+    _accessToken = _prefs!.getString(Const.ACCESS_TOKEN) ?? "";
+    _refreshToken = _prefs!.getString(Const.REFRESH_TOKEN) ?? "";
+    emitter(GetPrefsSuccess());
+  }
 
-  @override
-  Stream<ChangePasswordState> mapEventToState(ChangePasswordEvent event) async* {
-    // TODO: implement mapEventToState
-    if (_prefs == null) {
-      _prefs = await SharedPreferences.getInstance();
-      _accessToken = _prefs.getString(Const.ACCESS_TOKEN) ?? "";
-      _refreshToken = _prefs.getString(Const.REFRESH_TOKEN) ?? "";
-    }
-    if(event is ChangePassword){
-      yield ChangePasswordLoading();
-      ChangePasswordRequest request = ChangePasswordRequest(
+  void _changePassword(ChangePassword event, Emitter<ChangePasswordState> emitter)async{
+    emitter(ChangePasswordLoading());
+    ChangePasswordRequest request = ChangePasswordRequest(
         matKhauHienTai: event.passOld,
         matKhau: event.passNew
-      );
-      ChangePasswordState state = _handleChangePassword(await _networkFactory.changePassword(request,_accessToken));
-      yield state;
-    }
-    if (event is ValidatePasswordOldEvent) {
-      yield ChangePasswordInitial();
-      String error = checkPass(context, event.pass);
-      yield ValidateErrorPasswordOld(error);
-    }
-    if (event is ValidatePasswordNewEvent) {
-      yield ChangePasswordInitial();
-      String error = checkPass(context, event.pass);
-      yield ValidateErrorPasswordNew(error);
-    }
-    if (event is ValidateAgainPasswordNewEvent) {
-      yield ChangePasswordInitial();
-      String error = checkPassAgain(context, event.currentPassword, event.newPassword);
-      yield ValidateErrorAgainPasswordNew(error);
-    }
+    );
+    ChangePasswordState state = _handleChangePassword(await _networkFactory!.changePassword(request,_accessToken!));
+    emitter(state);
+  }
+
+  void _validatePasswordOldEvent(ValidatePasswordOldEvent event, Emitter<ChangePasswordState> emitter)async{
+    emitter(ChangePasswordLoading());
+    String? error = checkPass(context, event.pass) ?? '';
+    emitter(ValidateErrorPasswordOld(error));
+  }
+
+  void _validatePasswordNewEvent(ValidatePasswordNewEvent event, Emitter<ChangePasswordState> emitter)async{
+    emitter(ChangePasswordLoading());
+    String? error = checkPass(context, event.pass) ?? '';
+    emitter(ValidateErrorPasswordNew(error));
+  }
+
+  void _validateAgainPasswordNewEvent(ValidateAgainPasswordNewEvent event, Emitter<ChangePasswordState> emitter)async{
+    emitter(ChangePasswordLoading());
+    String error = checkPassAgain(context, event.currentPassword, event.newPassword) ?? '';
+    emitter(ValidateErrorAgainPasswordNew(error));
   }
 
   ChangePasswordState _handleChangePassword(Object data){
-    if (data is String) return ChangePasswordFailure(data ?? 'Error'.tr);
+    if (data is String) return ChangePasswordFailure(data.toString());
     try{
       return ChangePasswordSuccess();
     } catch (e) {
       print(e.toString());
-      return ChangePasswordFailure(e);
+      return ChangePasswordFailure(e.toString());
     }
   }
 
   void checkPasswordOldBloc(String username) {
-    String _tempErrUsername = checkPass(context, username);
+    String? _tempErrUsername = checkPass(context, username);
     if (_errorUsername != _tempErrUsername) {
       _errorUsername = _tempErrUsername;
       add(ValidatePasswordOldEvent(username));
@@ -88,7 +90,7 @@ class ChangePasswordBloc extends Bloc<ChangePasswordEvent,ChangePasswordState>wi
   }
 
   void checkPasswordNewBloc(String pass) {
-    String _tempErrPass = checkPass(context, pass);
+    String? _tempErrPass = checkPass(context, pass);
     if (_errorPass != _tempErrPass) {
       _errorPass = _tempErrPass;
       add(ValidatePasswordNewEvent(pass));
@@ -96,7 +98,7 @@ class ChangePasswordBloc extends Bloc<ChangePasswordEvent,ChangePasswordState>wi
   }
 
   void checkAgainPassBloc( String currentPassword, String newPassword) {
-    String _tempErrPass = checkPassAgain(context, currentPassword,newPassword);
+    String? _tempErrPass = checkPassAgain(context, currentPassword,newPassword);
     if (_errorAgainPass != _tempErrPass) {
       _errorAgainPass = _tempErrPass;
       add(ValidateAgainPasswordNewEvent(currentPassword,newPassword));

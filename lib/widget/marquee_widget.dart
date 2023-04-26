@@ -6,7 +6,7 @@ class MarqueeWidget extends StatefulWidget {
   final Duration animationDuration, backDuration, pauseDuration;
 
   MarqueeWidget({
-    @required this.child,
+    required this.child,
     this.direction: Axis.horizontal,
     this.animationDuration: const Duration(milliseconds: 3000),
     this.backDuration: const Duration(milliseconds: 800),
@@ -18,7 +18,7 @@ class MarqueeWidget extends StatefulWidget {
 }
 
 class _MarqueeWidgetState extends State<MarqueeWidget> {
-  ScrollController scrollController;
+  late ScrollController scrollController;
 
   @override
   void initState() {
@@ -41,12 +41,12 @@ class _MarqueeWidgetState extends State<MarqueeWidget> {
       try {
         await Future.delayed(widget.pauseDuration);
         await scrollController.animateTo(
-            scrollController?.position?.maxScrollExtent,
+            scrollController.position.maxScrollExtent,
             duration: widget.animationDuration,
             curve: Curves.easeIn);
         await Future.delayed(widget.pauseDuration);
 
-        await scrollController?.animateTo(0.0,
+        await scrollController.animateTo(0.0,
             duration: widget.backDuration, curve: Curves.easeOut);
       } catch (e) {}
     }

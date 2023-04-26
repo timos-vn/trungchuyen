@@ -1,30 +1,30 @@
 import 'package:equatable/equatable.dart';
 
 class Customer extends Equatable {
-  String idTrungChuyen;
-  final String idTaiXeLimousine;
-  final String hoTenTaiXeLimousine;
-  final String dienThoaiTaiXeLimousine;
-  final String tenXeLimousine;
-  final String bienSoXeLimousine;
-  final String tenKhachHang;
-  final String soDienThoaiKhach;
-  final String diaChiKhachDi;
-  final String toaDoDiaChiKhachDi;
-  final String diaChiKhachDen;
-  final String toaDoDiaChiKhachDen;
-  final String diaChiLimoDi;
-  final String toaDoLimoDi;
-  final String diaChiLimoDen;
-  final String toaDoLimoDen;
-  final int loaiKhach;
-  int trangThaiTC;
-  int soKhach=1;
-  String chuyen;
-  int totalCustomer =0;
-  int idKhungGio;
-  int idVanPhong;
-  String ngayTC;
+  String? idTrungChuyen;
+  final String? idTaiXeLimousine;
+  final String? hoTenTaiXeLimousine;
+  final String? dienThoaiTaiXeLimousine;
+  final String? tenXeLimousine;
+  final String? bienSoXeLimousine;
+  final String? tenKhachHang;
+  final String? soDienThoaiKhach;
+  final String? diaChiKhachDi;
+  final String? toaDoDiaChiKhachDi;
+  final String? diaChiKhachDen;
+  final String? toaDoDiaChiKhachDen;
+  final String? diaChiLimoDi;
+  final String? toaDoLimoDi;
+  final String? diaChiLimoDen;
+  final String? toaDoLimoDen;
+  final int? loaiKhach;
+  int? trangThaiTC;
+  int? soKhach=1;
+  String? chuyen;
+  int? totalCustomer =0;
+  int? idKhungGio;
+  int? idVanPhong;
+  String? ngayTC;
 
 
   Customer(
@@ -54,7 +54,7 @@ class Customer extends Equatable {
     this.ngayTC
   });
 
-  Customer.fromDb(Map<String, dynamic> map)
+  Customer.fromDb(Map<String?, dynamic> map)
       :
         idTrungChuyen = map['idTrungChuyen'],
         idTaiXeLimousine = map['idTaiXeLimousine'],
@@ -110,28 +110,28 @@ class Customer extends Equatable {
 
   @override
   List<Object> get props => [
-    idTrungChuyen,
-    idTaiXeLimousine,
-    hoTenTaiXeLimousine,
-    dienThoaiTaiXeLimousine,
-    tenXeLimousine,
-    bienSoXeLimousine,
-    tenKhachHang,
-    soDienThoaiKhach,
-    diaChiKhachDi,
-    toaDoDiaChiKhachDi,
-    diaChiKhachDen,
-    toaDoDiaChiKhachDen,
-    diaChiLimoDi,
-    toaDoLimoDi,
-    diaChiLimoDen,
-    toaDoLimoDen,
-    loaiKhach,
-    trangThaiTC,
-    soKhach,
-    chuyen,
-    idKhungGio,
-    idVanPhong,
-    ngayTC
+    idTrungChuyen!,
+    idTaiXeLimousine!,
+    hoTenTaiXeLimousine!,
+    dienThoaiTaiXeLimousine!,
+    tenXeLimousine!,
+    bienSoXeLimousine!,
+    tenKhachHang!,
+    soDienThoaiKhach!,
+    diaChiKhachDi!,
+    toaDoDiaChiKhachDi!,
+    diaChiKhachDen!,
+    toaDoDiaChiKhachDen!,
+    diaChiLimoDi!,
+    toaDoLimoDi!,
+    diaChiLimoDen!,
+    toaDoLimoDen!,
+    loaiKhach!,
+    trangThaiTC!,
+    soKhach!,
+    chuyen!,
+    idKhungGio!,
+    idVanPhong!,
+    ngayTC!
   ];
 }

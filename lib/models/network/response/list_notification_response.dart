@@ -1,32 +1,32 @@
 class ListNotificationData {
 
-  List<NotificationData> notifications;
+  List<NotificationData>? notifications;
 
   ListNotificationData({ this.notifications});
 
-  ListNotificationData.fromJson(Map<String, dynamic> json) {
+  ListNotificationData.fromJson(Map<String?, dynamic> json) {
     if (json['notifications'] != null) {
-      notifications = new List<NotificationData>();
+      notifications = <NotificationData>[];
       json['notifications'].forEach((v) {
-        notifications.add(new NotificationData.fromJson(v));
+        notifications?.add(new NotificationData.fromJson(v));
       });
     }
   }
 
-  Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = new Map<String, dynamic>();
+  Map<String?, dynamic> toJson() {
+    final Map<String?, dynamic> data = new Map<String?, dynamic>();
     if (this.notifications != null) {
       data['notifications'] =
-          this.notifications.map((v) => v.toJson()).toList();
+          this.notifications?.map((v) => v.toJson()).toList();
     }
     return data;
   }
 }
 
 class NotificationData {
-  // String title;
-  // String body;
-  DataDetail listDataDetail;
+  // String? title;
+  // String? body;
+  DataDetail? listDataDetail;
   // List<DataDetail> listDataDetail;
 
   NotificationData(
@@ -37,7 +37,7 @@ class NotificationData {
         this.listDataDetail
       });
 
-  NotificationData.fromJson(Map<String, dynamic> jsons) {
+  NotificationData.fromJson(Map<String?, dynamic> jsons) {
 
     // title = jsons['title'];
     // body = jsons['body'];
@@ -50,8 +50,8 @@ class NotificationData {
     // }
   }
 
-  Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = new Map<String, dynamic>();
+  Map<String?, dynamic> toJson() {
+    final Map<String?, dynamic> data = new Map<String?, dynamic>();
 
     // data['title'] = this.title;
     // data['body'] = this.body;
@@ -64,16 +64,16 @@ class NotificationData {
 }
 
 class DataDetail{
-  String loaiKhach;
-  String soKhach;
-  String event;
-  String idChuyenTruyens;
-  String thoiGian;
-  String chuyen;
+  String? loaiKhach;
+  String? soKhach;
+  String? event;
+  String? idChuyenTruyens;
+  String? thoiGian;
+  String? chuyen;
 
   DataDetail({this.loaiKhach,this.soKhach,this.event,this.idChuyenTruyens,this.thoiGian,this.chuyen});
 
-  DataDetail.fromJson(Map<String, dynamic> json) {
+  DataDetail.fromJson(Map<String?, dynamic> json) {
     loaiKhach = json['LoaiKhach'];
     soKhach = json['SoKhach'];
     event = json['EVENT'];
@@ -82,8 +82,8 @@ class DataDetail{
     chuyen = json['Chuyen'];
   }
 
-  Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = new Map<String, dynamic>();
+  Map<String?, dynamic> toJson() {
+    final Map<String?, dynamic> data = new Map<String?, dynamic>();
     data['LoaiKhach'] = this.loaiKhach;
     data['SoKhach'] = this.soKhach;
     data['EVENT'] = this.event;

@@ -5,6 +5,14 @@ abstract class  WaitingState extends Equatable {
   List<Object> get props => [];
 }
 
+class GetPrefsSuccess extends WaitingState{
+
+  @override
+  String toString() {
+    return 'GetPrefsSuccess{}';
+  }
+}
+
 class WaitingInitial extends WaitingState {
 
   @override

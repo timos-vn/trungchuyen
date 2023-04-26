@@ -4,16 +4,16 @@ import 'package:socket_io_client/socket_io_client.dart' as IO;
 import 'package:trungchuyen/utils/const.dart';
 
 class SocketIOService extends GetxService {
-  IO.Socket socket;
-  SharedPreferences _prefs;
-  String _accessToken;
+  late IO.Socket socket;
+  SharedPreferences? _prefs;
+  String? _accessToken;
   @override
   void onInit() async {
     if (_prefs == null) {
       _prefs = await SharedPreferences.getInstance();
-      _accessToken = _prefs.getString(Const.ACCESS_TOKEN) ?? "";
+      _accessToken = _prefs!.getString(Const.ACCESS_TOKEN) ?? "";
     }else{
-      _accessToken = _prefs.getString(Const.ACCESS_TOKEN) ?? "";
+      _accessToken = _prefs!.getString(Const.ACCESS_TOKEN) ?? "";
     }
     initSocket();
     super.onInit();

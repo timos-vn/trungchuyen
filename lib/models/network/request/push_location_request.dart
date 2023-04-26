@@ -1,6 +1,6 @@
 class PushLocationRequestBody {
 
-  String location;
+  String? location;
 
   PushLocationRequestBody({this.location,});
 

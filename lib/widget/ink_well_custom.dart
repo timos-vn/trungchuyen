@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 
 class InkWellCustom extends StatelessWidget {
-  final VoidCallback onTap;
-  final Widget child;
+  final VoidCallback? onTap;
+  final Widget? child;
 
-  const InkWellCustom({Key key, this.onTap, this.child}) : super(key: key);
+  const InkWellCustom({ Key? key, this.onTap, this.child}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {

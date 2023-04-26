@@ -25,6 +25,14 @@ class ChangeLanguageSuccess extends LoginState {
   }
 }
 
+class GetPrefsSuccess extends LoginState{
+
+  @override
+  String toString() {
+    return 'GetPrefsSuccess{}';
+  }
+}
+
 class LoginLoading extends LoginState {
   @override
   String toString() => 'LoginLoading';
@@ -43,6 +51,10 @@ class LoginSuccess extends LoginState {
 }
 
 class UpdateTokenSuccessState extends LoginState {
+
+  final String tokenFCM;
+
+  UpdateTokenSuccessState(this.tokenFCM);
 
   @override
   String toString() {

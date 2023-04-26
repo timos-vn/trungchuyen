@@ -1,27 +1,26 @@
-import 'package:flutter/cupertino.dart';
+import 'package:date_time_picker/date_time_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
 import 'package:jiffy/jiffy.dart';
-import 'package:liquid_pull_to_refresh/liquid_pull_to_refresh.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
+import 'package:persistent_bottom_nav_bar/persistent-tab-view.dart';
 import 'package:trungchuyen/extension/customer_clip_path.dart';
-import 'package:trungchuyen/extension/popup_picker.dart';
 import 'package:trungchuyen/models/network/response/list_of_group_awaiting_customer_response.dart';
 import 'package:trungchuyen/page/detail_trips/detail_trips_page.dart';
 import 'package:trungchuyen/page/history_tc/list_history_tc_bloc.dart';
 import 'package:trungchuyen/page/history_tc/list_history_tc_state.dart';
 import 'package:trungchuyen/page/main/main_bloc.dart';
-import 'package:trungchuyen/themes/colors.dart';
 import 'package:trungchuyen/themes/images.dart';
 import 'package:trungchuyen/utils/utils.dart';
 
+import '../../utils/const.dart';
 import 'list_history_tc_event.dart';
 
 
 class ListHistoryTCPage extends StatefulWidget {
 
-  ListHistoryTCPage({Key key}) : super(key: key);
+  ListHistoryTCPage({Key? key}) : super(key: key);
 
   @override
   ListHistoryTCPageState createState() => ListHistoryTCPageState();
@@ -30,8 +29,8 @@ class ListHistoryTCPage extends StatefulWidget {
 
 class ListHistoryTCPageState extends State<ListHistoryTCPage> {
   DateFormat format = DateFormat("dd/MM/yyyy");
-  ListHistoryTCBloc _bloc;
-  MainBloc _mainBloc;
+  late ListHistoryTCBloc _bloc;
+  late MainBloc _mainBloc;
 
   DateTime dateTime = DateFormat("yyyy-MM-dd").parse(DateTime.now().toString());
   @override
@@ -39,10 +38,7 @@ class ListHistoryTCPageState extends State<ListHistoryTCPage> {
     // TODO: implement initState
     super.initState();
     _bloc = ListHistoryTCBloc(context);
-    _bloc.getMainBloc(context);
-    _mainBloc = BlocProvider.of<MainBloc>(context);
-    DateTime parseDate = new DateFormat("yyyy-MM-dd").parse(DateTime.now().toString());
-    _bloc.add(GetListHistoryTC(parseDate.toString()));
+    _bloc.add(GetPrefs());
   }
 
   @override
@@ -63,30 +59,64 @@ class ListHistoryTCPageState extends State<ListHistoryTCPage> {
             style: TextStyle(color: Colors.black),
           ),
           actions: [
-            InkWell(
-              onTap: ()async {
-                final DateTime result = await showDialog<dynamic>(
-                    context: context,
-                    builder: (BuildContext context) {
-                      return DateRangePicker(
-                        dateTime ?? DateTime.now(),
-                        null,
-                        minDate: DateTime.now().add(Duration(days: -365)),
-                        maxDate: DateTime.now().add(const Duration(days: 10000)),
-                        displayDate: dateTime ?? DateTime.now(),
-                      );
-                    });
-                if (result != null) {
-                  print(result);
-                  dateTime = DateFormat("yyyy-MM-dd").parse(result.toString());
+            SizedBox(
+              // height: 40,
+              width: 50,
+              child: DateTimePicker(
+                type: DateTimePickerType.date,
+                // dateMask: 'd MMM, yyyy',
+                initialValue: DateTime.now().toString(),
+                firstDate: DateTime(2000),
+                lastDate: DateTime(2100),
+                decoration:const InputDecoration(
+                  suffixIcon: Icon(Icons.event,color: Colors.orange,size: 22,),
+                  contentPadding: EdgeInsets.only(left: 12),
+                  border: InputBorder.none,
+                ),
+                style:const TextStyle(fontSize: 13),
+                locale: const Locale("vi", "VN"),
+                // icon: Icon(Icons.event),
+                selectableDayPredicate: (date) {
+                  return true;
+                },
+                onChanged: (result){
+                  DateTime? dateOrder = result as DateTime?;
+                  dateTime = Utils.parseStringToDate(dateOrder.toString(), Const.DATE_SV_FORMAT_2);
                   _bloc.add(GetListHistoryTC(dateTime.toString()));
-                }
-              },
-              child: Icon(
-                Icons.event,
-                color: Colors.black,
+                },
+                validator: (result) {
+
+                  return null;
+                },
+                onSaved: (val){
+                  print('asd$val');
+                },
               ),
             ),
+            // InkWell(
+            //   onTap: ()async {
+            //     final DateTime result = await showDialog<dynamic>(
+            //         context: context,
+            //         builder: (BuildContext context) {
+            //           return DateRangePicker(
+            //             dateTime ?? DateTime.now(),
+            //             null,
+            //             minDate: DateTime.now().add(Duration(days: -365)),
+            //             maxDate: DateTime.now().add(const Duration(days: 10000)),
+            //             displayDate: dateTime ?? DateTime.now(),
+            //           );
+            //         });
+            //     if (result != null) {
+            //       print(result);
+            //       dateTime = DateFormat("yyyy-MM-dd").parse(result.toString());
+            //       _bloc.add(GetListHistoryTC(dateTime.toString()));
+            //     }
+            //   },
+            //   child: Icon(
+            //     Icons.event,
+            //     color: Colors.black,
+            //   ),
+            // ),
             SizedBox(width: 20,),
             InkWell(
                 onTap: (){
@@ -104,6 +134,12 @@ class ListHistoryTCPageState extends State<ListHistoryTCPage> {
           bloc: _bloc,
           listener:  (context, state){
 
+            if(state is GetPrefsSuccess){
+              _bloc.getMainBloc(context);
+              _mainBloc = BlocProvider.of<MainBloc>(context);
+              DateTime parseDate = new DateFormat("yyyy-MM-dd").parse(DateTime.now().toString());
+              _bloc.add(GetListHistoryTC(parseDate.toString()));
+            }
           },
           child: BlocBuilder<ListHistoryTCBloc,ListHistoryTCState>(
             bloc: _bloc,
@@ -141,7 +177,7 @@ class ListHistoryTCPageState extends State<ListHistoryTCPage> {
                       ),
                       Container(
                         height: 35,
-                        child: Center(child: Text(_bloc.listCustomerTC.length?.toString()??'0')),
+                        child: Center(child: Text(_bloc.listCustomerTC.length.toString())),
                       ),
                     ],
                   ),TableRow(
@@ -153,7 +189,7 @@ class ListHistoryTCPageState extends State<ListHistoryTCPage> {
                       ),
                       Container(
                         height: 35,
-                        child: Center(child: Text('${_bloc.tongKhachThanhCong?.toString()??'0'}',style: TextStyle(color: Colors.purple),)),
+                        child: Center(child: Text('${_bloc.tongKhachThanhCong.toString()}',style: TextStyle(color: Colors.purple),)),
                       ),
                     ],
                   ),TableRow(
@@ -165,7 +201,7 @@ class ListHistoryTCPageState extends State<ListHistoryTCPage> {
                       ),
                       Container(
                         height: 35,
-                        child: Center(child: Text('${_bloc.tongKhachHuy?.toString()??'0'}',style: TextStyle(color: Colors.red),)),
+                        child: Center(child: Text('${_bloc.tongKhachHuy.toString()}',style: TextStyle(color: Colors.red),)),
                       ),
                     ],
                   ),
@@ -178,7 +214,7 @@ class ListHistoryTCPageState extends State<ListHistoryTCPage> {
                       ),
                       Container(
                         height: 35,
-                        child: Center(child: Text(Jiffy(dateTime, "yyyy-MM-dd").format("dd-MM-yyyy")?.toString()??'')),
+                        child: Center(child: Text(Jiffy(dateTime, "yyyy-MM-dd").format("dd-MM-yyyy").toString())),
                       ),
                     ],
                   ),
@@ -226,7 +262,7 @@ class ListHistoryTCPageState extends State<ListHistoryTCPage> {
         onTap: () {
 
           DateTime parseDate = new DateFormat("yyyy-MM-dd").parse(Jiffy(item.ngayChay, "dd/MM/yyyy").format("yyyy-MM-dd"));
-          Navigator.push(context, MaterialPageRoute(builder: (context)=>DetailTripsPage(dateTime: parseDate,typeDetail: 2,idRoom: item.idVanPhong,idTime: item.idKhungGio,typeCustomer: item.loaiKhach,)));///item.idTuyenDuong.toString()
+          pushNewScreen(context, screen: DetailTripsPage(dateTime: parseDate,typeDetail: 2,idRoom: item.idVanPhong,idTime: item.idKhungGio,typeCustomer: item.loaiKhach,),withNavBar: false);
         },
         child: Padding(
           padding: const EdgeInsets.only(left: 10, right: 16, top: 8, bottom: 8),
@@ -279,7 +315,7 @@ class ListHistoryTCPageState extends State<ListHistoryTCPage> {
                                   children: [
                                     Text(
                                       'Số khách:  ',
-                                      style: Theme.of(this.context).textTheme.subtitle.copyWith(
+                                      style: TextStyle(
                                         color: Colors.red,
                                         fontWeight: FontWeight.normal,
                                       ),
@@ -288,7 +324,7 @@ class ListHistoryTCPageState extends State<ListHistoryTCPage> {
                                       '${item.soKhach??''}',
                                       maxLines: 2,
                                       overflow: TextOverflow.ellipsis,
-                                      style: Theme.of(this.context).textTheme.subtitle.copyWith(
+                                      style: TextStyle(
                                         fontWeight: FontWeight.bold,
                                         color: Colors.red,
                                       ),
@@ -310,7 +346,7 @@ class ListHistoryTCPageState extends State<ListHistoryTCPage> {
                               child: Center(
                                 child: Text(
                                   '${item.loaiKhach == 1 ? 'Đón' : 'Trả'}',
-                                  style: Theme.of(this.context).textTheme.caption.copyWith(
+                                  style: TextStyle(
                                     color: (item.idKhungGio == _mainBloc.idKhungGio && item.loaiKhach == _mainBloc.loaiKhach && _mainBloc.blocked == true&& item.idVanPhong == _mainBloc.idVanPhong)? Colors.white.withOpacity(0.5) :Colors.white,
                                     fontWeight: FontWeight.bold,
                                   ),
@@ -331,7 +367,7 @@ class ListHistoryTCPageState extends State<ListHistoryTCPage> {
                           children: <Widget>[
                             Text(
                               'Thông tin chuyến',
-                              style: Theme.of(this.context).textTheme.caption.copyWith(
+                              style: TextStyle(
                                 color: Theme.of(this.context).disabledColor,
                                 fontWeight: FontWeight.normal,
                               ),
@@ -343,9 +379,9 @@ class ListHistoryTCPageState extends State<ListHistoryTCPage> {
                               '${item.thoiGianDi??''}' + " / " + '${item.ngayChay??''}',
                               maxLines: 2,
                               overflow: TextOverflow.ellipsis,
-                              style: Theme.of(this.context).textTheme.subtitle.copyWith(
+                              style: TextStyle(
                                 fontWeight: FontWeight.normal,
-                                color: Theme.of(this.context).textTheme.title.color,
+                                color: Colors.black,
                               ),
                             ),
                           ],

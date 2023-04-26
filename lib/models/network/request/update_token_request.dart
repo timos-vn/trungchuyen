@@ -1,6 +1,6 @@
 class UpdateTokenRequestBody {
 
-  String deviceToken;
+  String? deviceToken;
 
   UpdateTokenRequestBody({this.deviceToken});
 

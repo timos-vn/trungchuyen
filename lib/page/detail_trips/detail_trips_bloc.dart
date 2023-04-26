@@ -14,132 +14,136 @@ import 'package:trungchuyen/models/network/service/network_factory.dart';
 
 
 class DetailTripsBloc extends Bloc<DetailTripsEvent,DetailTripsState> {
-  MainBloc _mainBloc;
+  late MainBloc _mainBloc;
   MainBloc get mainBloc => _mainBloc;
   BuildContext context;
-  NetWorkFactory _networkFactory;
-  String _accessToken;
-  String get accessToken => _accessToken;
-  String _refreshToken;
-  String get refreshToken => _refreshToken;
-  SharedPreferences _prefs;
-  SharedPreferences get prefs => _prefs;
-  String _nameLXTC;
-  SocketIOService socketIOService;
-  List<DetailTripsResponseBody> listOfDetailTrips = new List<DetailTripsResponseBody>();
+  NetWorkFactory? _networkFactory;
+  String? _accessToken;
+  String? get accessToken => _accessToken;
+  String? _refreshToken;
+  String? get refreshToken => _refreshToken;
+  SharedPreferences? _prefs;
+  SharedPreferences? get prefs => _prefs;
+  String _nameLXTC = '';
+  SocketIOService? socketIOService;
+  List<DetailTripsResponseBody> listOfDetailTrips = [];
 
-  DetailTripsBloc(this.context){
+
+  DetailTripsBloc(this.context) : super(DetailTripsInitial()){
     _networkFactory = NetWorkFactory(context);
+    _mainBloc = MainBloc(context);
+    // _mainBloc = BlocProvider.of<MainBloc>(context);
     socketIOService = Get.find<SocketIOService>();
+    on<GetPrefs>(_getPrefs,);
+    on<GetListDetailTrips>(_getListDetailTrips);
+    on<GetListDetailTripsHistory>(_getListDetailTripsHistory);
+    on<UpdateStatusCustomerDetailEvent>(_updateStatusCustomerDetailEvent);
+    on<TCTransferCustomerToLimoEvent>(_tCTransferCustomerToLimoEvent);
   }
 
-  // TODO: implement initialState
-  DetailTripsState get initialState => DetailTripsInitial();
+  void _getPrefs(GetPrefs event, Emitter<DetailTripsState> emitter)async{
+    emitter(DetailTripsLoading());
+    _prefs = await SharedPreferences.getInstance();
+    _accessToken = _prefs!.getString(Const.ACCESS_TOKEN) ?? "";
+    _refreshToken = _prefs!.getString(Const.REFRESH_TOKEN) ?? "";
+    _nameLXTC = _prefs!.getString(Const.FULL_NAME) ?? "";
+    emitter(GetPrefsSuccess());
+  }
 
-  @override
-  Stream<DetailTripsState> mapEventToState(DetailTripsEvent event) async* {
-    // TODO: implement mapEventToState
-    if (_prefs == null) {
-      _prefs = await SharedPreferences.getInstance();
-      _accessToken = _prefs.getString(Const.ACCESS_TOKEN) ?? "";
-      _refreshToken = _prefs.getString(Const.REFRESH_TOKEN) ?? "";
-      _nameLXTC = _prefs.getString(Const.FULL_NAME) ?? "";
-    }
-    if(event is GetListDetailTrips){
-      yield DetailTripsLoading();
-      DetailTripsState state = _handleGetListOfDetailTrips(await _networkFactory.getDetailTrips(event.date.toString(),_accessToken,event.date,event.idRoom.toString(),event.idTime.toString(),event.typeCustomer.toString()));
-      yield state;
-    }
-    else if(event is GetListDetailTripsHistory){
-      yield DetailTripsLoading();
-      DetailTripsState state = _handleGetListOfDetailTrips(await _networkFactory.getDetailTripsHistory(_accessToken,event.idRoom.toString(),event.idTime.toString(),event.typeCustomer.toString(),event.dateTime.toString()));
-      yield state;
-    }
-    else if(event is UpdateStatusCustomerDetailEvent){
-      yield DetailTripsLoading();
-      UpdateStatusCustomerRequestBody request = UpdateStatusCustomerRequestBody(
-          id:event.idTrungChuyen,
-          status: event.status,
-          ghiChu: event.note
-      );
-      DetailTripsState state = _handleUpdateStatusCustomer(await _networkFactory.updateGroupStatusCustomer(request,_accessToken),event.status);
-      yield state;
-    }
-    else if(event is TCTransferCustomerToLimoEvent){
-      yield DetailTripsLoading();
-      List<String> listIdTXLimo = new List<String>();
-      List<String> listKhach = new List<String>();
-      List<String> listIdTC = new List<String>();
-      String numberCustomer;
-      String idTC;
-      String taiXeLimo;
-      List<DetailTripsResponseBody> listitem = event.listCustomer;
-      if(_mainBloc.listDriverLimo !=null){
-        _mainBloc.listDriverLimo.clear();
-      }
-      listitem.forEach((element) {
-        if(element.trangThaiTC != 12){
-          listIdTC.add(element.idTrungChuyen);
-          if(listIdTXLimo.contains(element.idTaiXeLimousine) == false ){
-            _mainBloc.listDriverLimo.add(element);
-            listIdTXLimo.add(element.idTaiXeLimousine);
-          }
-          else {
-            DetailTripsResponseBody itemDetail = DetailTripsResponseBody(
-              soKhach: element.soKhach + 1,
-              hoTenTaiXeLimousine: element.hoTenTaiXeLimousine,
-              dienThoaiTaiXeLimousine: element.dienThoaiTaiXeLimousine,
-              bienSoXeLimousine: element.bienSoXeLimousine,
-            );
-            _mainBloc.listDriverLimo.removeWhere((item) => item.idTaiXeLimousine == element.idTaiXeLimousine);
-            _mainBloc.listDriverLimo.add(itemDetail);
-          }
+  void _getListDetailTrips(GetListDetailTrips event, Emitter<DetailTripsState> emitter)async{
+    emitter(DetailTripsLoading());
+    DetailTripsState state = _handleGetListOfDetailTrips(await _networkFactory!.getDetailTrips(event.date.toString(),_accessToken!,event.date,event.idRoom.toString(),event.idTime.toString(),event.typeCustomer.toString()));
+    emitter(state);
+  }
+
+  void _getListDetailTripsHistory(GetListDetailTripsHistory event, Emitter<DetailTripsState> emitter)async{
+    emitter(DetailTripsLoading());
+    DetailTripsState state = _handleGetListOfDetailTrips(await _networkFactory!.getDetailTripsHistory(_accessToken!,event.idRoom.toString(),event.idTime.toString(),event.typeCustomer.toString(),event.dateTime.toString()));
+    emitter(state);
+  }
+
+  void _updateStatusCustomerDetailEvent(UpdateStatusCustomerDetailEvent event, Emitter<DetailTripsState> emitter)async{
+    emitter(DetailTripsLoading());
+    UpdateStatusCustomerRequestBody request = UpdateStatusCustomerRequestBody(
+        id:event.idTrungChuyen,
+        status: event.status,
+        ghiChu: event.note
+    );
+    DetailTripsState state = _handleUpdateStatusCustomer(await _networkFactory!.updateGroupStatusCustomer(request,_accessToken!),event.status!);
+    emitter(state);
+  }
+
+  void _tCTransferCustomerToLimoEvent(TCTransferCustomerToLimoEvent event, Emitter<DetailTripsState> emitter)async{
+    emitter(DetailTripsLoading());
+    List<String> listIdTXLimo = [];
+    List<String> listKhach = [];
+    List<String> listIdTC = [];
+    String numberCustomer;
+    String idTC;
+    String taiXeLimo;
+    List<DetailTripsResponseBody> listitem = event.listCustomer;
+    _mainBloc.listDriverLimo.clear();
+    listitem.forEach((element) {
+      if(element.trangThaiTC != 12){
+        listIdTC.add(element.idTrungChuyen.toString());
+        if(listIdTXLimo.contains(element.idTaiXeLimousine) == false ){
+          _mainBloc.listDriverLimo.add(element);
+          listIdTXLimo.add(element.idTaiXeLimousine.toString());
         }
-      });
-
-      if(_mainBloc.listDriverLimo != null){
-        _mainBloc.listDriverLimo.forEach((element) {
-          listKhach.add(element.soKhach.toString());
-        });
+        else {
+          DetailTripsResponseBody itemDetail = DetailTripsResponseBody(
+            soKhach: element.soKhach! + 1,
+            hoTenTaiXeLimousine: element.hoTenTaiXeLimousine,
+            dienThoaiTaiXeLimousine: element.dienThoaiTaiXeLimousine,
+            bienSoXeLimousine: element.bienSoXeLimousine,
+          );
+          _mainBloc.listDriverLimo.removeWhere((item) => item.idTaiXeLimousine == element.idTaiXeLimousine);
+          _mainBloc.listDriverLimo.add(itemDetail);
+        }
       }
+    });
 
-      numberCustomer = listKhach.join(',');
-      idTC  = listIdTC.join(',');
-      taiXeLimo = listIdTXLimo.join(',');
-      var objData = {
-        'EVENT':'TAIXE_TRUNGCHUYEN_GIAOKHACH_LIMO',
-        'numberCustomer' : numberCustomer,
-        'nameLXTC':_nameLXTC,
-        'listIdTXLimo':taiXeLimo
-      };
-      TranferCustomerRequestBody request = TranferCustomerRequestBody(
-          title: event.title,
-          body: '',
-          data: objData,
-          idTaiKhoans: listIdTXLimo,
-      );
+    _mainBloc.listDriverLimo.forEach((element) {
+      listKhach.add(element.soKhach.toString());
+    });
 
-      DetailTripsState state =  _handleTransferCustomerLimo(await _networkFactory.sendNotification(request,_accessToken),idTC);
-      yield state;
-    }
+    numberCustomer = listKhach.join(',');
+    idTC  = listIdTC.join(',');
+    taiXeLimo = listIdTXLimo.join(',');
+    var objData = {
+      'EVENT':'TAIXE_TRUNGCHUYEN_GIAOKHACH_LIMO',
+      'numberCustomer' : numberCustomer,
+      'nameLXTC':_nameLXTC,
+      'listIdTXLimo':taiXeLimo
+    };
+    TranferCustomerRequestBody request = TranferCustomerRequestBody(
+      title: event.title.isEmpty ? 'Thông báo' : event.title,
+      body: event.body.isEmpty ? 'Thông báo' : event.body,
+      data: objData,
+      idTaiKhoans: listIdTXLimo,
+    );
+
+    DetailTripsState state =  _handleTransferCustomerLimo(await _networkFactory!.sendNotification(request,_accessToken!),idTC);
+    emitter(state);
   }
+
 
   DetailTripsState _handleTransferCustomerLimo(Object data,String listIDTC) {
-    if (data is String) return DetailTripsFailure(data);
+    //if (data is String) return DetailTripsFailure(data);
     try {
       return TCTransferCustomerToLimoSuccess(listIDTC);
     } catch (e) {
       print(e.toString());
-      return DetailTripsFailure(e.toString());
+      return TCTransferCustomerToLimoSuccess(listIDTC);
     }
   }
 
   DetailTripsState _handleUpdateStatusCustomer(Object data, int status) {
     if (data is String) return DetailTripsFailure(data);
     try {
-      if(socketIOService.socket.connected)
+      if(socketIOService!.socket.connected)
       {
-        socketIOService.socket.emit("TAIXE_TRUNGCHUYEN_CAPNHAT_TRANGTHAI_KHACH");
+        socketIOService!.socket.emit("TAIXE_TRUNGCHUYEN_CAPNHAT_TRANGTHAI_KHACH");
       }
       return UpdateStatusCustomerSuccess(status);
     } catch (e) {
@@ -152,8 +156,8 @@ class DetailTripsBloc extends Bloc<DetailTripsEvent,DetailTripsState> {
     if (data is String) return DetailTripsFailure(data);
     try {
       // listOfDetailTrips.clear();
-      DetailTripsResponse response = DetailTripsResponse.fromJson(data);
-      listOfDetailTrips = response.data;
+      DetailTripsResponse response = DetailTripsResponse.fromJson(data as Map<String,dynamic>);
+      listOfDetailTrips = response.data!;
           //response.data.forEach((element) {
         //var contain =  listOfDetailTrips.where((phone) => phone.soDienThoaiKhach == element.soDienThoaiKhach);
         // if (contain.isEmpty){

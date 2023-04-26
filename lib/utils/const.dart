@@ -1,5 +1,4 @@
 
-import 'package:flutter/services.dart';
 
 
 class Const {
@@ -8,7 +7,7 @@ class Const {
   /// live : https://api.trungchuyenhn.com
   /// dev : https://apidev.trungchuyenhn.com
   // ignore: non_constant_identifier_names
-  static  String HOST_URL = "https://apidev.trungchuyenhn.com";
+  static  String HOST_URL = "https://api.trungchuyenhn.com";
   // ignore: non_constant_identifier_names
   static  int PORT_URL = 0;
 
@@ -26,7 +25,7 @@ class Const {
   static const String TYPE_ONE = '1';
   static const String TYPE_ALL = '0';
 
-  static TextInputFormatter FORMAT_DECIMA_NUMBER = BlacklistingTextInputFormatter(RegExp('[\\-|\\ |\\/|\\*|\$|\\#|\\+|\\|]'));
+  // static TextInputFormatter FORMAT_DECIMA_NUMBER = BlacklistingTextInputFormatter(RegExp('[\\-|\\ |\\/|\\*|\$|\\#|\\+|\\|]'));
   static const String DATE_FORMAT = "dd/MM/yyyy";
   static const String DATE_TIME_FORMAT_LOCAL = "dd/MM/yyyy HH:mm:ss";
   static const String DATE_TIME_FORMAT = "yyyy-MM-dd HH:mm:ss";

@@ -5,6 +5,12 @@ abstract class DetailTripsLimoEvent extends Equatable {
   List<Object> get props => [];
 }
 
+class GetPrefs extends DetailTripsLimoEvent {
+
+  @override
+  String toString() => 'GetPrefs';
+}
+
 class GetListDetailTripsLimo extends DetailTripsLimoEvent {
 
   final String date;
@@ -30,10 +36,10 @@ class ConfirmCustomerLimoEvent extends DetailTripsLimoEvent {
 }
 
 class UpdateStatusCustomerConfirmMapEvent extends DetailTripsLimoEvent{
-  final int status;
-  final String idTrungChuyen;
-  final String note;
-  final String idLaiXeTC;
+  final int? status;
+  final String? idTrungChuyen;
+  final String? note;
+  final String? idLaiXeTC;
   UpdateStatusCustomerConfirmMapEvent({this.status,this.idTrungChuyen,this.note,this.idLaiXeTC});
 
   @override

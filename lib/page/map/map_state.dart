@@ -1,7 +1,4 @@
 import 'package:equatable/equatable.dart';
-import 'package:flutter_polyline_points/flutter_polyline_points.dart';
-import 'package:google_maps_controller/google_maps_controller.dart';
-import 'package:trungchuyen/models/network/response/detail_trips_repose.dart';
 
 abstract class  MapState extends Equatable {
   @override
@@ -12,7 +9,13 @@ class GetListCustomerSuccess extends MapState {
   @override
   String toString() => 'GetListCustomerSuccess }';
 }
+class GetPrefsSuccess extends MapState{
 
+  @override
+  String toString() {
+    return 'GetPrefsSuccess{}';
+  }
+}
 class MapInitial extends MapState {
 
   @override
@@ -57,13 +60,15 @@ class OfflineSuccess2 extends MapState {
   @override
   String toString() => 'OfflineSuccess {}';
 }
-class GetListLocationPolylineSuccess extends MapState {
-  final List<LatLng> lsPoints;
+// class GetListLocationPolylineSuccess extends MapState {
+//   final List<LatLng> lsPoints;
+//
+//   GetListLocationPolylineSuccess(this.lsPoints);
+//   @override
+//   String toString() => 'GetListLocationPolylineSuccess {}';
+// }
 
-  GetListLocationPolylineSuccess(this.lsPoints);
-  @override
-  String toString() => 'GetListLocationPolylineSuccess {}';
-}
+
 class TransferCustomerToLimoSuccess extends MapState {
   final String listIDTC;
 

@@ -5,7 +5,11 @@ abstract class DetailTripsEvent extends Equatable {
   @override
   List<Object> get props => [];
 }
+class GetPrefs extends DetailTripsEvent {
 
+  @override
+  String toString() => 'GetPrefs';
+}
 class GetListDetailTrips extends DetailTripsEvent {
 
   final DateTime date;
@@ -42,9 +46,9 @@ class TCTransferCustomerToLimoEvent extends DetailTripsEvent {
 }
 
 class UpdateStatusCustomerDetailEvent extends DetailTripsEvent{
-  final int status;
-  final List<String> idTrungChuyen;
-  final String note;
+  final int? status;
+  final List<String>? idTrungChuyen;
+  final String? note;
   UpdateStatusCustomerDetailEvent({this.status,this.idTrungChuyen,this.note});
 
   @override

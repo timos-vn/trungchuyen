@@ -28,7 +28,13 @@ class GetListHistoryTCSuccess extends ListHistoryTCState {
   @override
   String toString() => 'GetListHistoryTCSuccess }';
 }
+class GetPrefsSuccess extends ListHistoryTCState{
 
+  @override
+  String toString() {
+    return 'GetPrefsSuccess{}';
+  }
+}
 class GetListHistoryDetailTCSuccess extends ListHistoryTCState {
   @override
   String toString() => 'GetListHistoryDetailTCSuccess }';

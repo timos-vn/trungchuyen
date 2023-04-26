@@ -1,26 +1,26 @@
 
 class ListOfGroupAwaitingCustomer {
-  List<ListOfGroupAwaitingCustomerBody> data;
-  int statusCode;
-  String message;
+  List<ListOfGroupAwaitingCustomerBody>? data;
+  int? statusCode;
+  String? message;
 
   ListOfGroupAwaitingCustomer({this.data, this.statusCode, this.message});
 
-  ListOfGroupAwaitingCustomer.fromJson(Map<String, dynamic> json) {
+  ListOfGroupAwaitingCustomer.fromJson(Map<String?, dynamic> json) {
     if (json['data'] != null) {
-      data = new List<ListOfGroupAwaitingCustomerBody>();
+      data = <ListOfGroupAwaitingCustomerBody>[];
       json['data'].forEach((v) {
-        data.add(new ListOfGroupAwaitingCustomerBody.fromJson(v));
+        data?.add(new ListOfGroupAwaitingCustomerBody.fromJson(v));
       });
     }
     statusCode = json['statusCode'];
     message = json['message'];
   }
 
-  Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = new Map<String, dynamic>();
+  Map<String?, dynamic> toJson() {
+    final Map<String?, dynamic> data = new Map<String?, dynamic>();
     if (this.data != null) {
-      data['data'] = this.data.map((v) => v.toJson()).toList();
+      data['data'] = this.data?.map((v) => v.toJson()).toList();
     }
     data['statusCode'] = this.statusCode;
     data['message'] = this.message;
@@ -29,17 +29,17 @@ class ListOfGroupAwaitingCustomer {
 }
 
 class ListOfGroupAwaitingCustomerBody {
-  String ngayChay;
-  int idVanPhong;
-  String diaChi;
-  int idKhungGio;
-  String thoiGianDi;
-  String thoiGianDen;
-  int loaiKhach;
-  int soKhach;
-  String tenVanPhong;
-  int thanhCong;
-  int thatBai;
+  String? ngayChay;
+  int? idVanPhong;
+  String? diaChi;
+  int? idKhungGio;
+  String? thoiGianDi;
+  String? thoiGianDen;
+  int? loaiKhach;
+  int? soKhach;
+  String? tenVanPhong;
+  int? thanhCong;
+  int? thatBai;
 
   ListOfGroupAwaitingCustomerBody(
       {this.ngayChay,
@@ -52,7 +52,7 @@ class ListOfGroupAwaitingCustomerBody {
         this.soKhach,
       this.tenVanPhong,this.thanhCong,this.thatBai});
 
-  ListOfGroupAwaitingCustomerBody.fromJson(Map<String, dynamic> json) {
+  ListOfGroupAwaitingCustomerBody.fromJson(Map<String?, dynamic> json) {
     ngayChay = json['ngayChay'];
     idVanPhong = json['idVanPhong'];
     diaChi = json['diaChi'];
@@ -66,8 +66,8 @@ class ListOfGroupAwaitingCustomerBody {
     thatBai = json['thatBai'];
   }
 
-  Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = new Map<String, dynamic>();
+  Map<String?, dynamic> toJson() {
+    final Map<String?, dynamic> data = new Map<String?, dynamic>();
     data['ngayChay'] = this.ngayChay;
     data['idVanPhong'] = this.idVanPhong;
     data['diaChi'] = this.diaChi;

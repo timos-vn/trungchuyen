@@ -10,6 +10,14 @@ class DetailTripsInitial extends DetailTripsState {
   @override
   String toString() => 'DetailTripsInitial';
 }
+
+class GetPrefsSuccess extends DetailTripsInitial{
+
+  @override
+  String toString() {
+    return 'GetPrefsSuccess{}';
+  }
+}
 class DetailTripsFailure extends DetailTripsState {
   final String error;
 

@@ -1,6 +1,4 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:get/get.dart' as libGetX;
@@ -19,7 +17,6 @@ import 'package:trungchuyen/page/report_limo/report_limo_page.dart';
 import 'package:trungchuyen/themes/colors.dart';
 import 'package:trungchuyen/utils/utils.dart';
 import 'package:trungchuyen/widget/pending_action.dart';
-import 'dart:io' show Platform, exit;
 
 import 'package:trungchuyen/widget/separator.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -28,23 +25,24 @@ import 'account_event.dart';
 
 
 class AccountPage extends StatefulWidget {
-  final bool roleTC;
-  const AccountPage({Key key,this.roleTC}) : super(key: key);
+  final bool? roleTC;
+  const AccountPage({Key? key,this.roleTC}) : super(key: key);
   @override
   AccountPageState createState() => AccountPageState();
 }
 
 class AccountPageState extends State<AccountPage> with TickerProviderStateMixin {
 
-  AccountBloc _accountBloc;
-  MainBloc _mainBloc;
+  late AccountBloc _accountBloc;
+  late MainBloc _mainBloc;
 
   @override
   void initState() {
     // TODO: implement initState
     _accountBloc = AccountBloc(context);
     _mainBloc = BlocProvider.of<MainBloc>(context);
-    _accountBloc.add(GetInfoAccount());
+    _accountBloc.add(GetPrefs());
+
 
     super.initState();
   }
@@ -55,6 +53,9 @@ class AccountPageState extends State<AccountPage> with TickerProviderStateMixin 
         body: BlocListener<AccountBloc,AccountState>(
             bloc: _accountBloc,
             listener: (context, state){
+              if(state is GetPrefsSuccess){
+                _accountBloc.add(GetInfoAccount());
+              }
               if(state is LogOutSuccess){
                 libGetX.Get.offAll(LoginPage());
               }
@@ -97,8 +98,7 @@ class AccountPageState extends State<AccountPage> with TickerProviderStateMixin 
               ),
               Expanded(
                 child: Stack(
-                  overflow: Overflow.visible,
-                  children: [
+                  clipBehavior: Clip.none, children: [
                     Container(
                       width: double.infinity,
                       decoration: BoxDecoration(
@@ -158,9 +158,9 @@ class AccountPageState extends State<AccountPage> with TickerProviderStateMixin 
                                         minWidth: 17,
                                         minHeight: 17,
                                       ),
-                                      child: Text(_mainBloc.countNotifyUnRead > 0
+                                      child: Text('${_mainBloc.countNotifyUnRead > 0
                                           ? _mainBloc.countNotifyUnRead.toString()
-                                          : _mainBloc.countNotifyUnRead?.toString(),
+                                          : _mainBloc.countNotifyUnRead.toString()}',
                                         style: TextStyle(
                                           color: Colors.white,
                                           fontSize: 10,

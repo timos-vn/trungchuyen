@@ -22,6 +22,13 @@ class PickDateSuccess extends OptionsInputState {
     return 'PickDateSuccess{}';
   }
 }
+class GetPrefsSuccess extends OptionsInputState{
+
+  @override
+  String toString() {
+    return 'GetPrefsSuccess{}';
+  }
+}
 
 class WrongDate extends OptionsInputState {
   @override

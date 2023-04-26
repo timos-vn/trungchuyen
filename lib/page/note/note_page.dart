@@ -1,12 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
 import 'package:trungchuyen/utils/utils.dart';
 
 class NotePage extends StatefulWidget {
-  final bool typeView;
-  final String reasonOld;
+  final bool? typeView;
+  final String? reasonOld;
 
-  const NotePage({Key key, this.typeView,this.reasonOld}) : super(key: key);
+  const NotePage({Key? key, this.typeView,this.reasonOld}) : super(key: key);
   @override
   _NotePageState createState() => _NotePageState();
 }
@@ -63,7 +62,7 @@ class _NotePageState extends State<NotePage> {
                                   SizedBox(height: 10,),
                                   CheckboxListTile(
                                     title: Text('Đón khách thành công'),
-                                    value: _isChecked,
+                                    value: _isChecked, onChanged: (bool? value) {  },
                                   ),
                                   Visibility(
                                     visible: widget.typeView == true,
@@ -72,7 +71,7 @@ class _NotePageState extends State<NotePage> {
                                       value: _isChecked2,
                                       onChanged: (val) {
                                         setState(() {
-                                          _isChecked2 = val;
+                                          _isChecked2 = val!;
                                         });
                                       },
                                     ),
@@ -105,7 +104,7 @@ class _NotePageState extends State<NotePage> {
                                   child: Center(
                                     child: TextButton(
                                       onPressed: (){
-                                        String content = '${Utils.isEmpty(widget.reasonOld) ? '' : widget.reasonOld + '/'} [TX]Đón khách thành công';
+                                        String content = '${Utils.isEmpty(widget.reasonOld.toString()) ? '' : widget.reasonOld.toString() + '/'} [TX]Đón khách thành công';
                                         if(widget.typeView == true){
                                           content = content + ', ' + '[TX]Đã thu tiền';
                                         }

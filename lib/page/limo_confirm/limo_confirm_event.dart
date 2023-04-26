@@ -1,5 +1,4 @@
 import 'package:equatable/equatable.dart';
-import 'package:trungchuyen/models/entity/customer.dart';
 
 abstract class LimoConfirmEvent extends Equatable {
   @override
@@ -12,11 +11,17 @@ class GetListCustomerConfirmEvent extends LimoConfirmEvent {
   String toString() => 'GetListCustomerConfirmEvent {}';
 }
 
+class GetPrefs extends LimoConfirmEvent {
+
+  @override
+  String toString() => 'GetPrefs';
+}
+
 class UpdateStatusCustomerConfirmMapEvent extends LimoConfirmEvent{
-  final int status;
-  final String idTrungChuyen;
-  final String note;
-  final String idLaiXeTC;
+  final int? status;
+  final String? idTrungChuyen;
+  final String? note;
+  final String? idLaiXeTC;
   UpdateStatusCustomerConfirmMapEvent({this.status,this.idTrungChuyen,this.note,this.idLaiXeTC});
 
   @override

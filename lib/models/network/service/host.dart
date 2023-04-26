@@ -12,7 +12,7 @@ class HostSingleton {
     return _singleton;
   }
 
-  HostSingleton._internal() {}
+  HostSingleton._internal();
 
   void showError(){
    // print('test connection show Error');

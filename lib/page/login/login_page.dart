@@ -1,13 +1,8 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:get/get.dart';
-import 'package:get/get.dart' as libGetX;
-import 'package:in_app_update/in_app_update.dart';
-import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
-import 'package:new_version/new_version.dart';
-import 'package:trungchuyen/page/main/main_page.dart';
-import 'package:trungchuyen/service/soket_io_service.dart';
+import 'package:persistent_bottom_nav_bar/persistent-tab-view.dart';
+// import 'package:in_app_update/in_app_update.dart';
+// import 'package:new_version/new_version.dart';
 import 'package:trungchuyen/themes/colors.dart';
 import 'package:trungchuyen/themes/font.dart';
 import 'package:trungchuyen/themes/images.dart';
@@ -16,6 +11,7 @@ import 'package:trungchuyen/widget/confirm_update_version.dart';
 import 'package:trungchuyen/widget/pending_action.dart';
 import 'package:trungchuyen/widget/text_field_widget.dart';
 import 'package:url_launcher/url_launcher.dart';
+import '../main/main_page.dart';
 import 'login_bloc.dart';
 import 'login_event.dart';
 import 'login_sate.dart';
@@ -27,61 +23,57 @@ class LoginPage extends StatefulWidget {
 
 class _LoginPageState extends State<LoginPage> {
 
-  TextEditingController usernameController;
-  TextEditingController passwordController;
-  FocusNode usernameFocus;
-  FocusNode passwordFocus;
+  late TextEditingController usernameController;
+  late TextEditingController passwordController;
+  late FocusNode usernameFocus;
+  late FocusNode passwordFocus;
   bool isChecked = false;
-  LoginBloc _loginBloc;
+  late LoginBloc _loginBloc;
   bool showLoading = false;
-  String errorPass, errorUsername, errorHotId;
-  String _selectedLang;
-  AppUpdateInfo _updateInfo;bool _flexibleUpdateAvailable = false;
+  String? errorPass, errorUsername, errorHotId;
+  String? _selectedLang;
+  // AppUpdateInfo? _updateInfo;
+  bool _flexibleUpdateAvailable = false;
   GlobalKey<ScaffoldState> _scaffoldKey = new GlobalKey();
 
   Future<void> checkForUpdate() async {
-    InAppUpdate.checkForUpdate().then((info) {
-      setState(() {
-        _updateInfo = info;
-      });
-    }).catchError((e) {
-      showSnack(e.toString());
-    });
+    // InAppUpdate.checkForUpdate().then((info) {
+    //   setState(() {
+    //     _updateInfo = info;
+    //   });
+    // }).catchError((e) {
+    //   showSnack(e.toString());
+    // });
   }
 
   void showSnack(String text) {
     if (_scaffoldKey.currentContext != null) {
-      ScaffoldMessenger.of(_scaffoldKey.currentContext)
+      ScaffoldMessenger.of(_scaffoldKey.currentContext!)
           .showSnackBar(SnackBar(content: Text(text)));
     }
   }
 
 
   void _checkVersion() async {
-    final newVersion = NewVersion(
-        context: context,
-        androidId: 'takecare.hn.trungchuyen',
-        iOSId: 'takecare.hn.trungchuyen',
-        dialogTitle: 'Thông báo cập nhật',
-        dialogText: 'Đã có phiên bản mới vui lòng cập nhật để sử dụng những tính năng mới nhất.',
-        dismissText: 'Để sau',
-        updateText:'Cập nhật'
-    );
-    final status = await newVersion.getVersionStatus();
-    setState(() {
-      showLoading = false;
-    });
-    print(status.localVersion);
-    print(status.storeVersion);
-    List<String> localVersion = status.localVersion.split('.');
-    List<String> storeVersion = status.storeVersion.split('.');
-    if(int.parse(localVersion[0]) < int.parse(storeVersion[0])){
-      showUpdate();
-    }else if((int.parse(localVersion[0]) == int.parse(storeVersion[0])) && (int.parse(localVersion[1]) < int.parse(storeVersion[1]))){
-      showUpdate();
-    }else if((int.parse(localVersion[0]) == int.parse(storeVersion[0])) && (int.parse(localVersion[1]) == int.parse(storeVersion[1])) && (int.parse(localVersion[2]) < int.parse(storeVersion[2]))){
-      showUpdate();
-    }
+    // final newVersion = NewVersion(
+    //     androidId: 'takecare.hn.trungchuyen',
+    //     iOSId: 'takecare.hn.trungchuyen',
+    // );
+    // final status = await newVersion.getVersionStatus();
+    // setState(() {
+    //   showLoading = false;
+    // });
+    // print(status!.localVersion);
+    // print(status.storeVersion);
+    // List<String> localVersion = status.localVersion.split('.');
+    // List<String> storeVersion = status.storeVersion.split('.');
+    // if(int.parse(localVersion[0]) < int.parse(storeVersion[0])){
+    //   showUpdate();
+    // }else if((int.parse(localVersion[0]) == int.parse(storeVersion[0])) && (int.parse(localVersion[1]) < int.parse(storeVersion[1]))){
+    //   showUpdate();
+    // }else if((int.parse(localVersion[0]) == int.parse(storeVersion[0])) && (int.parse(localVersion[1]) == int.parse(storeVersion[1])) && (int.parse(localVersion[2]) < int.parse(storeVersion[2]))){
+    //   showUpdate();
+    // }
   }
 
   void showUpdate(){
@@ -106,7 +98,8 @@ class _LoginPageState extends State<LoginPage> {
     showLoading = true;
     _checkVersion();
     _loginBloc = LoginBloc(context);
-    _loginBloc.add(SaveUserNamePassWordEvent());
+    _loginBloc.add(GetPrefs());
+
 
     usernameFocus = FocusNode();
     passwordFocus = FocusNode();
@@ -124,15 +117,22 @@ class _LoginPageState extends State<LoginPage> {
           create: (context) => _loginBloc,
           child: BlocListener<LoginBloc, LoginState>(
             listener: (context, state) {
+              if(state is GetPrefsSuccess){
+                _loginBloc.add(SaveUserNamePassWordEvent());
+              }
+              if(state is LoginFailure){
+                Utils.showToast(state.error.toString());
+              }
               if (state is LoginSuccess) {
-                Get.put(SocketIOService());
+                // Get.put(SocketIOService());
                 ///0 : Offline
                 ///1 : Online
                 _loginBloc.add(UpdateTokenDiveEvent(state.tokenFCM));
-                Navigator.push(context, (MaterialPageRoute(builder: (context)=>MainPage(roleTC: _loginBloc.roleTC,roleAccount: _loginBloc.roleAccount,tokenFCM: state.tokenFCM,))));
-              }
-              else if (state is CheckVersionSuccess) {
+                print('Login OK');
 
+              }
+              else if (state is UpdateTokenSuccessState) {
+                pushNewScreen(context, screen: MainPage(roleTC: _loginBloc.roleTC,roleAccount: _loginBloc.roleAccount,tokenFCM: state.tokenFCM,));
               }
               else if(state is ChangeLanguageSuccess){
                 _selectedLang = state.nameLng;
@@ -143,10 +143,11 @@ class _LoginPageState extends State<LoginPage> {
               }
             },
             child: BlocBuilder<LoginBloc, LoginState>(builder: (BuildContext context, LoginState state,) {
-              if (state is ValidateErrorHostId) errorHotId = state.error;
-              if (state is ValidateErrorUsername) errorUsername = state.error;
-              if (state is ValidateErrorPassword) errorPass = state.error;
-
+              if (state is ValidateErrorUsername) {
+                errorUsername = state.error;
+              } else if (state is ValidateErrorPassword) {
+                errorPass = state.error;
+              }
               return buildPage(context, state);
             }),
           ),
@@ -240,15 +241,15 @@ class _LoginPageState extends State<LoginPage> {
           children: [
             Checkbox(
               value: isChecked,
-              onChanged: (bool newValue) {
+              onChanged: (bool? newValue) {
                 setState(() {
                   print(isChecked);
-                  isChecked = newValue;
+                  isChecked = newValue!;
                 });
               },
             ),
             Text(
-              'SavePassword'.tr.toUpperCase(),
+              'Ghi nhớ mật khẩu'.toUpperCase(),
               style: TextStyle(fontFamily: fontSub, fontSize: 12, color: grey,decoration:TextDecoration.underline ),
               textAlign: TextAlign.center,
             ),
@@ -289,12 +290,12 @@ class _LoginPageState extends State<LoginPage> {
         controller: usernameController,
         textInputAction: TextInputAction.next,
         errorText: errorUsername,
-        hintText: 'Tên tài khoản'.tr,
-        onChanged: (text) => _loginBloc.checkUsernameBloc(text),
+        hintText: 'Tên tài khoản',
+        onChanged: (text) => _loginBloc.checkUsernameBloc(text!),
         //labelText: S.of(context).phone_number,
         keyboardType: TextInputType.phone,
         prefixIcon: Icons.account_circle,
-        onSubmitted: (text) => Utils.navigateNextFocusChange(context,  usernameFocus,  passwordFocus),
+        onSubmitted: (text) => Utils.navigateNextFocusChange(context,  usernameFocus,  passwordFocus), readOnly: false,
       ),
     );
   }
@@ -308,11 +309,11 @@ class _LoginPageState extends State<LoginPage> {
         keyboardType: TextInputType.phone,
         isPassword: true,
         errorText: errorPass,
-        hintText: 'Mật khẩu'.tr,
+        hintText: 'Mật khẩu',
         prefixIcon: Icons.vpn_key,
-        onChanged: (text) => _loginBloc.checkPassBloc(text),
+        onChanged: (text) => _loginBloc.checkPassBloc(text!),
         focusNode: passwordFocus,
-        onSubmitted: (_)=>_loginBloc.add(Login(usernameController.text,passwordController.text,false)),
+        onSubmitted: (_)=>_loginBloc.add(Login(usernameController.text,passwordController.text,false)), readOnly: false,
       ),
     );
   }

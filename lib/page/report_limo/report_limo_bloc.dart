@@ -3,8 +3,6 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:trungchuyen/models/network/response/report_reponse.dart';
 import 'package:trungchuyen/models/network/service/network_factory.dart';
-import 'package:trungchuyen/page/report/report_event.dart';
-import 'package:trungchuyen/page/report/report_state.dart';
 import 'package:trungchuyen/page/report_limo/report_limo_event.dart';
 import 'package:trungchuyen/page/report_limo/report_limo_state.dart';
 import 'package:trungchuyen/utils/const.dart';
@@ -14,39 +12,40 @@ import 'package:trungchuyen/utils/utils.dart';
 class ReportLimoBloc extends Bloc<ReportLimoEvent,ReportLimoState> {
 
   BuildContext context;
-  NetWorkFactory _networkFactory;
-  String _accessToken;
-  String get accessToken => _accessToken;
-  String _refreshToken;
-  String get refreshToken => _refreshToken;
-  SharedPreferences _prefs;
-  SharedPreferences get prefs => _prefs;
+  NetWorkFactory? _networkFactory;
+  String? _accessToken;
+  String? get accessToken => _accessToken;
+  String? _refreshToken;
+  String? get refreshToken => _refreshToken;
+  SharedPreferences? _prefs;
+  SharedPreferences? get prefs => _prefs;
 
-  List<DsKhachs> listReport = new List<DsKhachs>();
-  ReportReponseDetail reponseDetail;
+  List<DsKhachs> listReport = [];
+  ReportReponseDetail? reponseDetail;
   int tongKhach = 0;
-  String idNhaXe;
-  ReportLimoBloc(this.context) {
+  String idNhaXe = '';
+
+
+  ReportLimoBloc(this.context) : super(ReportLimoInitial()){
     _networkFactory = NetWorkFactory(context);
+
+    on<GetPrefs>(_getPrefs,);
+    on<GetReportLimoEvent>(_getReportLimoEvent);
   }
 
-  // TODO: implement initialState
-  ReportLimoState get initialState => ReportLimoInitial();
+  void _getPrefs(GetPrefs event, Emitter<ReportLimoState> emitter)async{
+    emitter(ReportLimoLoading());
+    _prefs = await SharedPreferences.getInstance();
+    _accessToken = _prefs!.getString(Const.ACCESS_TOKEN) ?? "";
+    _refreshToken = _prefs!.getString(Const.REFRESH_TOKEN) ?? "";
+    idNhaXe = _prefs!.getString(Const.NHA_XE)??"";
+    emitter(GetPrefsSuccess());
+  }
 
-  @override
-  Stream<ReportLimoState> mapEventToState(ReportLimoEvent event) async*{
-    // TODO: implement mapEventToState
-    if (_prefs == null) {
-      _prefs = await SharedPreferences.getInstance();
-      _accessToken = _prefs.getString(Const.ACCESS_TOKEN) ?? "";
-      _refreshToken = _prefs.getString(Const.REFRESH_TOKEN) ?? "";
-      idNhaXe = _prefs.getString(Const.NHA_XE)??"";
-    }
-    if(event is GetReportLimoEvent){
-      yield ReportLimoLoading();
-      ReportLimoState state = _handleGetReportLimo(await _networkFactory.getReportLimo(_accessToken, event.dateFrom,event.dateTo,idNhaXe));
-      yield state;
-    }
+  void _getReportLimoEvent(GetReportLimoEvent event, Emitter<ReportLimoState> emitter)async{
+    emitter(ReportLimoLoading());
+    ReportLimoState state = _handleGetReportLimo(await _networkFactory!.getReportLimo(_accessToken!, event.dateFrom,event.dateTo,idNhaXe));
+    emitter(state);
   }
 
 
@@ -57,10 +56,10 @@ class ReportLimoBloc extends Bloc<ReportLimoEvent,ReportLimoState> {
         tongKhach=0;
         listReport.clear();
       }
-      ReportReponse reponse = ReportReponse.fromJson(data);
+      ReportReponse reponse = ReportReponse.fromJson(data as Map<String,dynamic>);
       reponseDetail = reponse.data;
-      tongKhach = reponseDetail.tongKhach;
-      reponseDetail.dsKhachs.forEach((element) {
+      tongKhach = reponseDetail!.tongKhach!;
+      reponseDetail!.dsKhachs!.forEach((element) {
         DsKhachs customer = new DsKhachs(
             ngayChay: element.ngayChay,
             tenTuyenDuong: element.tenTuyenDuong,
@@ -98,9 +97,7 @@ class ReportLimoBloc extends Bloc<ReportLimoEvent,ReportLimoState> {
                   &&
                   item.tenTuyenDuong == element.tenTuyenDuong
           ));
-          if (customerNews != null){
-            customerNews.soKhach = customerNews.soKhach + 1;
-          }
+          customerNews.soKhach = customerNews.soKhach! + 1;
           listReport.removeWhere((rm) => rm.ngayChay == customerNews.ngayChay && rm.gioBatDau == customerNews.gioBatDau && rm.tenTuyenDuong == customerNews.tenTuyenDuong);
           listReport.add(customerNews);
         }

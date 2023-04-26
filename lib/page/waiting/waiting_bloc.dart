@@ -3,12 +3,10 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:trungchuyen/models/database/dbhelper.dart';
-import 'package:trungchuyen/models/entity/customer.dart';
 import 'package:trungchuyen/models/network/response/detail_trips_repose.dart';
 import 'package:trungchuyen/models/network/response/list_of_group_awaiting_customer_response.dart';
 import 'package:trungchuyen/models/network/service/network_factory.dart';
 import 'package:trungchuyen/page/main/main_bloc.dart';
-import 'package:trungchuyen/page/main/main_event.dart';
 import 'package:trungchuyen/page/waiting/waiting_event.dart';
 import 'package:trungchuyen/page/waiting/waiting_sate.dart';
 import 'package:trungchuyen/utils/const.dart';
@@ -16,56 +14,50 @@ import 'package:trungchuyen/utils/const.dart';
 
 class WaitingBloc extends Bloc<WaitingEvent,WaitingState> {
 
-  // ignore: close_sinks
-  MainBloc _mainBloc;
+  late MainBloc _mainBloc;
   MainBloc get mainBloc => _mainBloc;
   BuildContext context;
-  NetWorkFactory _networkFactory;
-  String _accessToken;
-  String get accessToken => _accessToken;
-  String _refreshToken;
-  String get refreshToken => _refreshToken;
-  SharedPreferences _prefs;
-  SharedPreferences get prefs => _prefs;
-  List<ListOfGroupAwaitingCustomerBody> listOfGroupAwaitingCustomer;
-  List<DetailTripsResponseBody> listOfDetailTrips1 = new List<DetailTripsResponseBody>();
-  int testRole;
+  NetWorkFactory? _networkFactory;
+  String? _accessToken;
+  String? get accessToken => _accessToken;
+  String? _refreshToken;
+  String? get refreshToken => _refreshToken;
+  SharedPreferences? _prefs;
+  SharedPreferences? get prefs => _prefs;
+  List<ListOfGroupAwaitingCustomerBody> listOfGroupAwaitingCustomer = [];
+  List<DetailTripsResponseBody> listOfDetailTrips1 = [];
+  int testRole = 0;
   DateFormat format = DateFormat("dd/MM/yyyy");
   DatabaseHelper db = DatabaseHelper();
-  WaitingBloc(this.context)  {
+
+  WaitingBloc(this.context) : super(WaitingInitial()){
     _networkFactory = NetWorkFactory(context);
-    // try{
-    //   _mainBloc = BlocProvider.of<MainBloc>(context);
-    // }catch(e){
-    //   print(e);
-    // }
+    db = DatabaseHelper();
+    db.init();
+    on<GetPrefs>(_getPrefs,);
+    on<GetListGroupAwaitingCustomer>(_getListGroupAwaitingCustomer);
+    on<GetListDetailTripsOfPageWaiting>(_getListDetailTripsOfPageWaiting);
   }
 
-  // TODO: implement initialState
-  WaitingState get initialState => WaitingInitial();
+  void _getPrefs(GetPrefs event, Emitter<WaitingState> emitter)async{
+    emitter(WaitingLoading());
+    _prefs = await SharedPreferences.getInstance();
+    _accessToken = _prefs!.getString(Const.ACCESS_TOKEN) ?? "";
+    _refreshToken = _prefs!.getString(Const.REFRESH_TOKEN) ?? "";
+    testRole = int.parse(_prefs!.getString(Const.CHUC_VU) ?? "0");
+    emitter(GetPrefsSuccess());
+  }
 
-  @override
-  Stream<WaitingState> mapEventToState(WaitingEvent event) async* {
-    // TODO: implement mapEventToState
-    if (_prefs == null) {
-      _prefs = await SharedPreferences.getInstance();
-      _accessToken = _prefs.getString(Const.ACCESS_TOKEN) ?? "";
-      _refreshToken = _prefs.getString(Const.REFRESH_TOKEN) ?? "";
-      testRole = int.parse(_prefs.getString(Const.CHUC_VU) ?? 0);
+  void _getListGroupAwaitingCustomer(GetListGroupAwaitingCustomer event, Emitter<WaitingState> emitter)async{
+    emitter(WaitingLoading());
+    WaitingState state = _handleAwaitingCustomer(await _networkFactory!.groupCustomerAWaiting(_accessToken!,event.date));
+    emitter(state);
+  }
 
-    }
-    if(event is GetListGroupAwaitingCustomer){
-      yield WaitingLoading();
-      print(event.date);
-      WaitingState state = _handleAwaitingCustomer(await _networkFactory.groupCustomerAWaiting(_accessToken,event.date));
-      yield state;
-    }
-
-    if(event is GetListDetailTripsOfPageWaiting){
-      yield WaitingLoading();
-      WaitingState state = _handleGetListOfDetailTrips(await _networkFactory.getDetailTrips(event.date.toString(),_accessToken,event.date,event.idRoom.toString(),event.idTime.toString(),event.typeCustomer.toString()));
-      yield state;
-    }
+  void _getListDetailTripsOfPageWaiting(GetListDetailTripsOfPageWaiting event, Emitter<WaitingState> emitter)async{
+    emitter(WaitingLoading());
+    WaitingState state = _handleGetListOfDetailTrips(await _networkFactory!.getDetailTrips(event.date.toString(),_accessToken.toString(),event.date,event.idRoom.toString(),event.idTime.toString(),event.typeCustomer.toString()));
+    emitter(state);
   }
 
   WaitingState _handleGetListOfDetailTrips(Object data) {
@@ -73,8 +65,8 @@ class WaitingBloc extends Bloc<WaitingEvent,WaitingState> {
     try {
       _mainBloc.listCustomer.clear();
 
-      DetailTripsResponse response = DetailTripsResponse.fromJson(data);
-      _mainBloc.listCustomer = response.data;
+      DetailTripsResponse response = DetailTripsResponse.fromJson(data as Map<String,dynamic>);
+      _mainBloc.listCustomer = response.data!;
       // response.data.forEach((element) {
       //   var contain =  _mainBloc.listCustomer.where((phone) => phone.soDienThoaiKhach == element.soDienThoaiKhach);
       //   if (contain.isEmpty){
@@ -124,7 +116,7 @@ class WaitingBloc extends Bloc<WaitingEvent,WaitingState> {
         if(b.trangThaiTC == 5) return 1;
         if(a.trangThaiTC == 2) return -1;
         if(b.trangThaiTC == 2) return 1;
-        if(a.trangThaiTC > b.trangThaiTC) return 1;
+        if(a.trangThaiTC! > b.trangThaiTC!) return 1;
         return 0;
       });
       _mainBloc.currentNumberCustomerOfList = _mainBloc.listCustomer.length;
@@ -139,17 +131,17 @@ class WaitingBloc extends Bloc<WaitingEvent,WaitingState> {
     if (data is String) return WaitingFailure(data);
     try {
       bool vanTrongChuyen = false;
-      String ngayChay;
+      String ngayChay = '';
       _mainBloc.listOfGroupAwaitingCustomer.clear();
-      ListOfGroupAwaitingCustomer response = ListOfGroupAwaitingCustomer.fromJson(data);
-      listOfGroupAwaitingCustomer = response.data;
-      _mainBloc.listOfGroupAwaitingCustomer = response.data;
+      ListOfGroupAwaitingCustomer response = ListOfGroupAwaitingCustomer.fromJson(data as Map<String,dynamic>);
+      listOfGroupAwaitingCustomer = response.data!;
+      _mainBloc.listOfGroupAwaitingCustomer = response.data!;
       print(_mainBloc.listOfGroupAwaitingCustomer.length);
       _mainBloc.listOfGroupAwaitingCustomer.forEach((item) {
         if(item.idKhungGio == _mainBloc.idKhungGio && item.loaiKhach == _mainBloc.loaiKhach && _mainBloc.blocked == true&& item.idVanPhong == _mainBloc.idVanPhong){
           vanTrongChuyen = true;
-          _mainBloc.trips = item.thoiGianDi + ' - ' + item.ngayChay;
-          ngayChay = item.ngayChay;
+          _mainBloc.trips = item.thoiGianDi.toString() + ' - ' + item.ngayChay.toString();
+          ngayChay = item.ngayChay.toString();
         }
       });
       if(vanTrongChuyen == true){

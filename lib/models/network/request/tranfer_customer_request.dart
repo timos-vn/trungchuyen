@@ -1,9 +1,9 @@
 class TranferCustomerRequestBody {
 
-  String title;
-  String body;
-  Map<String,String> data;
-  List<String> idTaiKhoans;
+  String? title;
+  String? body;
+  Map<String,String>? data;
+  List<String>? idTaiKhoans;
 
 
   TranferCustomerRequestBody({this.title, this.body,this.data, this.idTaiKhoans,});

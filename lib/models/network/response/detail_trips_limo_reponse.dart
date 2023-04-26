@@ -127,9 +127,9 @@
 // }
 
 class DetailTripsLimo {
-  DetailTripsLimoReponseBody data;
-  int statusCode;
-  String message;
+  DetailTripsLimoReponseBody? data;
+  int? statusCode;
+  String? message;
 
   DetailTripsLimo({this.data, this.statusCode, this.message});
 
@@ -142,7 +142,7 @@ class DetailTripsLimo {
   Map<String, dynamic> toJson() {
     final Map<String, dynamic> data = new Map<String, dynamic>();
     if (this.data != null) {
-      data['data'] = this.data.toJson();
+      data['data'] = this.data?.toJson();
     }
     data['statusCode'] = this.statusCode;
     data['message'] = this.message;
@@ -151,9 +151,9 @@ class DetailTripsLimo {
 }
 
 class DetailTripsLimoReponseBody {
-  int tongKhach;
-  int khachHuy;
-  List<DsKhachs> dsKhachs;
+  int? tongKhach;
+  int? khachHuy;
+  List<DsKhachs>? dsKhachs;
 
   DetailTripsLimoReponseBody({this.tongKhach, this.khachHuy, this.dsKhachs});
 
@@ -161,9 +161,9 @@ class DetailTripsLimoReponseBody {
     tongKhach = json['tongKhach'];
     khachHuy = json['khachHuy'];
     if (json['dsKhachs'] != null) {
-      dsKhachs = new List<DsKhachs>();
+      dsKhachs = <DsKhachs>[];
       json['dsKhachs'].forEach((v) {
-        dsKhachs.add(new DsKhachs.fromJson(v));
+        dsKhachs?.add(new DsKhachs.fromJson(v));
       });
     }
   }
@@ -173,42 +173,42 @@ class DetailTripsLimoReponseBody {
     data['tongKhach'] = this.tongKhach;
     data['khachHuy'] = this.khachHuy;
     if (this.dsKhachs != null) {
-      data['dsKhachs'] = this.dsKhachs.map((v) => v.toJson()).toList();
+      data['dsKhachs'] = this.dsKhachs!.map((v) => v.toJson()).toList();
     }
     return data;
   }
 }
 
 class DsKhachs {
-  String idDatVe;
-  String idTaiXeTC;
-  int maVe;
-  int soGhe;
-  String hoTenTaiXeTrungChuyen;
-  String dienThoaiTaiXeTrungChuyen;
-  String tenXeTrungChuyen;
-  String bienSoXeTrungChuyen;
-  String tenKhachHang;
-  String soDienThoaiKhach;
-  String diaChiKhachDi;
-  String toaDoDiaChiKhachDi;
-  String diaChiKhachDen;
-  String toaDoDiaChiKhachDen;
-  String diaChiLimoDi;
-  String toaDoLimoDi;
-  String diaChiLimoDen;
-  String toaDoLimoDen;
-  String ghiChu;
-  int loaiKhach;
-  int khachTrungChuyen;
-  int trangThaiVe;
-  int trangThaiTC;
-  int soKhach=1;
-  int daThanhToan;
-  num tienVe;
-  num soTienCoc;
-  String hoTenKhachDatHo;
-  String soDienThoaiKhachDatHo;
+  String? idDatVe;
+  String? idTaiXeTC;
+  int? maVe;
+  int? soGhe;
+  String? hoTenTaiXeTrungChuyen;
+  String? dienThoaiTaiXeTrungChuyen;
+  String? tenXeTrungChuyen;
+  String? bienSoXeTrungChuyen;
+  String? tenKhachHang;
+  String? soDienThoaiKhach;
+  String? diaChiKhachDi;
+  String? toaDoDiaChiKhachDi;
+  String? diaChiKhachDen;
+  String? toaDoDiaChiKhachDen;
+  String? diaChiLimoDi;
+  String? toaDoLimoDi;
+  String? diaChiLimoDen;
+  String? toaDoLimoDen;
+  String? ghiChu;
+  int? loaiKhach;
+  int? khachTrungChuyen;
+  int? trangThaiVe;
+  int? trangThaiTC;
+  int? soKhach=1;
+  int? daThanhToan;
+  num? tienVe;
+  num? soTienCoc;
+  String? hoTenKhachDatHo;
+  String? soDienThoaiKhachDatHo;
 
   DsKhachs(
       {this.idDatVe,

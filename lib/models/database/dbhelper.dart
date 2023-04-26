@@ -6,12 +6,11 @@ import 'package:sqflite/sqflite.dart';
 import 'package:trungchuyen/models/entity/account.dart';
 import 'package:trungchuyen/models/entity/customer.dart';
 import 'package:trungchuyen/models/entity/notification_of_limo.dart';
-import 'package:trungchuyen/models/entity/notification_trung_chuyen.dart';
 import 'package:trungchuyen/utils/log.dart';
 
 class DatabaseHelper {
   static final DatabaseHelper _instance = DatabaseHelper._();
-  static Database _database;
+  static Database? _database;
 
   DatabaseHelper._();
 
@@ -21,11 +20,11 @@ class DatabaseHelper {
 
   Future<Database> get db async {
     if (_database != null) {
-      return _database;
+      return _database!;
     }
     _database = await init();
 
-    return _database;
+    return _database!;
   }
 
   void _onCreate(Database db, int version) {
@@ -157,7 +156,7 @@ class DatabaseHelper {
   /// Account
   Future<void> saveAccount(AccountInfo accountInfo) async {
     var client = await db;
-    AccountInfo oldAccountInfo = await fetchAccountInfo(accountInfo.userName);
+    AccountInfo? oldAccountInfo = await fetchAccountInfo(accountInfo.userName);
     if (oldAccountInfo == null)
       await client.insert('AccountSave', accountInfo.toMapForDb(),
           conflictAlgorithm: ConflictAlgorithm.replace);
@@ -172,7 +171,7 @@ class DatabaseHelper {
         conflictAlgorithm: ConflictAlgorithm.replace);
   }
 
-  Future<AccountInfo> fetchAccountInfo(String userName,) async {
+  Future<AccountInfo?> fetchAccountInfo(String userName,) async {
     var client = await db;
     final Future<List<Map<String, dynamic>>> futureMaps =
     client.query('AccountSave', where: 'userName = ?', whereArgs: [userName]);
@@ -198,7 +197,7 @@ class DatabaseHelper {
   ///Customer
   Future<void> addNew(Customer customer) async {
     var client = await db;
-    Customer oldCustomer = await fetchCustomer(customer.idTrungChuyen);
+    Customer? oldCustomer = await fetchCustomer(customer.idTrungChuyen.toString());
     if (oldCustomer == null)
       await client.insert('CustomerPending', customer.toMapForDb(),
           conflictAlgorithm: ConflictAlgorithm.replace);
@@ -208,7 +207,7 @@ class DatabaseHelper {
   }
 
 
-  Future<Customer> fetchCustomer(String idTrungChuyen,) async {
+  Future<Customer?> fetchCustomer(String idTrungChuyen,) async {
     var client = await db;
     final Future<List<Map<String, dynamic>>> futureMaps =
         client.query('CustomerPending', where: 'idTrungChuyen = ?', whereArgs: [idTrungChuyen]);
@@ -257,7 +256,7 @@ class DatabaseHelper {
         conflictAlgorithm: ConflictAlgorithm.replace);
   }
 
-  Future<void> remove(String idTC) async {
+  Future<Future<int>> remove(String idTC) async {
     var client = await db;
     return client.delete('CustomerPending', where: 'idTrungChuyen = ?', whereArgs: [idTC]);
   }
@@ -265,7 +264,7 @@ class DatabaseHelper {
   ///Notification_Limo
   Future<void> addNotificationLimo(NotificationOfLimo notificationOfLimo) async {
     var client = await db;
-    NotificationOfLimo oldNotificationLimo = await fetchNotificationLimo(notificationOfLimo.idTrungChuyen);
+    NotificationOfLimo? oldNotificationLimo = await fetchNotificationLimo(notificationOfLimo.idTrungChuyen.toString());
     if (oldNotificationLimo == null)
       await client.insert('NotificationLimo', notificationOfLimo.toMapForDb(),
           conflictAlgorithm: ConflictAlgorithm.replace);
@@ -274,7 +273,7 @@ class DatabaseHelper {
     }
   }
 
-  Future<NotificationOfLimo> fetchNotificationLimo(String idTrungChuyen,) async {
+  Future<NotificationOfLimo?> fetchNotificationLimo(String idTrungChuyen,) async {
     var client = await db;
     final Future<List<Map<String, dynamic>>> futureMaps =
     client.query('NotificationLimo', where: 'idTrungChuyen = ?', whereArgs: [idTrungChuyen]);
@@ -305,7 +304,7 @@ class DatabaseHelper {
     return [];
   }
 
-  Future<void> removeNotificationLimo(String idTrungChuyen) async {
+  Future<Future<int>> removeNotificationLimo(String idTrungChuyen) async {
     var client = await db;
     return client.delete('NotificationLimo', where: 'idTrungChuyen = ?', whereArgs: [idTrungChuyen]);
   }
@@ -318,18 +317,18 @@ class DatabaseHelper {
   ///Tai xe Limo
   Future<void> addDriverLimo(Customer customer) async {
     var client = await db;
-    Customer oldCustomer = await fetchDriverLimo(customer.idTaiXeLimousine);
+    Customer? oldCustomer = await fetchDriverLimo(customer.idTaiXeLimousine.toString());
     if (oldCustomer == null)
       await client.insert('DriverLimoInfo', customer.toMapForDb(),
           conflictAlgorithm: ConflictAlgorithm.replace);
     else {
-      int sk = oldCustomer.soKhach + customer.soKhach;
-      String listIdTC = oldCustomer.idTrungChuyen + ',' + customer.idTrungChuyen;
+      int sk = oldCustomer.soKhach! + customer.soKhach!;
+      String listIdTC = oldCustomer.idTrungChuyen.toString() + ',' + customer.idTrungChuyen.toString();
       await updateRowDriverLimo(oldCustomer,sk,listIdTC);
     }
   }
 
-  Future<Customer> fetchDriverLimo(String idTaiXeLimousine,) async {
+  Future<Customer?> fetchDriverLimo(String idTaiXeLimousine,) async {
     var client = await db;
     final Future<List<Map<String, dynamic>>> futureMaps =
     client.query('DriverLimoInfo', where: 'idTaiXeLimousine = ?', whereArgs: [idTaiXeLimousine]);
@@ -365,7 +364,7 @@ class DatabaseHelper {
     return [];
   }
 
-  Future<void> removeDriverLimo(String idTrungChuyen) async {
+  Future<Future<int>> removeDriverLimo(String idTrungChuyen) async {
     var client = await db;
     return client.delete('DriverLimoInfo', where: 'idTrungChuyen = ?', whereArgs: [idTrungChuyen]);
   }

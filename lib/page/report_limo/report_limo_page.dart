@@ -1,8 +1,7 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
-import 'package:liquid_pull_to_refresh/liquid_pull_to_refresh.dart';
 import 'package:table_calendar/table_calendar.dart';
 import 'package:trungchuyen/page/options_input/options_input_pages.dart';
 import 'package:trungchuyen/page/report_limo/report_limo_bloc.dart';
@@ -11,6 +10,8 @@ import 'package:trungchuyen/page/report_limo/report_limo_state.dart';
 import 'package:trungchuyen/themes/images.dart';
 import 'package:trungchuyen/utils/utils.dart';
 
+import '../../widget/m.dart';
+
 class ReportLimoPage extends StatefulWidget {
   @override
   _ReportLimoPageState createState() => _ReportLimoPageState();
@@ -18,21 +19,28 @@ class ReportLimoPage extends StatefulWidget {
 
 class _ReportLimoPageState extends State<ReportLimoPage> {
 
-  ReportLimoBloc _bloc;
-  void onDaySelected(DateTime day, List events, List holidays) {
-    print('CALLBACK: ${DateFormat("yyyy-MM-dd").parse(day.toString())}');
-    _bloc.add(GetReportLimoEvent(DateFormat("yyyy-MM-dd").parse(day.toString()).toString(),DateFormat("yyyy-MM-dd").parse(day.toString()).toString()));
+  late ReportLimoBloc _bloc;
+  void _onDaySelected(DateTime selectedDay, DateTime focusedDay) {
+    print('CALLBACK: ${DateFormat("yyyy-MM-dd").parse(selectedDay.toString())}');
+    _bloc.add(GetReportLimoEvent(DateFormat("yyyy-MM-dd").parse(selectedDay.toString()).toString(),DateFormat("yyyy-MM-dd").parse(selectedDay.toString()).toString()));
   }
-  CalendarController calendarController;
+  CalendarFormat _calendarFormat = CalendarFormat.week;
+  RangeSelectionMode _rangeSelectionMode = RangeSelectionMode
+      .toggledOff;
+
+  DateTime _focusedDay = DateTime.now();
+  DateTime? _selectedDay;
+
   int countTotalCustomer = 0;
-  String toDate,fromDate;
+  String? toDate,fromDate;
   @override
   void initState() {
     // TODO: implement initState
     super.initState();
+    _selectedDay = _focusedDay;
     _bloc = ReportLimoBloc(context);
-    calendarController = CalendarController();
-    _bloc.add(GetReportLimoEvent(DateFormat("yyyy-MM-dd").parse(DateTime.now().toString()).toString(),DateFormat("yyyy-MM-dd").parse(DateTime.now().toString()).toString()));
+    _bloc.add(GetPrefs());
+
   }
 
   @override
@@ -40,6 +48,9 @@ class _ReportLimoPageState extends State<ReportLimoPage> {
     return BlocListener<ReportLimoBloc,ReportLimoState>(
         bloc: _bloc,
         listener: (context,state){
+          if(state is GetPrefsSuccess){
+            _bloc.add(GetReportLimoEvent(DateFormat("yyyy-MM-dd").parse(DateTime.now().toString()).toString(),DateFormat("yyyy-MM-dd").parse(DateTime.now().toString()).toString()));
+          }
           if(state is GetReportLimoEventSuccess){
             countTotalCustomer = _bloc.tongKhach;
           }
@@ -64,10 +75,10 @@ class _ReportLimoPageState extends State<ReportLimoPage> {
                     builder: (context) => OptionsInputPage()).then(
                         (value){
                       if(!Utils.isEmpty(value)){
-                        if(!Utils.isEmpty(value[0]?.toString()) || !Utils.isEmpty(value[1]?.toString())){
+                        if(!Utils.isEmpty(value[0].toString()) || !Utils.isEmpty(value[1].toString())){
                           fromDate = value[0]?.toString();
                           toDate = value[1]?.toString();
-                          _bloc.add(GetReportLimoEvent(fromDate,toDate));
+                          _bloc.add(GetReportLimoEvent(fromDate.toString(),toDate.toString()));
                         }else{
                           print('Cancel');
                         }
@@ -89,66 +100,205 @@ class _ReportLimoPageState extends State<ReportLimoPage> {
             Container(
               child: Column(
                 children: <Widget>[
-                  Container(
-                    margin: EdgeInsets.symmetric(horizontal: 16.0),
-                    child: TableCalendar(
-                      locale: 'vi_VN',
-                      initialCalendarFormat: CalendarFormat.week,
-                      calendarStyle: CalendarStyle(
-                        todayColor: Theme.of(context).primaryColor,
-                        selectedColor: Theme.of(context).primaryColor,
-                        todayStyle: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 18.0,
-                            color: Colors.white),
-                        weekendStyle:
-                        TextStyle(color: Colors.black.withOpacity(0.3)),
-                        outsideDaysVisible: false,
-                      ),
-                      headerStyle: HeaderStyle(
-                          centerHeaderTitle: true,
-                          formatButtonDecoration: BoxDecoration(
-                            color: Colors.teal,
-                            borderRadius: BorderRadius.circular(20.0),
-                          ),
-                          formatButtonTextStyle:
-                          TextStyle(color: Colors.white),
-                          formatButtonShowsNext: false),
-                      startingDayOfWeek: StartingDayOfWeek.monday,
-                      daysOfWeekStyle: DaysOfWeekStyle(
-                          weekdayStyle: TextStyle(
-                              color: Colors.black,
-                              fontWeight: FontWeight.bold),
-                          weekendStyle: TextStyle(
-                              color: Colors.black,
-                              fontWeight: FontWeight.bold)),
-                      onDaySelected: onDaySelected,
-                      builders: CalendarBuilders(
-                          selectedDayBuilder: (context, date, events) =>
-                              Container(
-                                  margin: EdgeInsets.all(4),
-                                  alignment: Alignment.center,
-                                  decoration: BoxDecoration(
-                                      color: Colors.pink,
-                                      shape: BoxShape.circle),
-                                  child: Text(
-                                    date.day.toString(),
-                                    style: TextStyle(color: Colors.white),
-                                  )),
-                          todayDayBuilder: (context, date, enevts) =>
-                              Container(
-                                  margin: EdgeInsets.all(4),
-                                  alignment: Alignment.center,
-                                  decoration: BoxDecoration(
-                                      color: Colors.grey,
-                                      shape: BoxShape.circle),
-                                  child: Text(
-                                    date.day.toString(),
-                                    style: TextStyle(color: Colors.white),
-                                  ))),
-                      calendarController: calendarController,
+                  TableCalendar(
+                    rowHeight: 70,
+                    daysOfWeekHeight: 20,
+                    calendarBuilders: CalendarBuilders(
+                      // todayBuilder: (context, date, _){
+                      //   return Padding(
+                      //     padding: const EdgeInsets.only(bottom: 11),
+                      //     child: Container(
+                      //       decoration: new BoxDecoration(
+                      //         color: mainColor.withOpacity(0.8),
+                      //         shape: BoxShape.circle,
+                      //       ),
+                      //       // margin: const EdgeInsets.all(4.0),
+                      //       width: 45,
+                      //       height: 45,
+                      //       child: Center(
+                      //         child: Text(
+                      //           '${date.day}',
+                      //           style: TextStyle(
+                      //             fontSize: 16.0,
+                      //             color: Colors.white,
+                      //           ),
+                      //         ),
+                      //       ),
+                      //     ),
+                      //   );
+                      // },
+                        selectedBuilder: (context, date, _) {
+                          return Padding(
+                            padding: const EdgeInsets.only(bottom: 11),
+                            child: Container(
+                              decoration:  BoxDecoration(
+                                color: Colors.black.withOpacity(0.7),
+                                shape: BoxShape.circle,
+                                // borderRadius: BorderRadius.circular(150)
+                              ),
+                              // margin: const EdgeInsets.all(4.0),
+                              width: 45,
+                              height: 45,
+                              child: Center(
+                                child: Text(
+                                  '${date.day}',
+                                  style: const TextStyle(
+                                    fontSize: 16.0,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          );
+                        },
+                        markerBuilder: (context,date, event){
+                          return Container(
+                            // margin: const EdgeInsets.only(top: 10,bottom: 0),
+                            // padding: const EdgeInsets.all(1),
+                            //height: 12,
+                            //child: Icon(MdiIcons.emoticonPoop,color: Colors.blueGrey.withOpacity(0.5),),
+                          );
+                        }
                     ),
+                    firstDay: kFirstDay,
+                    lastDay: kLastDay,
+                    focusedDay: _focusedDay,
+                    selectedDayPredicate: (day) => isSameDay(_selectedDay, day),
+                    // rangeStartDay: _rangeStart,
+                    // rangeEndDay: _rangeEnd,
+                    formatAnimationCurve: Curves.elasticInOut,
+                    formatAnimationDuration: const Duration(milliseconds: 500),
+                    calendarFormat: _calendarFormat,
+                    rangeSelectionMode: _rangeSelectionMode,
+                    startingDayOfWeek: StartingDayOfWeek.monday,
+                    onHeaderTapped: (_){
+                      //print(_);
+                    },
+                    locale: 'vi',
+                    daysOfWeekStyle: DaysOfWeekStyle(
+                        weekendStyle: GoogleFonts.montserrat(
+                          color: Colors.red,
+                        ),
+                        weekdayStyle: GoogleFonts.montserrat(
+                          color: Colors.black,
+                        )
+                    ),
+                    headerVisible: false,
+                    // headerStyle: HeaderStyle(
+                    //   leftChevronIcon: Icon(Icons.arrow_back_ios, size: 15, color: Colors.black),
+                    //   rightChevronIcon: Icon(Icons.arrow_forward_ios, size: 15, color: Colors.black),
+                    //   titleTextStyle: GoogleFonts.montserrat(
+                    //       color: Colors.yellow,
+                    //       fontSize: 16),
+                    //   titleCentered: true,
+                    //   formatButtonDecoration: BoxDecoration(
+                    //     color: Colors.white60,
+                    //     borderRadius: BorderRadius.circular(20),
+                    //   ),
+                    //   formatButtonVisible: false,
+                    //   formatButtonTextStyle: GoogleFonts.montserrat(
+                    //       color: Colors.black,
+                    //       fontSize: 13,
+                    //       fontWeight: FontWeight.bold),
+                    // ),
+                    calendarStyle: CalendarStyle(
+                      // selectedTextStyle: TextStyle(
+                      //   backgroundColor: Colors.white,
+                      //   color: mainColor
+                      // ),
+                        todayTextStyle: GoogleFonts.montserrat(
+                            color: Colors.black,
+                            fontSize: 16),
+                        weekendTextStyle: GoogleFonts.montserrat(
+                            color: Colors.red,
+                            fontSize: 16),
+                        outsideTextStyle: const TextStyle(color: Colors.blueGrey),
+                        withinRangeTextStyle: const TextStyle(color: Colors.grey),
+                        defaultTextStyle: GoogleFonts.montserrat(
+                            color: Colors.black,
+                            fontSize: 16),
+                        canMarkersOverflow: true,
+                        outsideDaysVisible: false,
+                        holidayTextStyle: const TextStyle(
+                            color: Colors.yellow
+                        )
+                    ),
+                    onDaySelected: _onDaySelected,
+                    // onRangeSelected: _onRangeSelected,
+                    onFormatChanged: (format) {
+
+                      if (_calendarFormat != format) {
+                        setState(() {
+                          _calendarFormat = format;
+                        });
+                      }
+                    },
+                    onPageChanged: (focusedDay) {
+                      setState(() {
+                        _focusedDay = focusedDay;
+                      });
+                    },
                   ),
+                  // Container(
+                  //   margin: EdgeInsets.symmetric(horizontal: 16.0),
+                  //   child: TableCalendar(
+                  //     locale: 'vi_VN',
+                  //     initialCalendarFormat: CalendarFormat.week,
+                  //     calendarStyle: CalendarStyle(
+                  //       todayColor: Theme.of(context).primaryColor,
+                  //       selectedColor: Theme.of(context).primaryColor,
+                  //       todayStyle: TextStyle(
+                  //           fontWeight: FontWeight.bold,
+                  //           fontSize: 18.0,
+                  //           color: Colors.white),
+                  //       weekendStyle:
+                  //       TextStyle(color: Colors.black.withOpacity(0.3)),
+                  //       outsideDaysVisible: false,
+                  //     ),
+                  //     headerStyle: HeaderStyle(
+                  //         centerHeaderTitle: true,
+                  //         formatButtonDecoration: BoxDecoration(
+                  //           color: Colors.teal,
+                  //           borderRadius: BorderRadius.circular(20.0),
+                  //         ),
+                  //         formatButtonTextStyle:
+                  //         TextStyle(color: Colors.white),
+                  //         formatButtonShowsNext: false),
+                  //     startingDayOfWeek: StartingDayOfWeek.monday,
+                  //     daysOfWeekStyle: DaysOfWeekStyle(
+                  //         weekdayStyle: TextStyle(
+                  //             color: Colors.black,
+                  //             fontWeight: FontWeight.bold),
+                  //         weekendStyle: TextStyle(
+                  //             color: Colors.black,
+                  //             fontWeight: FontWeight.bold)),
+                  //     onDaySelected: onDaySelected,
+                  //     builders: CalendarBuilders(
+                  //         selectedDayBuilder: (context, date, events) =>
+                  //             Container(
+                  //                 margin: EdgeInsets.all(4),
+                  //                 alignment: Alignment.center,
+                  //                 decoration: BoxDecoration(
+                  //                     color: Colors.pink,
+                  //                     shape: BoxShape.circle),
+                  //                 child: Text(
+                  //                   date.day.toString(),
+                  //                   style: TextStyle(color: Colors.white),
+                  //                 )),
+                  //         todayDayBuilder: (context, date, enevts) =>
+                  //             Container(
+                  //                 margin: EdgeInsets.all(4),
+                  //                 alignment: Alignment.center,
+                  //                 decoration: BoxDecoration(
+                  //                     color: Colors.grey,
+                  //                     shape: BoxShape.circle),
+                  //                 child: Text(
+                  //                   date.day.toString(),
+                  //                   style: TextStyle(color: Colors.white),
+                  //                 ))),
+                  //     calendarController: calendarController,
+                  //   ),
+                  // ),
                   Container(
                     margin: EdgeInsets.only(left: 20,right: 20,top: 2,bottom: 20),
                     child: Row(
@@ -222,7 +372,7 @@ class _ReportLimoPageState extends State<ReportLimoPage> {
                   Row(
                     children: [
                       Expanded(child: Container()),
-                      !Utils.isEmpty(fromDate) ?
+                      !Utils.isEmpty(fromDate.toString()) ?
                       Text('Từ ngày: ${fromDate?.toString()} - Đến ngày: ${toDate?.toString()}',style: TextStyle(color: Colors.grey,fontSize: 10),) : Container(),
                       Expanded(child: Container()),
                     ],

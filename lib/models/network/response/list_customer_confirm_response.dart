@@ -1,25 +1,25 @@
 class CustomerLimoConfirm {
-  List<CustomerLimoConfirmBody> data;
-  int statusCode;
-  String message;
+  List<CustomerLimoConfirmBody>? data;
+  int? statusCode;
+  String? message;
 
   CustomerLimoConfirm({this.data, this.statusCode, this.message});
 
-  CustomerLimoConfirm.fromJson(Map<String, dynamic> json) {
+  CustomerLimoConfirm.fromJson(Map<String?, dynamic> json) {
     if (json['data'] != null) {
-      data = new List<CustomerLimoConfirmBody>();
+      data = <CustomerLimoConfirmBody>[];
       json['data'].forEach((v) {
-        data.add(new CustomerLimoConfirmBody.fromJson(v));
+        data?.add(new CustomerLimoConfirmBody.fromJson(v));
       });
     }
     statusCode = json['statusCode'];
     message = json['message'];
   }
 
-  Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = new Map<String, dynamic>();
+  Map<String?, dynamic> toJson() {
+    final Map<String?, dynamic> data = new Map<String?, dynamic>();
     if (this.data != null) {
-      data['data'] = this.data.map((v) => v.toJson()).toList();
+      data['data'] = this.data?.map((v) => v.toJson()).toList();
     }
     data['statusCode'] = this.statusCode;
     data['message'] = this.message;
@@ -28,19 +28,19 @@ class CustomerLimoConfirm {
 }
 
 class CustomerLimoConfirmBody {
-  String idTrungChuyen;
-  String hoTenTaiXe;
-  String dienThoaiTaiXe;
-  String tenKhachHang;
-  String soDienThoaiKhach;
-  String tenTuyenDuong;
-  String ghiChuDatVe;
-  String ghiChuTrungChuyen;
-  int loaiKhach;
-  String ngayChay;
-  String thoiGianDi;
-  String idTaiXe;
-  int soKhach = 1;
+  String? idTrungChuyen;
+  String? hoTenTaiXe;
+  String? dienThoaiTaiXe;
+  String? tenKhachHang;
+  String? soDienThoaiKhach;
+  String? tenTuyenDuong;
+  String? ghiChuDatVe;
+  String? ghiChuTrungChuyen;
+  int? loaiKhach;
+  String? ngayChay;
+  String? thoiGianDi;
+  String? idTaiXe;
+  int? soKhach = 1;
 
   CustomerLimoConfirmBody(
       {this.idTrungChuyen,
@@ -57,7 +57,7 @@ class CustomerLimoConfirmBody {
         this.idTaiXe,
         this.soKhach});
 
-  CustomerLimoConfirmBody.fromJson(Map<String, dynamic> json) {
+  CustomerLimoConfirmBody.fromJson(Map<String?, dynamic> json) {
     idTrungChuyen = json['idTrungChuyen'];
     hoTenTaiXe = json['hoTenTaiXe'];
     dienThoaiTaiXe = json['dienThoaiTaiXe'];
@@ -72,8 +72,8 @@ class CustomerLimoConfirmBody {
     idTaiXe = json['idTaiXe'];
   }
 
-  Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = new Map<String, dynamic>();
+  Map<String?, dynamic> toJson() {
+    final Map<String?, dynamic> data = new Map<String?, dynamic>();
     data['idTrungChuyen'] = this.idTrungChuyen;
     data['hoTenTaiXe'] = this.hoTenTaiXe;
     data['dienThoaiTaiXe'] = this.dienThoaiTaiXe;

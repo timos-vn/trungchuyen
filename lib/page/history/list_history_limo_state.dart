@@ -23,7 +23,13 @@ class ListHistoryLimoLoading extends ListHistoryLimoState {
   @override
   String toString() => 'ListHistoryLimoLoading';
 }
+class GetPrefsSuccess extends ListHistoryLimoState{
 
+  @override
+  String toString() {
+    return 'GetPrefsSuccess{}';
+  }
+}
 class GetListHistoryLimoSuccess extends ListHistoryLimoState {
   @override
   String toString() => 'GetListHistoryLimoSuccess }';

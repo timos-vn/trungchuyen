@@ -21,6 +21,14 @@ class GetListNotificationSuccess extends NotificationState {
     return 'GetListNotificationSuccess{}';
   }
 }
+
+class GetPrefsSuccess extends NotificationState{
+
+  @override
+  String toString() {
+    return 'GetPrefsSuccess{}';
+  }
+}
 class GetListNotificationFailure extends NotificationState {
   final String error;
 

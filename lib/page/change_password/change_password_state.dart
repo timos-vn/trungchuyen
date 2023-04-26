@@ -17,7 +17,13 @@ class ChangePasswordLoading extends ChangePasswordState {
   String toString() => 'ChangePasswordLoading';
 }
 
+class GetPrefsSuccess extends ChangePasswordState{
 
+  @override
+  String toString() {
+    return 'GetPrefsSuccess{}';
+  }
+}
 class ChangePasswordFailure extends ChangePasswordState {
   final String error;
 

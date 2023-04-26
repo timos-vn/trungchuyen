@@ -5,16 +5,16 @@ import 'package:trungchuyen/utils/utils.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class DetailListConfirm extends StatefulWidget {
-  final String nameTrip;
+  final String? nameTrip;
   final List<CustomerLimoConfirmBody> list;
-  final String dateStart;
-  final String idDriver;
-  final String timeStart;
-  final int role;
-  final int totalCustomer;
-  final int typeCustomer;
+  final String? dateStart;
+  final String? idDriver;
+  final String? timeStart;
+  final int? role;
+  final int? totalCustomer;
+  final int? typeCustomer;
 
-  const DetailListConfirm({Key key, this.nameTrip,this.list,this.dateStart,this.idDriver,this.timeStart,this.role,this.totalCustomer,this.typeCustomer}) : super(key: key);
+  const DetailListConfirm({Key? key, this.nameTrip,required this.list,this.dateStart,this.idDriver,this.timeStart,this.role,this.totalCustomer,this.typeCustomer}) : super(key: key);
 
   @override
   _DetailListConfirmState createState() => _DetailListConfirmState();
@@ -22,7 +22,7 @@ class DetailListConfirm extends StatefulWidget {
 
 class _DetailListConfirmState extends State<DetailListConfirm> {
 
-  List<CustomerLimoConfirmBody> _list = new List<CustomerLimoConfirmBody>();
+  List<CustomerLimoConfirmBody> _list = [];
 
   @override
   void initState() {
@@ -37,11 +37,9 @@ class _DetailListConfirmState extends State<DetailListConfirm> {
           _list.add(element);
         }else{
           final _customerNews = _list.firstWhere((item) => item.soDienThoaiKhach == element.soDienThoaiKhach);
-          if (_customerNews != null){
-            _customerNews.soKhach = _customerNews.soKhach + 1;
-            String listIdTC = _customerNews.idTrungChuyen + ',' + element.idTrungChuyen;
-            _customerNews.idTrungChuyen = listIdTC;
-          }
+          _customerNews.soKhach = _customerNews.soKhach! + 1;
+          String listIdTC = _customerNews.idTrungChuyen.toString() + ',' + element.idTrungChuyen.toString();
+          _customerNews.idTrungChuyen = listIdTC;
           _list.removeWhere((rm) => rm.soDienThoaiKhach == _customerNews.soDienThoaiKhach);
           _list.add(_customerNews);
         }
@@ -216,7 +214,7 @@ class _DetailListConfirmState extends State<DetailListConfirm> {
                                 '${item.soKhach??''}',
                                 maxLines: 2,
                                 overflow: TextOverflow.ellipsis,
-                                style: Theme.of(this.context).textTheme.subtitle.copyWith(
+                                style: TextStyle(
                                   fontWeight: FontWeight.normal,
                                   color: Colors.red,fontSize: 12,fontStyle: FontStyle.italic
                                 ),
@@ -228,7 +226,17 @@ class _DetailListConfirmState extends State<DetailListConfirm> {
                     ],
                   ),
                   InkWell(
-                    onTap: () => launch("tel://${item.soDienThoaiKhach}"),
+                    onTap: () async{
+                      if(item.soDienThoaiKhach != null && item.soDienThoaiKhach != 'null'){
+                        final Uri launchUri = Uri(
+                          scheme: 'tel',
+                          path: '${item.soDienThoaiKhach}',
+                        );
+                        await launchUrl(launchUri);
+                      }else{
+                        Utils.showToast('Không có SĐT Khách hàng');
+                      }
+                    },
                     child: Container(
                         decoration: BoxDecoration(
                           color: Colors.orange,
@@ -251,7 +259,7 @@ class _DetailListConfirmState extends State<DetailListConfirm> {
                 children: <Widget>[
                   Text( widget.role == 7 ?
                   'Thông tin lái xe Trung chuyển' : 'Thông tin lái xe Limos',
-                    style: Theme.of(this.context).textTheme.caption.copyWith(
+                    style: TextStyle(
                       color: Theme.of(this.context).disabledColor,
                       fontWeight: FontWeight.normal,
                     ),
@@ -268,16 +276,16 @@ class _DetailListConfirmState extends State<DetailListConfirm> {
                             '${item.hoTenTaiXe??''}',
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
-                            style: Theme.of(this.context).textTheme.subtitle.copyWith(
+                            style: TextStyle(
                               fontWeight: FontWeight.normal,
-                              color: Theme.of(this.context).textTheme.title.color,
+                              color: Colors.black,
                             ),
                           ),
                           Text(
                             ' / ${item.dienThoaiTaiXe??''}',
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
-                            style: Theme.of(this.context).textTheme.subtitle.copyWith(
+                            style: TextStyle(
                               fontWeight: FontWeight.normal,
                               color: Colors.grey,
                             ),
@@ -285,7 +293,17 @@ class _DetailListConfirmState extends State<DetailListConfirm> {
                         ],
                       ),
                       InkWell(
-                        onTap: () => launch("tel://${item.dienThoaiTaiXe}"),
+                        onTap: () async{
+                          if(item.dienThoaiTaiXe != null && item.dienThoaiTaiXe != ''){
+                            final Uri launchUri = Uri(
+                              scheme: 'tel',
+                              path: '${item.dienThoaiTaiXe}',
+                            );
+                            await launchUrl(launchUri);
+                          }else{
+                            Utils.showToast('Không có SĐT của Tài xế');
+                          }
+                        },
                         child: Container(
                             padding: EdgeInsets.all(8),
                             child: Icon(Icons.phone_callback_outlined)),

@@ -1,38 +1,36 @@
-import 'package:flutter/cupertino.dart';
+import 'package:date_time_picker/date_time_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:get/get.dart';
-import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
-import 'package:trungchuyen/extension/bottom_sheet.dart';
-import 'package:trungchuyen/extension/popup_picker.dart';
 import 'package:trungchuyen/themes/colors.dart';
 import 'package:trungchuyen/themes/font.dart';
 import 'package:trungchuyen/utils/utils.dart';
+import '../../utils/const.dart';
 import 'options_input_bloc.dart';
 import 'options_input_event.dart';
 import 'options_input_state.dart';
 
 
 class OptionsInputPage extends StatefulWidget {
-  const OptionsInputPage({Key key}) : super(key: key);
+  const OptionsInputPage({Key? key}) : super(key: key);
   @override
   _OptionsInputPageState createState() => _OptionsInputPageState();
 }
 
 class _OptionsInputPageState extends State<OptionsInputPage> {
 
-  OptionsInputBloc _bloc;
-  String timeName;
-  String timeId = "";
-  int status;
+  late OptionsInputBloc _bloc;
+  String? timeName;
+  String? timeId = "";
+  int status = 0;
   String toDate ="";
   String fromDate="";
   @override
   void initState() {
     // TODO: implement initState
     super.initState();
-    _bloc = OptionsInputBloc();
-
+    _bloc = OptionsInputBloc(context);
+    _bloc.add(GetPrefs());
   }
 
   @override
@@ -43,7 +41,7 @@ class _OptionsInputPageState extends State<OptionsInputPage> {
           bloc: _bloc,
             listener: (context, state){
               if (state is WrongDate) {
-                Utils.showToast('from_date_before_to_date'.tr);
+                Utils.showToast('Ngày sau phải lớn hơn ngày trước');
               }
             },
             child: BlocBuilder<OptionsInputBloc,OptionsInputState>(
@@ -117,69 +115,61 @@ class _OptionsInputPageState extends State<OptionsInputPage> {
                 SizedBox(
                   width: 10,
                 ),
+
                 Expanded(
-                  child: GestureDetector(
-                    onTap: ()async {
-                      final DateTime result = await showDialog<dynamic>(
-                          context: context,
-                          builder: (BuildContext context) {
-                            return DateRangePicker(
-                              _bloc.dateFrom ?? DateTime.now(),
-                              null,
-                              minDate: DateTime.now().subtract(const Duration(days: 10000)),
-                              maxDate:
-                              DateTime.now().add(const Duration(days: 10000)),
-                              displayDate: _bloc.dateFrom ?? DateTime.now(),
-                            );
-                          });
-                      if (result != null) {
-                        print(result);
-                        _bloc.add(DateFrom(result));
-                      }
-                    },
-                    child: Container(
-                        height: 30,
-                        padding:
-                        EdgeInsets.fromLTRB(5, 0, 0, 0),
-                        decoration: BoxDecoration(
-                            border: Border.all(
-                                color: blackBlur,
-                                width: 1)),
-                        child: Align(
-                          alignment: Alignment.centerLeft,
-                          child: Text(
-                            _bloc.getStringFromDate(_bloc.dateFrom) ?? '',
-                            style: TextStyle(fontSize: 13),
-                          ),
-                        )),
-                  ),
+                  child: Container(
+                      height: 30,
+                      padding:
+                      EdgeInsets.fromLTRB(5, 0, 0, 0),
+                      decoration: BoxDecoration(
+                          border: Border.all(
+                              color: blackBlur,
+                              width: 1)),
+                      child: Align(
+                        alignment: Alignment.centerLeft,
+                        child: Text(
+                          '${_bloc.getStringFromDate(_bloc.dateFrom!)}',
+                          style: TextStyle(fontSize: 13),
+                        ),
+                      )),
                 ),
                 SizedBox(
                   width: 20,
                 ),
-                InkWell(
-                    child: Icon(
-                      MdiIcons.calendar,
-                      color: primaryColor,
+                SizedBox(
+                  // height: 40,
+                  width: 50,
+                  child: DateTimePicker(
+                    type: DateTimePickerType.date,
+                    // dateMask: 'd MMM, yyyy',
+                    initialValue: DateTime.now().toString(),
+                    firstDate: DateTime(2000),
+                    lastDate: DateTime(2100),
+                    decoration:const InputDecoration(
+                      suffixIcon: Icon(Icons.event,color: Colors.orange,size: 22,),
+                      contentPadding: EdgeInsets.only(left: 12),
+                      border: InputBorder.none,
                     ),
-                  onTap: ()async {
-                    final DateTime result = await showDialog<dynamic>(
-                        context: context,
-                        builder: (BuildContext context) {
-                          return DateRangePicker(
-                            _bloc.dateFrom ?? DateTime.now(),
-                            null,
-                            minDate: DateTime.now().subtract(const Duration(days: 10000)),
-                            maxDate:
-                            DateTime.now().add(const Duration(days: 10000)),
-                            displayDate: _bloc.dateFrom ?? DateTime.now(),
-                          );
-                        });
-                    if (result != null) {
-                      print(result);
-                      _bloc.add(DateFrom(result));
-                    }
-                  },),
+                    style:const TextStyle(fontSize: 13),
+                    locale: const Locale("vi", "VN"),
+                    // icon: Icon(Icons.event),
+                    selectableDayPredicate: (date) {
+                      return true;
+                    },
+                    onChanged: (result){
+                      DateTime? dateOrder = result as DateTime?;
+                      DateTime dateTime = Utils.parseStringToDate(dateOrder.toString(), Const.DATE_SV_FORMAT_2);
+                      _bloc.add(DateFrom(dateTime));
+                    },
+                    validator: (result) {
+
+                      return null;
+                    },
+                    onSaved: (val){
+                      print('asd$val');
+                    },
+                  ),
+                ),
               ],
             ),
             SizedBox(
@@ -203,65 +193,58 @@ class _OptionsInputPageState extends State<OptionsInputPage> {
                   width: 10,
                 ),
                 Expanded(
-                  child: GestureDetector(
-                      onTap: ()async {
-                        final DateTime result = await showDialog<dynamic>(
-                            context: context,
-                            builder: (BuildContext context) {
-                              return DateRangePicker(
-                                _bloc.dateTo ?? DateTime.now(),
-                                null,
-                                minDate: DateTime.now()
-                                    .subtract(const Duration(days: 10000)),
-                                maxDate:
-                                DateTime.now().add(const Duration(days: 10000)),
-                                displayDate: _bloc.dateTo ?? DateTime.now(),
-                              );
-                            });
-                        if (result != null) {
-                          print(result);
-                          _bloc.add(DateTo(result));
-                        }},
-                      child: Container(
-                          height: 30,
-                          padding: EdgeInsets.fromLTRB(5, 0, 0, 0),
-                          decoration: BoxDecoration(
-                              border: Border.all(
-                                  color: blackBlur,
-                                  width: 1)),
-                          child: Align(
-                            alignment: Alignment.centerLeft,
-                            child: Text(
-                              _bloc.getStringFromDate(_bloc.dateTo) ?? "",
-                              style: TextStyle(fontSize: 13),
-                            ),
-                          ))),
+                  child: Container(
+                      height: 30,
+                      padding: EdgeInsets.fromLTRB(5, 0, 0, 0),
+                      decoration: BoxDecoration(
+                          border: Border.all(
+                              color: blackBlur,
+                              width: 1)),
+                      child: Align(
+                        alignment: Alignment.centerLeft,
+                        child: Text(
+                          "${_bloc.getStringFromDate(_bloc.dateTo!)}",
+                          style: TextStyle(fontSize: 13),
+                        ),
+                      )),
                 ),
                 SizedBox(
                   width: 20,
                 ),
-                InkWell(
-                    child: Icon(
-                      MdiIcons.calendar,
-                      color: primaryColor,
+                SizedBox(
+                  // height: 40,
+                  width: 50,
+                  child: DateTimePicker(
+                    type: DateTimePickerType.date,
+                    // dateMask: 'd MMM, yyyy',
+                    initialValue: DateTime.now().toString(),
+                    firstDate: DateTime(2000),
+                    lastDate: DateTime(2100),
+                    decoration:const InputDecoration(
+                      suffixIcon: Icon(Icons.event,color: Colors.orange,size: 22,),
+                      contentPadding: EdgeInsets.only(left: 12),
+                      border: InputBorder.none,
                     ),
-                    onTap: ()async {
-                      final DateTime result = await showDialog<dynamic>(
-                          context: context,
-                          builder: (BuildContext context) {
-                            return DateRangePicker(
-                              _bloc.dateTo ?? DateTime.now(),
-                              null,
-                              minDate: DateTime.now().subtract(const Duration(days: 10000)),
-                              maxDate:
-                              DateTime.now().add(const Duration(days: 10000)),
-                              displayDate: _bloc.dateTo ?? DateTime.now(),
-                            );
-                          });
-                      if (result != null) {
-                        print(result);
-                        _bloc.add(DateTo(result));
-                      }}),
+                    style:const TextStyle(fontSize: 13),
+                    locale: const Locale("vi", "VN"),
+                    // icon: Icon(Icons.event),
+                    selectableDayPredicate: (date) {
+                      return true;
+                    },
+                    onChanged: (result){
+                      DateTime? dateOrder = result as DateTime?;
+                      DateTime dateTime = Utils.parseStringToDate(dateOrder.toString(), Const.DATE_SV_FORMAT_2);
+                      _bloc.add(DateTo(dateTime));
+                    },
+                    validator: (result) {
+
+                      return null;
+                    },
+                    onSaved: (val){
+                      print('asd$val');
+                    },
+                  ),
+                ),
               ],
             ),
 
@@ -299,8 +282,8 @@ class _OptionsInputPageState extends State<OptionsInputPage> {
                   ),
                   GestureDetector(
                     onTap: () {
-                      if(!Utils.isEmpty(_bloc.dateFrom) && !Utils.isEmpty(_bloc.dateTo)){
-                        Navigator.pop(context,[_bloc.getStringFromDateYMD(_bloc.dateFrom),_bloc.getStringFromDateYMD(_bloc.dateTo),]);
+                      if(!Utils.isEmpty(_bloc.dateFrom!) && !Utils.isEmpty(_bloc.dateTo!)){
+                        Navigator.pop(context,[_bloc.getStringFromDateYMD(_bloc.dateFrom!),_bloc.getStringFromDateYMD(_bloc.dateTo!),]);
                       }else{
                         Utils.showToast('Vui lòng nhập đủ dữ liệu.');
                       }
@@ -358,8 +341,8 @@ class _OptionsInputPageState extends State<OptionsInputPage> {
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Text(listName[index]?.toString()??'',style: TextStyle(color: blue.withOpacity(0.5)),),
-                          Text(listID[index]?.toString()??'',style: TextStyle(color: blue.withOpacity(0.5)),),
+                          Text(listName[index].toString(),style: TextStyle(color: blue.withOpacity(0.5)),),
+                          Text(listID[index].toString(),style: TextStyle(color: blue.withOpacity(0.5)),),
                         ],
                       ),
                     ),
@@ -369,48 +352,5 @@ class _OptionsInputPageState extends State<OptionsInputPage> {
               itemCount: listName.length
           );
         });
-  }
-
-  void showBottomSheetSettingsPanel(BuildContext context,String title ,Widget propertyWidget) {
-    showRoundedModalBottomSheet<dynamic>(
-        context: context,
-        color:Colors.white,
-        builder: (BuildContext context) => Container(
-          padding: const EdgeInsets.fromLTRB(15, 0, 0, 5),
-          child: Stack(children: <Widget>[
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: <Widget>[
-                Text(title?.toString()??'Title'.tr,
-                    style: TextStyle(
-                        fontSize: 18,
-                        letterSpacing: 0.34,
-                        fontWeight: FontWeight.w500)),
-                IconButton(
-                  icon: Icon(
-                    Icons.close,
-                    // color: _model.textColor,
-                  ),
-                  onPressed: () {
-                    Navigator.pop(context);
-                  },
-                ),
-              ],
-            ),
-            Padding(
-                padding: const EdgeInsets.fromLTRB(10, 50, 0, 0),
-                child: propertyWidget)
-          ]),
-        )).then((value) {
-      if(!Utils.isEmpty(value)){
-        print(value[2]);
-        setState(() {
-          setState((){
-            timeName = value[1];
-            timeId = value[2];
-          });
-        });
-      }
-    });
   }
 }

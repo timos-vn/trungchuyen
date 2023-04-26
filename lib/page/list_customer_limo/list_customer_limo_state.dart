@@ -4,7 +4,13 @@ abstract class  ListCustomerLimoState extends Equatable {
   @override
   List<Object> get props => [];
 }
+class GetPrefsSuccess extends ListCustomerLimoState{
 
+  @override
+  String toString() {
+    return 'GetPrefsSuccess{}';
+  }
+}
 class ListCustomerLimoInitial extends ListCustomerLimoState {
 
   @override

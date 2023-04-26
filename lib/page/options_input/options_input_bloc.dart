@@ -1,5 +1,3 @@
-import 'dart:async';
-import 'dart:convert';
 import 'package:bloc/bloc.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -11,22 +9,74 @@ import 'options_input_state.dart';
 
 class OptionsInputBloc extends Bloc<OptionsInputEvent, OptionsInputState> {
 
-  SharedPreferences _prefs;
+  SharedPreferences? _prefs;
 
   BuildContext context;
-  int _status = 0;
-  int get status => _status;
-  DateTime _dateFrom;
-  DateTime _dateTo;
-  List<String> _listTimeId;
-  List<String> _listTimeName;
+  int? _status = 0;
+  int? get status => _status;
+  DateTime _dateFrom = DateTime.now();
+  DateTime? _dateTo  = DateTime.now();
+  List<String> _listTimeId = [];
+  List<String> _listTimeName = [];
 
   List<String> get listTimeId => _listTimeId;
   List<String> get listTimeName => _listTimeName;
-  DateTime get dateFrom => _dateFrom;
-  DateTime get dateTo => _dateTo;
+  DateTime? get dateFrom => _dateFrom;
+  DateTime? get dateTo => _dateTo;
 
+  OptionsInputBloc(this.context) : super(InitialOptionsInputState()){
 
+    on<GetPrefs>(_getPrefs,);
+    on<GetListTimeStatus>(_getListTimeStatus);
+    on<DateFrom>(_dateFromEvent);
+    on<DateFrom>(_dateToEvent);
+    on<PickGenderStatus>(_pickGenderStatus);
+  }
+
+  void _getPrefs(GetPrefs event, Emitter<OptionsInputState> emitter)async{
+    emitter(InitialOptionsInputState());
+    _prefs = await SharedPreferences.getInstance();
+    emitter(GetPrefsSuccess());
+  }
+
+  void _getListTimeStatus(GetListTimeStatus event, Emitter<OptionsInputState> emitter)async{
+    emitter(InitialOptionsInputState());
+    emitter(GetListTimeSuccess());
+  }
+
+  void _dateFromEvent(DateFrom event, Emitter<OptionsInputState> emitter)async{
+    emitter(InitialOptionsInputState());
+    _dateFrom = event.date;
+    if (_dateTo == null) {
+      emitter(PickDateSuccess());
+      return;
+    }
+    if (_dateFrom.add(Duration(hours: -23)).isAfter(_dateTo!)) {
+      _dateTo = null;
+      emitter(WrongDate());
+      return;
+    }
+  }
+
+  void _dateToEvent(DateFrom event, Emitter<OptionsInputState> emitter)async{
+    emitter(InitialOptionsInputState());
+    _dateTo = event.date;
+    if (_dateFrom == null) {
+      emitter(PickDateSuccess());
+      return;
+    }
+    if (_dateFrom.add(Duration(hours: -23)).isAfter(_dateTo!)) {
+      _dateTo = null;
+      emitter(WrongDate());
+      return;
+    }
+  }
+
+  void _pickGenderStatus(PickGenderStatus event, Emitter<OptionsInputState> emitter)async{
+    emitter(InitialOptionsInputState());
+    _status = event.status;
+    emitter(PickGenderStatusSuccess());
+  }
 
   init(BuildContext context) {
     this.context = context;
@@ -35,7 +85,7 @@ class OptionsInputBloc extends Bloc<OptionsInputEvent, OptionsInputState> {
   }
 
   bool checkDate() {
-    if (dateFrom.isBefore(dateTo)) {
+    if (dateFrom!.isBefore(dateTo!)) {
       return true;
     } else {
       return false;
@@ -52,48 +102,5 @@ class OptionsInputBloc extends Bloc<OptionsInputEvent, OptionsInputState> {
 
   String getStringFromDateYMD(DateTime date) {
     return Utils.parseDateToString(date, Const.DATE_SV_FORMAT_2);
-  }
-
-  @override
-  OptionsInputState get initialState => InitialOptionsInputState();
-
-  @override
-  Stream<OptionsInputState> mapEventToState(OptionsInputEvent event,) async* {
-    if (_prefs == null) {
-      _prefs = await SharedPreferences.getInstance();
-    }
-    if(event is GetListTimeStatus){
-      yield InitialOptionsInputState();
-
-      yield GetListTimeSuccess();
-    }
-    if (event is DateFrom || event is DateTo) {
-      yield InitialOptionsInputState();
-      if (event is DateFrom) {
-        _dateFrom = event.date;
-        if (_dateTo == null) {
-          yield PickDateSuccess();
-          return;
-        }
-      }
-      if (event is DateTo) {
-        _dateTo = event.date;
-        if (_dateFrom == null) {
-          yield PickDateSuccess();
-          return;
-        }
-      }
-      if (_dateFrom.add(Duration(hours: -23)).isAfter(_dateTo)) {
-        _dateTo = null;
-        yield WrongDate();
-        return;
-      }
-    }
-
-    if (event is PickGenderStatus) {
-      yield InitialOptionsInputState();
-      _status = event.status;
-      yield PickGenderStatusSuccess();
-    }
   }
 }

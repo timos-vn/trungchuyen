@@ -1,10 +1,8 @@
-import 'package:flutter/cupertino.dart';
+import 'package:date_time_picker/date_time_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:flutter_local_notifications/flutter_local_notifications.dart';
-import 'package:liquid_pull_to_refresh/liquid_pull_to_refresh.dart';
+
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
-import 'package:trungchuyen/extension/popup_picker.dart';
 import 'package:trungchuyen/models/network/response/list_of_group_limo_customer_response.dart';
 import 'package:trungchuyen/page/detail_trips_limo/detail_trips_limo_page.dart';
 import 'package:trungchuyen/page/list_customer_limo/list_customer_limo_bloc.dart';
@@ -15,11 +13,12 @@ import 'package:trungchuyen/themes/images.dart';
 import 'package:intl/intl.dart';
 import 'package:trungchuyen/utils/utils.dart';
 
+import '../../utils/const.dart';
 import 'list_customer_limo_event.dart';
 
 class ListCustomerLimoPage extends StatefulWidget {
 
-  ListCustomerLimoPage({Key key}) : super(key: key);
+  ListCustomerLimoPage({Key? key}) : super(key: key);
 
   @override
   ListCustomerLimoPageState createState() => ListCustomerLimoPageState();
@@ -28,11 +27,12 @@ class ListCustomerLimoPage extends StatefulWidget {
 
 class ListCustomerLimoPageState extends State<ListCustomerLimoPage> {
 
-  ListCustomerLimoBloc _bloc;
-  MainBloc _mainBloc;
-  DateTime dateTime;
+  late ListCustomerLimoBloc _bloc;
+  late MainBloc _mainBloc;
+  DateTime dateTime = DateFormat("yyyy-MM-dd").parse(DateTime.now().toString());
   DateTime parseDate = new DateFormat("yyyy-MM-dd").parse(DateTime.now().toString());
   DateFormat format = DateFormat("dd/MM/yyyy");
+
   @override
   void initState() {
     // TODO: implement initState
@@ -40,7 +40,9 @@ class ListCustomerLimoPageState extends State<ListCustomerLimoPage> {
     dateTime = DateTime.now();
     _bloc = ListCustomerLimoBloc(context);
     _mainBloc = BlocProvider.of<MainBloc>(context);
-    _bloc.add(GetListCustomerLimo(parseDate));
+
+    _bloc.add(GetPrefs());
+
   }
 
   @override
@@ -54,29 +56,41 @@ class ListCustomerLimoPageState extends State<ListCustomerLimoPage> {
         ),
         backgroundColor: Colors.white,
         actions: [
-          InkWell(
-            onTap: ()async {
-              final DateTime result = await showDialog<dynamic>(
-                  context: context,
-                  builder: (BuildContext context) {
-                    return DateRangePicker(
-                      dateTime ?? DateTime.now(),
-                      null,
-                      minDate: DateTime.now(),
-                      maxDate: DateTime.now().add(const Duration(days: 10000)),
-                      displayDate: dateTime ?? DateTime.now(),
-                    );
-                  });
-              if (result != null) {
-                print(result);
-                dateTime = result;
+          SizedBox(
+            // height: 40,
+            width: 50,
+            child: DateTimePicker(
+              type: DateTimePickerType.date,
+              // dateMask: 'd MMM, yyyy',
+              initialValue: DateTime.now().toString(),
+              firstDate: DateTime(2000),
+              lastDate: DateTime(2100),
+              decoration:const InputDecoration(
+                suffixIcon: Icon(Icons.event,color: Colors.orange,size: 22,),
+                contentPadding: EdgeInsets.only(left: 12),
+                border: InputBorder.none,
+              ),
+              style:const TextStyle(fontSize: 13),
+              locale: const Locale("vi", "VN"),
+              // icon: Icon(Icons.event),
+              selectableDayPredicate: (date) {
+                return true;
+              },
+              onChanged: (result){
+                DateTime? dateOrder = result as DateTime?;
+                dateTime = Utils.parseStringToDate(dateOrder.toString(), Const.DATE_SV_FORMAT_2);
                 _bloc.add(GetListCustomerLimo(dateTime));
-              }},
-            child: Icon(
-                Icons.event,
-              color: Colors.black,
+              },
+              validator: (result) {
+
+                return null;
+              },
+              onSaved: (val){
+                print('asd$val');
+              },
             ),
           ),
+
           SizedBox(width: 20,),
           InkWell(
               onTap: (){
@@ -96,6 +110,9 @@ class ListCustomerLimoPageState extends State<ListCustomerLimoPage> {
         // 1. Khách trung chuyển
         // 0: Không cần TC
         listener:  (context, state){
+          if(state is GetPrefsSuccess){
+            _bloc.add(GetListCustomerLimo(parseDate));
+          }
           if(state is GetListCustomerLimoSuccess){
            _mainBloc.listCustomerLimo = _bloc.listCustomerLimo;
           }else if(state is GetListOfDetailTripLimoSuccess){
@@ -116,7 +133,7 @@ class ListCustomerLimoPageState extends State<ListCustomerLimoPage> {
                 }else{
                   _countExitsCustomer++;
                   final tile = _mainBloc.listTaiXeTC.firstWhere((item) => item.dienThoaiTaiXeTrungChuyen == element.dienThoaiTaiXeTrungChuyen);
-                  if (tile != null) tile.soKhach = _countExitsCustomer;
+ tile.soKhach = _countExitsCustomer;
                 }
               }
             });
@@ -124,7 +141,7 @@ class ListCustomerLimoPageState extends State<ListCustomerLimoPage> {
 
             //_bloc.add(CustomerTransferToTC('Thông báo','Bạn nhận được khách từ Limo, vui lòng xác nhận.',_mainBloc.listTaiXeTC,));
           }else if(state is TransferLimoSuccess){
-            Utils.showDialogTransferCustomerLimo(context: context,listOfDetailTripsSuccessful: _mainBloc.listTaiXeTC);
+            Utils.showDialogTransferCustomerLimo(context: context,listOfDetailTripsSuccessful: _mainBloc.listTaiXeTC, content: '');
           }
         },
         child: BlocBuilder<ListCustomerLimoBloc,ListCustomerLimoState>(
@@ -167,8 +184,8 @@ class ListCustomerLimoPageState extends State<ListCustomerLimoPage> {
               height: 10,
             ),
             Expanded(
-              child: LiquidPullToRefresh(
-                showChildOpacityTransition: false,
+              child: RefreshIndicator(
+                color: Colors.orange,
                 onRefresh: () => Future.delayed(Duration.zero).then(
                         (_) {
                           if(Utils.isEmpty(dateTime)){
@@ -209,12 +226,12 @@ class ListCustomerLimoPageState extends State<ListCustomerLimoPage> {
   Widget buildListItem(ListOfGroupLimoCustomerResponseBody item,int index) {
     return GestureDetector(
         onTap: () {
-          _mainBloc.dateTimeDetailLimoTrips = format.parse(item.ngayChay).toString();
-          _mainBloc.idLimoTrips = item.idTuyenDuong;
-          _mainBloc.idLimoTime = item.idKhungGio;
-          Navigator.push(context, MaterialPageRoute(builder: (context)=>DetailTripsLimoPage(typeHistory: 1,dateTime: format.parse(item.ngayChay).toString(),idTrips: item.idTuyenDuong,idTime: item.idKhungGio,tenTuyenDuong: item.tenTuyenDuong,thoiGianDi:(item.ngayChay +' - ' + item.thoiGianDi)))).then((value){
+          _mainBloc.dateTimeDetailLimoTrips = format.parse(item.ngayChay.toString()).toString();
+          _mainBloc.idLimoTrips = item.idTuyenDuong!;
+          _mainBloc.idLimoTime = item.idKhungGio!;
+          Navigator.push(context, MaterialPageRoute(builder: (context)=>DetailTripsLimoPage(typeHistory: 1,dateTime: format.parse(item.ngayChay.toString()).toString(),idTrips: item.idTuyenDuong,idTime: item.idKhungGio,tenTuyenDuong: item.tenTuyenDuong,thoiGianDi:(item.ngayChay.toString() +' - ' + item.thoiGianDi.toString())))).then((value){
             print('checking');
-            _mainBloc.dateTimeDetailLimoTrips = null;
+            _mainBloc.dateTimeDetailLimoTrips = '';
             _mainBloc.idLimoTrips = 0;
             _mainBloc.idLimoTime = 0;
             _bloc.add(GetListCustomerLimo(dateTime));
@@ -276,8 +293,8 @@ class ListCustomerLimoPageState extends State<ListCustomerLimoPage> {
                     children: <Widget>[
                       Text(
                         'Thông tin chuyến',
-                        style: Theme.of(this.context).textTheme.caption.copyWith(
-                          color: Theme.of(this.context).disabledColor,
+                        style: TextStyle(
+                          color: Colors.blueGrey,
                           fontWeight: FontWeight.normal,
                         ),
                       ),
@@ -291,17 +308,17 @@ class ListCustomerLimoPageState extends State<ListCustomerLimoPage> {
                             '${item.thoiGianDi??''}',
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
-                            style: Theme.of(this.context).textTheme.subtitle.copyWith(
+                            style: TextStyle(
                               fontWeight: FontWeight.normal,
-                              color: Theme.of(this.context).textTheme.title.color,
+                              color: Colors.black,
                             ),
                           ),Text(
                             '${item.ngayChay??''}',
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
-                            style: Theme.of(this.context).textTheme.subtitle.copyWith(
+                            style: TextStyle(
                               fontWeight: FontWeight.normal,
-                              color: Theme.of(this.context).textTheme.title.color,
+                              color: Colors.black,
                             ),
                           ),
                         ],
@@ -326,8 +343,8 @@ class ListCustomerLimoPageState extends State<ListCustomerLimoPage> {
                           children: <Widget>[
                             Text(
                               'Số khách',
-                              style: Theme.of(this.context).textTheme.caption.copyWith(
-                                color: Theme.of(this.context).disabledColor,
+                              style: TextStyle(
+                                color: Colors.blueGrey,
                                 fontWeight: FontWeight.normal,
                               ),
                             ),
@@ -340,7 +357,7 @@ class ListCustomerLimoPageState extends State<ListCustomerLimoPage> {
                                   '${item.khachCanXuLy??''} khách cần xử lý / ',
                                   maxLines: 1,
                                   overflow: TextOverflow.ellipsis,
-                                  style: Theme.of(this.context).textTheme.subtitle.copyWith(
+                                  style: TextStyle(
                                     fontWeight: FontWeight.normal,
                                     color: Colors.blue,
                                   ),
@@ -349,7 +366,7 @@ class ListCustomerLimoPageState extends State<ListCustomerLimoPage> {
                                   '${item.tongSoGhe?.toString() ?? ''} ghế',
                                   maxLines: 1,
                                   overflow: TextOverflow.ellipsis,
-                                  style: Theme.of(this.context).textTheme.subtitle.copyWith(
+                                  style: TextStyle(
                                     fontWeight: FontWeight.normal,
                                     color: Colors.black.withOpacity(0.8),
                                   ),

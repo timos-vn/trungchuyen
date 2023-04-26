@@ -1,8 +1,8 @@
 class UpdateStatusCustomerRequestBody {
 
-  List<String> id;
-  int status;
-  String ghiChu;
+  List<String>? id;
+  int? status;
+  String? ghiChu;
 
   UpdateStatusCustomerRequestBody({this.id, this.status,this.ghiChu});
 

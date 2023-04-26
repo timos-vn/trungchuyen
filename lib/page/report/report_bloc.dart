@@ -11,40 +11,40 @@ import 'package:trungchuyen/utils/const.dart';
 class ReportBloc extends Bloc<ReportEvent,ReportState> {
 
   BuildContext context;
-  NetWorkFactory _networkFactory;
-  String _accessToken;
-  String get accessToken => _accessToken;
-  String _refreshToken;
-  String get refreshToken => _refreshToken;
-  SharedPreferences _prefs;
-  SharedPreferences get prefs => _prefs;
+  NetWorkFactory? _networkFactory;
+  String? _accessToken;
+  String? get accessToken => _accessToken;
+  String? _refreshToken;
+  String? get refreshToken => _refreshToken;
+  SharedPreferences? _prefs;
+  SharedPreferences? get prefs => _prefs;
 
-  List<DsKhachs> listReport = new List<DsKhachs>();
-  ReportReponseDetail reponseDetail;
+  List<DsKhachs> listReport = [];
+  ReportReponseDetail? reponseDetail;
   int tongKhach = 0;
-  String idNhaXe;
+  String? idNhaXe;
 
-  ReportBloc(this.context)  {
+
+
+  ReportBloc(this.context) : super(ReportInitial()){
     _networkFactory = NetWorkFactory(context);
+    on<GetPrefs>(_getPrefs,);
+    on<GetReportEvent>(_getReportEvent);
   }
 
-  // TODO: implement initialState
-  ReportState get initialState => ReportInitial();
+  void _getPrefs(GetPrefs event, Emitter<ReportState> emitter)async{
+    emitter(ReportLoading());
+    _prefs = await SharedPreferences.getInstance();
+    _accessToken = _prefs!.getString(Const.ACCESS_TOKEN) ?? "";
+    _refreshToken = _prefs!.getString(Const.REFRESH_TOKEN) ?? "";
+    idNhaXe = _prefs!.getString(Const.NHA_XE)??"";
+    emitter(GetPrefsSuccess());
+  }
 
-  @override
-  Stream<ReportState> mapEventToState(ReportEvent event) async*{
-    // TODO: implement mapEventToState
-    if (_prefs == null) {
-      _prefs = await SharedPreferences.getInstance();
-      _accessToken = _prefs.getString(Const.ACCESS_TOKEN) ?? "";
-      _refreshToken = _prefs.getString(Const.REFRESH_TOKEN) ?? "";
-      idNhaXe = _prefs.getString(Const.NHA_XE)??"";
-    }
-    if(event is GetReportEvent){
-      yield ReportLoading();
-      ReportState state = _handleGetReport(await _networkFactory.getReport(_accessToken, event.dateFrom,event.dateTo,idNhaXe));
-      yield state;
-    }
+  void _getReportEvent(GetReportEvent event, Emitter<ReportState> emitter)async{
+    emitter(ReportLoading());
+    ReportState state = _handleGetReport(await _networkFactory!.getReport(_accessToken!, event.dateFrom,event.dateTo,idNhaXe!));
+    emitter(state);
   }
 
 
@@ -52,10 +52,10 @@ class ReportBloc extends Bloc<ReportEvent,ReportState> {
     if (data is String) return ReportFailure(data);
     try {
       listReport.clear();
-      ReportReponse reponse = ReportReponse.fromJson(data);
+      ReportReponse reponse = ReportReponse.fromJson(data as Map<String,dynamic>);
       reponseDetail = reponse.data;
-      tongKhach = reponseDetail.tongKhach;
-      reponseDetail.dsKhachs.forEach((element) {
+      tongKhach = reponseDetail!.tongKhach!;
+      reponseDetail!.dsKhachs!.forEach((element) {
         DsKhachs customer = new DsKhachs(
           ngayChay: element.ngayChay,
           tenTuyenDuong: element.tenTuyenDuong,
@@ -93,9 +93,7 @@ class ReportBloc extends Bloc<ReportEvent,ReportState> {
                   &&
                   item.tenTuyenDuong == element.tenTuyenDuong
           ));
-          if (customerNews != null){
-            customerNews.soKhach = customerNews.soKhach + 1;
-          }
+          customerNews.soKhach = customerNews.soKhach! + 1;
           listReport.removeWhere((rm) => rm.ngayChay == customerNews.ngayChay && rm.gioBatDau == customerNews.gioBatDau && rm.tenTuyenDuong == customerNews.tenTuyenDuong);
           listReport.add(customerNews);
         }

@@ -1,27 +1,27 @@
 
 
 class DetailTripsResponse {
-  List<DetailTripsResponseBody> data;
-  int statusCode;
-  String message;
+  List<DetailTripsResponseBody>? data;
+  int? statusCode;
+  String? message;
 
   DetailTripsResponse({this.data, this.statusCode, this.message});
 
-  DetailTripsResponse.fromJson(Map<String, dynamic> json) {
+  DetailTripsResponse.fromJson(Map<String?, dynamic> json) {
     if (json['data'] != null) {
-      data = new List<DetailTripsResponseBody>();
+      data = <DetailTripsResponseBody>[];
       json['data'].forEach((v) {
-        data.add(new DetailTripsResponseBody.fromJson(v));
+        data?.add(new DetailTripsResponseBody.fromJson(v));
       });
     }
     statusCode = json['statusCode'];
     message = json['message'];
   }
 
-  Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = new Map<String, dynamic>();
+  Map<String?, dynamic> toJson() {
+    final Map<String?, dynamic> data = new Map<String?, dynamic>();
     if (this.data != null) {
-      data['data'] = this.data.map((v) => v.toJson()).toList();
+      data['data'] = this.data!.map((v) => v.toJson()).toList();
     }
     data['statusCode'] = this.statusCode;
     data['message'] = this.message;
@@ -30,36 +30,36 @@ class DetailTripsResponse {
 }
 
 class DetailTripsResponseBody {
-  String idTrungChuyen;
-  String idTaiXeLimousine;
-  String hoTenTaiXeLimousine;
-  String dienThoaiTaiXeLimousine;
-  String tenXeLimousine;
-  String bienSoXeLimousine;
-  String tenKhachHang;
-  String soDienThoaiKhach;
-  String diaChiKhachDi;
-  String toaDoDiaChiKhachDi;
-  String diaChiKhachDen;
-  String toaDoDiaChiKhachDen;
-  String diaChiLimoDi;
-  String toaDoLimoDi;
-  String diaChiLimoDen;
-  String toaDoLimoDen;
-  int loaiKhach;
-  int trangThaiTC;
-  int soKhach =1;
-  String chuyen;
-  int totalCustomer;
-  int idKhungGio;
-  int idVanPhong;
-  String ngayTC;
-  int maVe;
-  String vanPhongDen;
-  String vanPhongDi;
-  String tenNhaXe;
-  String hoTenKhachDatHo;
-  String soDienThoaiKhachDatHo;
+  String? idTrungChuyen;
+  String? idTaiXeLimousine;
+  String? hoTenTaiXeLimousine;
+  String? dienThoaiTaiXeLimousine;
+  String? tenXeLimousine;
+  String? bienSoXeLimousine;
+  String? tenKhachHang;
+  String? soDienThoaiKhach;
+  String? diaChiKhachDi;
+  String? toaDoDiaChiKhachDi;
+  String? diaChiKhachDen;
+  String? toaDoDiaChiKhachDen;
+  String? diaChiLimoDi;
+  String? toaDoLimoDi;
+  String? diaChiLimoDen;
+  String? toaDoLimoDen;
+  int? loaiKhach;
+  int? trangThaiTC;
+  int? soKhach =1;
+  String? chuyen;
+  int? totalCustomer;
+  int? idKhungGio;
+  int? idVanPhong;
+  String? ngayTC;
+  int? maVe;
+  String? vanPhongDen;
+  String? vanPhongDi;
+  String? tenNhaXe;
+  String? hoTenKhachDatHo;
+  String? soDienThoaiKhachDatHo;
 
   DetailTripsResponseBody(
       {
@@ -89,7 +89,7 @@ class DetailTripsResponseBody {
         this.hoTenKhachDatHo,this.soDienThoaiKhachDatHo
       });
 
-  DetailTripsResponseBody.fromJson(Map<String, dynamic> json) {
+  DetailTripsResponseBody.fromJson(Map<String?, dynamic> json) {
     idTrungChuyen = json['idTrungChuyen'];
     idTaiXeLimousine = json['idTaiXeLimousine'];
     hoTenTaiXeLimousine = json['hoTenTaiXeLimousine'];
@@ -115,8 +115,8 @@ class DetailTripsResponseBody {
     soDienThoaiKhachDatHo = json['soDienThoaiKhachDatHo'];
   }
 
-  Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = new Map<String, dynamic>();
+  Map<String?, dynamic> toJson() {
+    final Map<String?, dynamic> data = new Map<String?, dynamic>();
     data['idTrungChuyen'] = this.idTrungChuyen;
     data['idTaiXeLimousine'] = this.idTaiXeLimousine;
     data['hoTenTaiXeLimousine'] = this.hoTenTaiXeLimousine;

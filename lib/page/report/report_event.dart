@@ -1,12 +1,15 @@
 import 'package:equatable/equatable.dart';
-import 'package:trungchuyen/models/network/response/detail_trips_repose.dart';
 
 abstract class ReportEvent extends Equatable {
   @override
   List<Object> get props => [];
 }
 
+class GetPrefs extends ReportEvent {
 
+  @override
+  String toString() => 'GetPrefs';
+}
 class GetReportEvent extends ReportEvent {
 
   final String dateFrom;

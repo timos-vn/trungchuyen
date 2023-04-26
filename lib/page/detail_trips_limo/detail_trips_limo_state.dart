@@ -5,6 +5,14 @@ abstract class DetailTripsLimoState extends Equatable {
   List<Object> get props => [];
 }
 
+class GetPrefsSuccess extends DetailTripsLimoState{
+
+  @override
+  String toString() {
+    return 'GetPrefsSuccess{}';
+  }
+}
+
 class DetailTripsLimoInitial extends DetailTripsLimoState {
 
   @override

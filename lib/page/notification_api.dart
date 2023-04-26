@@ -9,7 +9,7 @@ class NotificationApi{
   static Future _notificationDetails()async{
     return NotificationDetails(
       android: AndroidNotificationDetails(
-        "channelid", "chanelname", "channeldesc",
+        "channelid", "chanelname",
         priority: Priority.high,
         playSound: true,
         sound: RawResourceAndroidNotificationSound('a_long_cold_sting'),
@@ -21,6 +21,7 @@ class NotificationApi{
           presentBadge: true,
           presentSound: true,
       )
+
     );
   }
 
@@ -31,23 +32,23 @@ class NotificationApi{
         requestBadgePermission: true,
         requestSoundPermission: true,
         onDidReceiveLocalNotification: (
-            int id, String title, String body, String payload,
+            int id, String? title, String? body, String? payload,
             ) async {}
     );
     var initializationSettings = InitializationSettings(android: initializationSettingAndroid,iOS: initializationSettingIOS);
     await _notifications.initialize(
         initializationSettings,
-      onSelectNotification: (payload) async {
-          onNotification.add(payload);
+        onSelectNotification: (payload) async {
+          onNotification.add(payload!);
       }
     );
   }
 
   static Future showNotification({
     int id = 0,
-    String title,
-    String body,
-    String payload})async => _notifications.show(
+    String? title,
+    String? body,
+    String? payload})async => _notifications.show(
       id,
       title,
       body,
@@ -57,14 +58,14 @@ class NotificationApi{
 
   static Future showScheduledNotification({
     int id = 0,
-    String title,
-    String body,
-    DateTime scheduledDateTime,
-    String payload})async => _notifications.zonedSchedule(
+    String? title,
+    String? body,
+    DateTime? scheduledDateTime,
+    String? payload})async => _notifications.zonedSchedule(
       id,
       title,
       body,
-      tz.TZDateTime.from(scheduledDateTime, tz.local),
+      tz.TZDateTime.from(scheduledDateTime!, tz.local),
       await _notificationDetails(),
       payload: payload,
       androidAllowWhileIdle: true,

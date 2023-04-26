@@ -16,6 +16,12 @@ class GetListCustomerLimo extends ListCustomerLimoEvent {
   String toString() => 'GetListCustomerLimo {date: $date }';
 }
 
+class GetPrefs extends ListCustomerLimoEvent {
+
+  @override
+  String toString() => 'GetPrefs';
+}
+
 class CustomerTransferToTC extends ListCustomerLimoEvent {
 
   final String title;

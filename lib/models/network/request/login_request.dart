@@ -1,7 +1,7 @@
 class LoginRequestBody {
 
-	String username;
-	String password;
+	String? username;
+	String? password;
 
 
 	LoginRequestBody({this.username, this.password,});

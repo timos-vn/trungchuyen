@@ -1,5 +1,4 @@
 import 'package:equatable/equatable.dart';
-import 'package:trungchuyen/models/network/response/detail_trips_limo_reponse.dart';
 
 abstract class HistoryLimoEvent extends Equatable {
   @override
@@ -13,7 +12,11 @@ class GetListHistoryLimo extends HistoryLimoEvent {
   @override
   String toString() => 'GetListHistoryLimo {dateTime:$dateTime}';
 }
+class GetPrefs extends HistoryLimoEvent {
 
+  @override
+  String toString() => 'GetPrefs';
+}
 
 class GetListDetailTripLimo extends HistoryLimoEvent {
 

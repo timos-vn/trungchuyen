@@ -1,5 +1,5 @@
 class LanguageRequest {
-  String lang;
+  String? lang;
 
   LanguageRequest({this.lang});
 

@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
-import 'package:image_picker/image_picker.dart';
+// import 'package:image_picker/image_picker.dart';
 import 'package:trungchuyen/page/account/account_bloc.dart';
 import 'package:trungchuyen/page/account/account_event.dart';
 import 'package:trungchuyen/page/account/account_state.dart';
@@ -26,33 +26,35 @@ class _MyProfileState extends State<MyProfile> {
   TextEditingController fullName = TextEditingController();
   TextEditingController phone = TextEditingController();
   TextEditingController email = TextEditingController();
-  String selectedGender;
-  String lastSelectedValue;
+  String? selectedGender;
+  String? lastSelectedValue;
   DateTime date = DateTime.now();
   var _image;
+  // final imagePicker = ImagePicker();
 
-  AccountBloc _accountBloc;
+  late AccountBloc _accountBloc;
 
   @override
   void initState() {
     // TODO: implement initState
     super.initState();
     _accountBloc = AccountBloc(context);
+    _accountBloc.add(GetPrefs());
   }
 
-  Future getImageLibrary() async {
-    var gallery = await ImagePicker.pickImage(source: ImageSource.gallery,maxWidth: 700);
-    setState(() {
-      _image = gallery;
-    });
-  }
+  // Future getImageLibrary() async {
+  //   final gallery = await imagePicker.pickImage(source: ImageSource.camera,imageQuality: 70);
+  //   setState(() {
+  //     _image = gallery;
+  //   });
+  // }
 
-  Future cameraImage() async {
-    var image = await ImagePicker.pickImage(source: ImageSource.camera,maxWidth: 700);
-    setState(() {
-      _image = image;
-    });
-  }
+  // Future cameraImage() async {
+  //   final image = await imagePicker.pickImage(source: ImageSource.camera,imageQuality: 70);
+  //   setState(() {
+  //     _image = image;
+  //   });
+  // }
 
 
   Widget _buildBottomPicker(Widget picker) {
@@ -77,11 +79,11 @@ class _MyProfileState extends State<MyProfile> {
     );
   }
 
-  void showDemoActionSheet({BuildContext context, Widget child}) {
+  void showDemoActionSheet({BuildContext? context, Widget? child}) {
     showCupertinoModalPopup<String>(
-      context: context,
-      builder: (BuildContext context) => child,
-    ).then((String value) {
+      context: context!,
+      builder: (BuildContext context) => child!,
+    ).then((String? value) {
       if (value != null) {
         setState(() { lastSelectedValue = value; });
       }
@@ -98,14 +100,14 @@ class _MyProfileState extends State<MyProfile> {
               child: const Text('Camera'),
               onPressed: () {
                 Navigator.pop(context, 'Camera');
-                cameraImage();
+                // cameraImage();
               },
             ),
             CupertinoActionSheetAction(
               child: const Text('Photo Library'),
               onPressed: () {
                 Navigator.pop(context, 'Photo Library');
-                getImageLibrary();
+                //getImageLibrary();
               },
             ),
           ],
@@ -121,8 +123,8 @@ class _MyProfileState extends State<MyProfile> {
   }
 
   submit(){
-    final FormState form = formKey.currentState;
-    form.save();
+    final FormState? form = formKey.currentState;
+    form?.save();
   }
 
   @override
@@ -180,7 +182,9 @@ class _MyProfileState extends State<MyProfile> {
                                       borderRadius: new BorderRadius.circular(100.0),
                                       child:_image == null
                                           ?new GestureDetector(
-                                          onTap: (){selectCamera();},
+                                          onTap: (){
+                                            selectCamera();
+                                            },
                                           child: new Material(
                                             elevation: 10.0,
                                             color: Colors.white,
@@ -201,7 +205,9 @@ class _MyProfileState extends State<MyProfile> {
                                             ),
                                           ),
                                       ): new GestureDetector(
-                                          onTap: () {selectCamera();},
+                                          onTap: () {
+                                            selectCamera();
+                                            },
                                           child: new Container(
                                             height: 80.0,
                                             width: 80.0,
@@ -375,7 +381,7 @@ class _MyProfileState extends State<MyProfile> {
                                                   ),),
                                                   value: selectedGender,
                                                   isDense: true,
-                                                  onChanged: (String newValue) {
+                                                  onChanged: (String? newValue) {
                                                     setState(() {
                                                       selectedGender = newValue;
                                                       print(selectedGender);

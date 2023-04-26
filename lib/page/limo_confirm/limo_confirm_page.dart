@@ -1,8 +1,5 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:get/get.dart' as libGetX;
-import 'package:liquid_pull_to_refresh/liquid_pull_to_refresh.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:trungchuyen/models/network/response/list_customer_confirm_response.dart';
 import 'package:trungchuyen/page/detail_list_confirm/detail_list_confirm.dart';
@@ -13,29 +10,29 @@ import 'package:trungchuyen/themes/images.dart';
 import 'package:trungchuyen/utils/utils.dart';
 import 'package:trungchuyen/widget/pending_action.dart';
 import 'package:url_launcher/url_launcher.dart';
-import 'dart:io' show Platform, exit;
 
 import 'limo_confirm_event.dart';
 
 
 class LimoConfirmPage extends StatefulWidget {
-  final bool roleTC;
-  const LimoConfirmPage({Key key,this.roleTC}) : super(key: key);
+  final bool? roleTC;
+  const LimoConfirmPage({Key? key,this.roleTC}) : super(key: key);
   @override
   LimoConfirmPageState createState() => LimoConfirmPageState();
 }
 
 class LimoConfirmPageState extends State<LimoConfirmPage>  {
 
-  LimoConfirmBloc _limoConfirmBloc;
+  late LimoConfirmBloc _limoConfirmBloc;
   // ignore: close_sinks
-  MainBloc _mainBloc;
+  late MainBloc _mainBloc;
   @override
   void initState() {
     // TODO: implement initState
     _mainBloc = BlocProvider.of<MainBloc>(context);
     _limoConfirmBloc = LimoConfirmBloc(context);
-    _limoConfirmBloc.getMainBloc(context);
+    _limoConfirmBloc.add(GetPrefs());
+
     if(widget.roleTC == true || _mainBloc.role == 3){
       _limoConfirmBloc.add(GetListCustomerConfirmEvent());
     }
@@ -62,6 +59,9 @@ class LimoConfirmPageState extends State<LimoConfirmPage>  {
         body: BlocListener<LimoConfirmBloc,LimoConfirmState>(
           bloc: _limoConfirmBloc,
             listener: (context, state){
+            if(state is GetPrefsSuccess){
+              _limoConfirmBloc.getMainBloc(context);
+            }
               if(state is UpdateStatusCustomerConfirmSuccess){
               }else if(state is GetListCustomerConfirmLimoSuccess){
                 _mainBloc.listCustomerConfirmLimo = _limoConfirmBloc.listCustomerConfirmLimos;
@@ -105,7 +105,7 @@ class LimoConfirmPageState extends State<LimoConfirmPage>  {
                       ),
                       Container(
                         height: 35,
-                        child: Center(child: Text(_mainBloc.tongChuyenXacNhan?.toString()??'',style: TextStyle(fontStyle: FontStyle.italic,color: Colors.red))),
+                        child: Center(child: Text(_mainBloc.tongChuyenXacNhan.toString(),style: TextStyle(fontStyle: FontStyle.italic,color: Colors.red))),
                       ),
                     ],
                   ),
@@ -117,7 +117,7 @@ class LimoConfirmPageState extends State<LimoConfirmPage>  {
                       ),
                       Container(
                         height: 35,
-                        child: Center(child: Text(_mainBloc.tongKhachXacNhan?.toString()??'',style: TextStyle(fontStyle: FontStyle.italic,color: Colors.red))),
+                        child: Center(child: Text(_mainBloc.tongKhachXacNhan.toString(),style: TextStyle(fontStyle: FontStyle.italic,color: Colors.red))),
                       ),
                     ],
                   ),
@@ -138,8 +138,8 @@ class LimoConfirmPageState extends State<LimoConfirmPage>  {
               height: 10,
             ),
             Expanded(
-              child: LiquidPullToRefresh(
-                showChildOpacityTransition: false,
+              child: RefreshIndicator(
+                color: Colors.orange,
                 onRefresh: () => Future.delayed(Duration.zero).then(
                         (_) => _limoConfirmBloc.add(GetListCustomerConfirmEvent())),
                 child: Utils.isEmpty(_mainBloc.listCustomerConfirmLimo) ? Center(child: Text('Tạm thời chưa có KH nào cần xác nhận'),) : Scrollbar(
@@ -274,7 +274,7 @@ class LimoConfirmPageState extends State<LimoConfirmPage>  {
                   children: <Widget>[
                     Text( _mainBloc.role == 7 ?
                     'Thông tin lái xe Trung chuyển' : 'Thông tin lái xe Limos',
-                      style: Theme.of(this.context).textTheme.caption.copyWith(
+                      style: TextStyle(
                         color: Theme.of(this.context).disabledColor,
                         fontWeight: FontWeight.normal,
                       ),
@@ -291,16 +291,16 @@ class LimoConfirmPageState extends State<LimoConfirmPage>  {
                               '${item.hoTenTaiXe??''}',
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
-                              style: Theme.of(this.context).textTheme.subtitle.copyWith(
+                              style: TextStyle(
                                 fontWeight: FontWeight.normal,
-                                color: Theme.of(this.context).textTheme.title.color,
+                                color: Colors.black,
                               ),
                             ),
                             Text(
                               ' / ${item.dienThoaiTaiXe??''}',
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
-                              style: Theme.of(this.context).textTheme.subtitle.copyWith(
+                              style: TextStyle(
                                 fontWeight: FontWeight.normal,
                                 color: Colors.grey,
                               ),
@@ -308,7 +308,17 @@ class LimoConfirmPageState extends State<LimoConfirmPage>  {
                           ],
                         ),
                         InkWell(
-                          onTap: () => launch("tel://${item.dienThoaiTaiXe}"),
+                          onTap: () async{
+                            if(item.dienThoaiTaiXe != null && item.dienThoaiTaiXe != 'null'){
+                              final Uri launchUri = Uri(
+                                scheme: 'tel',
+                                path: '${item.dienThoaiTaiXe}',
+                              );
+                              await launchUrl(launchUri);
+                            }else{
+                              Utils.showToast('Không có SĐT Tài xế');
+                            }
+                          },
                           child: Container(
                               padding: EdgeInsets.all(8),
                               child: Icon(Icons.phone_callback_outlined)),
@@ -345,7 +355,7 @@ class LimoConfirmPageState extends State<LimoConfirmPage>  {
                                 '${item.soKhach??''}',
                                 maxLines: 2,
                                 overflow: TextOverflow.ellipsis,
-                                style: Theme.of(this.context).textTheme.subtitle.copyWith(
+                                style: TextStyle(
                                   fontWeight: FontWeight.normal,
                                   color: Colors.blue,
                                 ),
@@ -360,7 +370,7 @@ class LimoConfirmPageState extends State<LimoConfirmPage>  {
                       child: GestureDetector(
                       onTap: () {
                         _limoConfirmBloc.add(UpdateStatusCustomerConfirmMapEvent(status: 11,idTrungChuyen:item.idTrungChuyen,idLaiXeTC: item.idTaiXe));
-                        _limoConfirmBloc.add(LimoConfirm('Thông báo', 'TX-Limo xác nhận khách thành công', item.idTaiXe));
+                        _limoConfirmBloc.add(LimoConfirm('Thông báo', 'TX-Limo xác nhận khách thành công', item.idTaiXe.toString()));
                       },
                       child: Container(
                         padding: EdgeInsets.all(8),

@@ -6,15 +6,21 @@ abstract class NotificationEvent extends Equatable {
 }
 
 class GetListNotification extends NotificationEvent {
-  final bool isScroll;
-  final bool isRefresh;
-  final bool isLoadMore;
-  final bool isReLoad;
+  final bool? isScroll;
+  final bool? isRefresh;
+  final bool? isLoadMore;
+  final bool? isReLoad;
 
   GetListNotification({this.isScroll,this.isRefresh = false, this.isLoadMore = false,this.isReLoad});
 
   @override
   String toString() => 'isScroll: $isScroll,GetListAds {isRefresh: $isRefresh, isLoadMore: $isLoadMore,isReLoad: $isReLoad}';
+}
+
+class GetPrefs extends NotificationEvent {
+
+  @override
+  String toString() => 'GetPrefs';
 }
 
 class UpdateNotificationEvent extends NotificationEvent {

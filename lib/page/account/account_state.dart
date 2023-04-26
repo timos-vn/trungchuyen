@@ -4,6 +4,14 @@ abstract class AccountState extends Equatable {
   @override
   List<Object> get props => [];
 }
+
+class GetPrefsSuccess extends AccountState{
+
+  @override
+  String toString() {
+    return 'GetPrefsSuccess{}';
+  }
+}
 class AccountInitial extends AccountState {
 
   @override

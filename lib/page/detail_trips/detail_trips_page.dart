@@ -1,4 +1,3 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
@@ -11,24 +10,22 @@ import 'package:trungchuyen/page/detail_trips/detail_trips_state.dart';
 import 'package:trungchuyen/page/main/main_bloc.dart';
 import 'package:trungchuyen/page/main/main_event.dart';
 import 'package:trungchuyen/themes/colors.dart';
-import 'package:trungchuyen/themes/images.dart';
 import 'package:intl/intl.dart';
 import 'package:trungchuyen/utils/utils.dart';
-import 'package:trungchuyen/widget/bottom_sheet_action.dart';
 import 'package:trungchuyen/widget/confirm_success.dart';
 import 'package:trungchuyen/widget/separator.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class DetailTripsPage extends StatefulWidget {
-  final String tenChuyen;
-  final DateTime dateTime;
-  final int idRoom;
-  final int idTime;
-  final int typeCustomer;
-  final int typeDetail;
-  final String thoiGian;
+  final String? tenChuyen;
+  final DateTime? dateTime;
+  final int? idRoom;
+  final int? idTime;
+  final int? typeCustomer;
+  final int? typeDetail;
+  final String? thoiGian;
 
-  const DetailTripsPage({Key key,this.tenChuyen,this.dateTime, this.idRoom, this.idTime,this.typeCustomer,this.typeDetail,this.thoiGian}) : super(key: key);
+  const DetailTripsPage({Key? key,this.tenChuyen,this.dateTime, this.idRoom, this.idTime,this.typeCustomer,this.typeDetail,this.thoiGian}) : super(key: key);
 
   @override
   DetailTripsPageState createState() => DetailTripsPageState();
@@ -36,8 +33,8 @@ class DetailTripsPage extends StatefulWidget {
 
 class DetailTripsPageState extends State<DetailTripsPage> {
 
-  MainBloc _mainBloc;
-  DetailTripsBloc _bloc;
+  late MainBloc _mainBloc;
+  late DetailTripsBloc _bloc;
   DateFormat format = DateFormat("dd/MM/yyyy");
   // List<DetailTripsResponseBody> _listOfDetailTrips = new List<DetailTripsResponseBody>();
   int tongKhach=0;
@@ -45,22 +42,11 @@ class DetailTripsPageState extends State<DetailTripsPage> {
   void initState() {
     // TODO: implement initState
     super.initState();
-    _mainBloc = BlocProvider.of<MainBloc>(context);
+
     _bloc = DetailTripsBloc(context);
-    _bloc.getMainBloc(context);
-   // DateTime parseDate = new DateFormat("yyyy-MM-dd").parse(DateTime.now().toString());
-    if(widget.typeDetail == 1){
-      // print('telete ${_mainBloc.tongKhach}');
-      // _mainBloc.tongKhach =0;
-      // _bloc.add(GetListDetailTrips(widget.dateTime,widget.idRoom,widget.idTime,widget.typeCustomer));
-    }else{
-      _bloc.add(GetListDetailTripsHistory(widget.dateTime,widget.idRoom,widget.idTime,widget.typeCustomer,));
-    }
-    if(!Utils.isEmpty(_mainBloc.listCustomer)){
-      _mainBloc.listCustomer.forEach((element) {
-        tongKhach = tongKhach + element.soKhach;
-      });
-    }
+
+    _bloc.add(GetPrefs());
+
   }
 
   @override
@@ -79,6 +65,26 @@ class DetailTripsPageState extends State<DetailTripsPage> {
         body:BlocListener<DetailTripsBloc,DetailTripsState>(
           bloc: _bloc,
           listener:  (context, state){
+            if(state is GetPrefsSuccess){
+              _bloc.getMainBloc(context);
+              _mainBloc = BlocProvider.of<MainBloc>(context);
+              // DateTime parseDate = new DateFormat("yyyy-MM-dd").parse(DateTime.now().toString());
+              if(widget.typeDetail == 1){
+                // print('telete ${_mainBloc.tongKhach}');
+                // _mainBloc.tongKhach =0;
+                // _bloc.add(GetListDetailTrips(widget.dateTime,widget.idRoom,widget.idTime,widget.typeCustomer));
+              }else{
+                _bloc.add(GetListDetailTripsHistory(widget.dateTime!,widget.idRoom!,widget.idTime!,widget.typeCustomer!,));
+              }
+              if(!Utils.isEmpty(_mainBloc.listCustomer)){
+                _mainBloc.listCustomer.forEach((element) {
+                  tongKhach = tongKhach + element.soKhach!;
+                });
+              }
+            }
+            if(state is DetailTripsFailure){
+              Utils.showToast(state.error.toString());
+            }
             if(state is GetListOfDetailTripsSuccess){
               // _listOfDetailTrips = _bloc.listOfDetailTrips;
               print('ok');
@@ -86,7 +92,7 @@ class DetailTripsPageState extends State<DetailTripsPage> {
             else if(state is TCTransferCustomerToLimoSuccess){
               _mainBloc.listOfGroupAwaitingCustomer.clear();
               _bloc.add(UpdateStatusCustomerDetailEvent(status: 10,idTrungChuyen: state.listIDTC.split(','),note: ''));
-              _mainBloc.showDialogTransferCustomer(context: context);
+              _mainBloc.showDialogTransferCustomer(context: context, content: '');
             }
             else if(state is UpdateStatusCustomerSuccess){
               if(state.status == 10 || state.status == 11){
@@ -159,7 +165,7 @@ class DetailTripsPageState extends State<DetailTripsPage> {
                           ),
                           Container(
                             height: 35,
-                            child: widget.typeDetail == 1 ? Center(child: Text(widget.thoiGian.split('->')[0]?.toString()??'')  ) :
+                            child: widget.typeDetail == 1 ? Center(child: Text(widget.thoiGian?.split('->')[0].toString()??'')  ) :
                             Center(child: Text(widget.thoiGian?.toString()??'')  ),
                           ),
                         ],
@@ -173,7 +179,7 @@ class DetailTripsPageState extends State<DetailTripsPage> {
                           ),
                           Container(
                             height: 35,
-                            child:widget.typeDetail == 1 ? Center(child: Text(widget.thoiGian.split('->')[1]?.toString()??'')) :
+                            child:widget.typeDetail == 1 ? Center(child: Text(widget.thoiGian?.split('->')[1].toString()??'')) :
                             Center(child: Text(widget.thoiGian?.toString()??'')),
                           ),
                         ],
@@ -186,7 +192,7 @@ class DetailTripsPageState extends State<DetailTripsPage> {
                           ),
                           Container(
                             height: 35,
-                            child: Center(child: Text('${_mainBloc.tongKhach?.toString()??''} / ${_mainBloc.listCustomer.length?.toString()??0}',style: TextStyle(color: Colors.purple),)),
+                            child: Center(child: Text('${_mainBloc.tongKhach.toString()} / ${_mainBloc.listCustomer.length.toString()}',style: TextStyle(color: Colors.purple),)),
                           ),
                         ],
                       ),
@@ -261,10 +267,10 @@ class DetailTripsPageState extends State<DetailTripsPage> {
                     visible: widget.typeCustomer == 2 && _mainBloc.soKhachDaDonDuoc == _mainBloc.listCustomer.length && _mainBloc.soKhachHuy < _mainBloc.listCustomer.length ,
                     child: InkWell(
                       onTap: (){
-                        List<String> idTC = new List<String>();
+                        List<String> idTC = [];
                         _mainBloc.listCustomer.forEach((element) {
                           if(element.trangThaiTC != 12){
-                            idTC.add(element.idTrungChuyen);
+                            idTC.add(element.idTrungChuyen.toString());
                           }
                         });
                         String id = idTC.join(',');
@@ -349,6 +355,7 @@ class DetailTripsPageState extends State<DetailTripsPage> {
                       })
               ),
             ),
+            const SizedBox(height: 50,)
           ],
         ),
         Visibility(
@@ -372,7 +379,7 @@ class DetailTripsPageState extends State<DetailTripsPage> {
                   return Padding(
                     padding: const EdgeInsets.only(left: 10,right: 10),
                     child: Container(
-                      height: 260,
+                      height: 365,
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.end,
                         mainAxisAlignment: MainAxisAlignment.end,
@@ -462,33 +469,56 @@ class DetailTripsPageState extends State<DetailTripsPage> {
                               ),
                             ),
                           ),
-                          SizedBox(height: 10,),
+                          SizedBox(height: 90,),
                         ],
                       ),
                     ),
                   );
                 }
-            ).then((value) {
+            ).then((value) async{
               if(value == 'ConfirmCustomer'){
                 print(item.loaiKhach);print(item.trangThaiTC);
                if(item.loaiKhach == 1 && item.trangThaiTC != 4){
-                 _mainBloc.add(UpdateStatusCustomerEvent(status: 4,idTrungChuyen: item.idTrungChuyen.split(','),));
+                 _mainBloc.add(UpdateStatusCustomerEvent(status: 4,idTrungChuyen: item.idTrungChuyen?.split(','),));
                  _mainBloc.add(GetListDetailTripsTC(format.parse(_mainBloc.ngayTC),_mainBloc.idVanPhong,_mainBloc.idKhungGio,_mainBloc.loaiKhach));
                  Utils.showToast('Đón khách thành công!');
                }else if(item.loaiKhach == 2 && item.trangThaiTC != 8){
-                 _mainBloc.add(UpdateStatusCustomerEvent(status: 8,idTrungChuyen: item.idTrungChuyen.split(',')));
+                 _mainBloc.add(UpdateStatusCustomerEvent(status: 8,idTrungChuyen: item.idTrungChuyen?.split(',')));
                  _mainBloc.add(GetListDetailTripsTC(format.parse(_mainBloc.ngayTC),_mainBloc.idVanPhong,_mainBloc.idKhungGio,_mainBloc.loaiKhach));
                  Utils.showToast('Trả khách thành công!');
                }
-              }else if(value == 'CallCustomer'){
-                if(!Utils.isEmpty(item.soDienThoaiKhachDatHo)){
-                  launch("tel://${item.soDienThoaiKhachDatHo}");
+              }
+              else if(value == 'CallCustomer'){
+                print(item.soDienThoaiKhach);
+                print(item.soDienThoaiKhachDatHo);
+                if(item.soDienThoaiKhachDatHo != 'null' && item.soDienThoaiKhachDatHo != null){
+                  final Uri launchUri = Uri(
+                    scheme: 'tel',
+                    path: '${item.soDienThoaiKhachDatHo.toString().trim()}',
+                  );
+                  await launchUrl(launchUri);
+                }else if(item.soDienThoaiKhach != 'null' && item.soDienThoaiKhach != null) {
+                  final Uri launchUri = Uri(
+                    scheme: 'tel',
+                    path: '${item.soDienThoaiKhach}',
+                  );
+                  await launchUrl(launchUri);
                 }else{
-                  launch("tel://${item.soDienThoaiKhach}");
+                  Utils.showToast('Không có SĐT Khách hàng');
                 }
-              }else if(value == 'CallDriver'){
-                launch("tel://${item.dienThoaiTaiXeLimousine}");
-              }else if(value == 'CancelCustomer'){
+              }
+              else if(value == 'CallDriver'){
+                if(item.dienThoaiTaiXeLimousine != 'null' && item.dienThoaiTaiXeLimousine != null){
+                  final Uri launchUri = Uri(
+                    scheme: 'tel',
+                    path: '${item.dienThoaiTaiXeLimousine.toString().trim()}',
+                  );
+                  await launchUrl(launchUri);
+                }else{
+                  Utils.showToast('Không có SĐT TX Limousine');
+                }
+              }
+              else if(value == 'CancelCustomer'){
                 showDialog(
                     context: context,
                     builder: (context) {
@@ -502,7 +532,7 @@ class DetailTripsPageState extends State<DetailTripsPage> {
                       );
                     }).then((value) {
                       if(value == 'Confirm'){
-                        _mainBloc.add(UpdateStatusCustomerEvent(status: 12,idTrungChuyen: item.idTrungChuyen.split(','),));
+                        _mainBloc.add(UpdateStatusCustomerEvent(status: 12,idTrungChuyen: item.idTrungChuyen?.split(','),));
                         _mainBloc.add(GetListDetailTripsTC(format.parse(_mainBloc.ngayTC),_mainBloc.idVanPhong,_mainBloc.idKhungGio,_mainBloc.loaiKhach));
                         Utils.showToast('Huỷ khách thành công!');
                       }
@@ -566,11 +596,27 @@ class DetailTripsPageState extends State<DetailTripsPage> {
                     ),
                   );
                 }
-            ).then((value) {
+            ).then((value) async{
               if(value == 'CallCustomer'){
-                launch("tel://${item.soDienThoaiKhach}");
+                if(item.soDienThoaiKhach != null && item.soDienThoaiKhach != 'null'){
+                  final Uri launchUri = Uri(
+                    scheme: 'tel',
+                    path: '${item.soDienThoaiKhach}',
+                  );
+                  await launchUrl(launchUri);
+                }else {
+                  Utils.showToast('Không có SĐT của Khách hàng');
+                }
               }else if(value == 'CallDriver'){
-                launch("tel://${item.dienThoaiTaiXeLimousine}");
+                if(item.dienThoaiTaiXeLimousine != null && item.dienThoaiTaiXeLimousine != 'null'){
+                  final Uri launchUri = Uri(
+                    scheme: 'tel',
+                    path: '${item.dienThoaiTaiXeLimousine}',
+                  );
+                  await launchUrl(launchUri);
+                }else{
+                  Utils.showToast('Không có SĐT TX Limousine');
+                }
               }
             });
           }
@@ -674,16 +720,13 @@ class DetailTripsPageState extends State<DetailTripsPage> {
                           children: [
                             Text(
                               '${item.tenNhaXe??''}',
-                              style: Theme.of(this.context).textTheme.caption.copyWith(
-                                color: Colors.red,
-                                fontWeight: FontWeight.normal,
-                              ),
+                              style: TextStyle(color: Colors.red,)
                             ),
                             Text(
                               '${item.soKhach??''} Khách.',
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
-                              style: Theme.of(this.context).textTheme.subtitle.copyWith(
+                              style: TextStyle(
                                   fontWeight: FontWeight.bold,
                                   color: Colors.red,fontSize: 11,fontStyle: FontStyle.italic
                               ),
@@ -705,7 +748,7 @@ class DetailTripsPageState extends State<DetailTripsPage> {
                                       '${item.tenKhachHang??''}',
                                       maxLines: 1,
                                       overflow: TextOverflow.ellipsis,
-                                      style: Theme.of(this.context).textTheme.subtitle.copyWith(
+                                      style: TextStyle(
                                         fontWeight: FontWeight.normal,
                                         color: Colors.red,
                                       ),
@@ -715,7 +758,7 @@ class DetailTripsPageState extends State<DetailTripsPage> {
                                       ' / ${item.soDienThoaiKhach??''}',
                                       maxLines: 1,
                                       overflow: TextOverflow.ellipsis,
-                                      style: Theme.of(this.context).textTheme.subtitle.copyWith(
+                                      style: TextStyle(
                                         fontWeight: FontWeight.normal,
                                         color: Colors.grey,fontSize: 11
                                       ),
@@ -750,9 +793,9 @@ class DetailTripsPageState extends State<DetailTripsPage> {
                                         '${item.diaChiKhachDi??''}',
                                         maxLines: 1,
                                         overflow: TextOverflow.ellipsis,
-                                        style: Theme.of(this.context).textTheme.subtitle.copyWith(
+                                        style: TextStyle(
                                             fontWeight: FontWeight.normal,
-                                            color: Theme.of(this.context).textTheme.title.color,
+                                            color: Colors.black,
                                             fontStyle: FontStyle.italic
                                         ),
                                       ),
@@ -765,9 +808,9 @@ class DetailTripsPageState extends State<DetailTripsPage> {
                                 'Đi',
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
-                                style: Theme.of(this.context).textTheme.subtitle.copyWith(
+                                style: TextStyle(
                                   fontWeight: FontWeight.normal,
-                                  color: Theme.of(this.context).textTheme.title.color.withOpacity(0.6),
+                                  color: Colors.black.withOpacity(0.6),
                                 ),
                               ),
                             ],
@@ -803,9 +846,9 @@ class DetailTripsPageState extends State<DetailTripsPage> {
                                         '${item.diaChiKhachDen??''}',
                                         maxLines: 1,
                                         overflow: TextOverflow.ellipsis,
-                                        style: Theme.of(this.context).textTheme.subtitle.copyWith(
+                                        style: TextStyle(
                                             fontWeight: FontWeight.normal,
-                                            color: Theme.of(this.context).textTheme.title.color,
+                                            color: Colors.black,
                                             fontStyle: FontStyle.italic
                                         ),
                                       ),
@@ -817,9 +860,9 @@ class DetailTripsPageState extends State<DetailTripsPage> {
                                 'Đến',
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
-                                style: Theme.of(this.context).textTheme.subtitle.copyWith(
+                                style: TextStyle(
                                   fontWeight: FontWeight.normal,
-                                  color: Theme.of(this.context).textTheme.title.color.withOpacity(0.6),
+                                  color: Colors.black.withOpacity(0.6),
                                 ),
                               ),
                             ],
@@ -930,7 +973,7 @@ class DetailTripsPageState extends State<DetailTripsPage> {
                           children: [
                             Text(
                               '${item.tenNhaXe??''}',
-                              style: Theme.of(this.context).textTheme.caption.copyWith(
+                              style: TextStyle(
                                 color: Colors.red,
                                 fontWeight: FontWeight.normal,
                               ),
@@ -939,7 +982,7 @@ class DetailTripsPageState extends State<DetailTripsPage> {
                               '${item.soKhach??''} Khách.',
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
-                              style: Theme.of(this.context).textTheme.subtitle.copyWith(
+                              style: TextStyle(
                                   fontWeight: FontWeight.bold,
                                   color: Colors.red,fontSize: 11,fontStyle: FontStyle.italic
                               ),
@@ -961,7 +1004,7 @@ class DetailTripsPageState extends State<DetailTripsPage> {
                                       '${item.tenKhachHang??''}',
                                       maxLines: 1,
                                       overflow: TextOverflow.ellipsis,
-                                      style: Theme.of(this.context).textTheme.subtitle.copyWith(
+                                      style: TextStyle(
                                         fontWeight: FontWeight.normal,
                                         color: Colors.red,
                                       ),
@@ -971,7 +1014,7 @@ class DetailTripsPageState extends State<DetailTripsPage> {
                                       ' / ${item.soDienThoaiKhach??''}',
                                       maxLines: 1,
                                       overflow: TextOverflow.ellipsis,
-                                      style: Theme.of(this.context).textTheme.subtitle.copyWith(
+                                      style: TextStyle(
                                           fontWeight: FontWeight.normal,
                                           color: Colors.grey,fontSize: 11
                                       ),
@@ -1006,9 +1049,9 @@ class DetailTripsPageState extends State<DetailTripsPage> {
                                         '${item.diaChiKhachDi??''}',
                                         maxLines: 1,
                                         overflow: TextOverflow.ellipsis,
-                                        style: Theme.of(this.context).textTheme.subtitle.copyWith(
+                                        style: TextStyle(
                                             fontWeight: FontWeight.normal,
-                                            color: Theme.of(this.context).textTheme.title.color,
+                                            color: Colors.black,
                                             fontStyle: FontStyle.italic
                                         ),
                                       ),
@@ -1021,9 +1064,9 @@ class DetailTripsPageState extends State<DetailTripsPage> {
                                 'Đi',
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
-                                style: Theme.of(this.context).textTheme.subtitle.copyWith(
+                                style: TextStyle(
                                   fontWeight: FontWeight.normal,
-                                  color: Theme.of(this.context).textTheme.title.color.withOpacity(0.6),
+                                  color: Colors.black.withOpacity(0.6),
                                 ),
                               ),
                             ],
@@ -1059,9 +1102,9 @@ class DetailTripsPageState extends State<DetailTripsPage> {
                                         '${item.diaChiKhachDen??''}',
                                         maxLines: 1,
                                         overflow: TextOverflow.ellipsis,
-                                        style: Theme.of(this.context).textTheme.subtitle.copyWith(
+                                        style: TextStyle(
                                             fontWeight: FontWeight.normal,
-                                            color: Theme.of(this.context).textTheme.title.color,
+                                            color: Colors.black,
                                             fontStyle: FontStyle.italic
                                         ),
                                       ),
@@ -1073,9 +1116,9 @@ class DetailTripsPageState extends State<DetailTripsPage> {
                                 'Đến',
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
-                                style: Theme.of(this.context).textTheme.subtitle.copyWith(
+                                style: TextStyle(
                                   fontWeight: FontWeight.normal,
-                                  color: Theme.of(this.context).textTheme.title.color.withOpacity(0.6),
+                                  color: Colors.black.withOpacity(0.6),
                                 ),
                               ),
                             ],

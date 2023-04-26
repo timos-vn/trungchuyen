@@ -1,4 +1,3 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
@@ -20,15 +19,15 @@ import 'detail_trips_limo_state.dart';
 
 class DetailTripsLimoPage extends StatefulWidget {
 
-  final String dateTime;
-  final int idTrips;
-  final int idTime;
-  final String tuyenDuong;
-  final String tenTuyenDuong;
-  final String thoiGianDi;
-  final int typeHistory;
+  final String? dateTime;
+  final int? idTrips;
+  final int? idTime;
+  final String? tuyenDuong;
+  final String? tenTuyenDuong;
+  final String? thoiGianDi;
+  final int? typeHistory;
 
-  const DetailTripsLimoPage({Key key,this.dateTime, this.idTrips, this.idTime,this.tuyenDuong,this.tenTuyenDuong,this.thoiGianDi,this.typeHistory}) : super(key: key);
+  const DetailTripsLimoPage({Key? key,this.dateTime, this.idTrips, this.idTime,this.tuyenDuong,this.tenTuyenDuong,this.thoiGianDi,this.typeHistory}) : super(key: key);
 
   @override
   _DetailTripsLimoPageState createState() => _DetailTripsLimoPageState();
@@ -36,8 +35,8 @@ class DetailTripsLimoPage extends StatefulWidget {
 
 class _DetailTripsLimoPageState extends State<DetailTripsLimoPage> {
 
-  DetailTripsLimoBloc _bloc;
-  MainBloc _mainBloc;
+  late DetailTripsLimoBloc _bloc;
+  late MainBloc _mainBloc;
 
   @override
   void initState() {
@@ -45,7 +44,7 @@ class _DetailTripsLimoPageState extends State<DetailTripsLimoPage> {
     super.initState();
     _mainBloc = BlocProvider.of<MainBloc>(context);
     _bloc = DetailTripsLimoBloc(context);
-    _mainBloc.add(GetListDetailTripsLimoMain(date: widget.dateTime,idTrips: widget.idTrips,idTime: widget.idTime));
+    _bloc.add(GetPrefs());
     // _bloc.add(GetListDetailTripsLimo(widget.dateTime,widget.idTrips,widget.idTime));
   }
 
@@ -68,7 +67,7 @@ class _DetailTripsLimoPageState extends State<DetailTripsLimoPage> {
               ),
             ),
             title: Text(
-              widget.tenTuyenDuong?.toString()??"",
+              widget.tenTuyenDuong.toString(),
               style: TextStyle(color: Colors.black),
             ),
              centerTitle: true,
@@ -85,6 +84,9 @@ class _DetailTripsLimoPageState extends State<DetailTripsLimoPage> {
           body:BlocListener<DetailTripsLimoBloc,DetailTripsLimoState>(
             bloc: _bloc,
             listener:  (context, state){
+              if(state is GetPrefsSuccess){
+                _mainBloc.add(GetListDetailTripsLimoMain(date: widget.dateTime,idTrips: widget.idTrips,idTime: widget.idTime));
+              }
               if(state is ConfirmCustomerLimoSuccess){
                 if(state.status == 4){
                   Utils.showToast('Huỷ khách thành công');
@@ -142,7 +144,7 @@ class _DetailTripsLimoPageState extends State<DetailTripsLimoPage> {
                     ),
                     Container(
                       height: 35,
-                      child: Center(child: Text(_mainBloc.totalCustomer?.toString()??'')),//_bloc.totalCustomer
+                      child: Center(child: Text(_mainBloc.totalCustomer.toString())),//_bloc.totalCustomer
                     ),
                   ],
                 ),
@@ -154,7 +156,7 @@ class _DetailTripsLimoPageState extends State<DetailTripsLimoPage> {
                     ),
                     Container(
                       height: 35,
-                      child:Center(child: Text( _mainBloc.totalCustomerCancel?.toString()??'',style: TextStyle(fontSize: 12,color: red),textAlign: TextAlign.center,maxLines: 2,overflow: TextOverflow.ellipsis,)) ,
+                      child:Center(child: Text( _mainBloc.totalCustomerCancel.toString(),style: TextStyle(fontSize: 12,color: red),textAlign: TextAlign.center,maxLines: 2,overflow: TextOverflow.ellipsis,)) ,
                     ),
                   ],
                 ),
@@ -340,7 +342,7 @@ class _DetailTripsLimoPageState extends State<DetailTripsLimoPage> {
                   ),
                 );
               }
-          ).then((value) {
+          ).then((value) async{
             if(value == 'ConfirmKhachThuong'){
               if(widget.typeHistory == 1){
                 bool typeView = false;
@@ -357,7 +359,7 @@ class _DetailTripsLimoPageState extends State<DetailTripsLimoPage> {
                     }).then((value){
                   if(!Utils.isEmpty(value)){
                     print(value);
-                    _bloc.add(ConfirmCustomerLimoEvent(item.idDatVe, 6,value));
+                    _bloc.add(ConfirmCustomerLimoEvent(item.idDatVe.toString(), 6,value));
                   }
                 });
               }
@@ -369,23 +371,30 @@ class _DetailTripsLimoPageState extends State<DetailTripsLimoPage> {
 
             }
             else if(value == 'CallCustomer'){
-              if(Utils.isEmpty(item.soDienThoaiKhachDatHo)){
-                if(!Utils.isEmpty(item.soDienThoaiKhach)) {
-                  launch("tel://${item.soDienThoaiKhach}");
-                }else{
-                  Utils.showToast('Chưa có số điện thoại của Khách');
-                }
-              }else {
-                if(!Utils.isEmpty(item.soDienThoaiKhachDatHo)) {
-                  launch("tel://${item.soDienThoaiKhachDatHo}");
-                }else{
-                  Utils.showToast('Chưa có số điện thoại của Khách');
-                }
+              if(item.soDienThoaiKhach != null && item.soDienThoaiKhach != 'null') {
+                final Uri launchUri = Uri(
+                  scheme: 'tel',
+                  path: '${item.soDienThoaiKhach}',
+                );
+                await launchUrl(launchUri);
+              }else if(item.soDienThoaiKhachDatHo != null && item.soDienThoaiKhachDatHo != 'null') {
+                final Uri launchUri = Uri(
+                  scheme: 'tel',
+                  path: '${item.soDienThoaiKhachDatHo}',
+                );
+                await launchUrl(launchUri);
+              }
+              else{
+                Utils.showToast('Chưa có số điện thoại của Khách');
               }
             }
             else if(value == 'CallLaiXeTC'){
-              if(!Utils.isEmpty(item.dienThoaiTaiXeTrungChuyen)){
-                launch("tel://${item.dienThoaiTaiXeTrungChuyen}");
+              if(item.dienThoaiTaiXeTrungChuyen != null && item.dienThoaiTaiXeTrungChuyen != 'null'){
+                final Uri launchUri = Uri(
+                  scheme: 'tel',
+                  path: '${item.dienThoaiTaiXeTrungChuyen}',
+                );
+                await launchUrl(launchUri);
               }else{
                 Utils.showToast('Chưa có số điện thoại của LXTC');
               }
@@ -400,7 +409,7 @@ class _DetailTripsLimoPageState extends State<DetailTripsLimoPage> {
                     );
                   }).then((value){
                 if(!Utils.isEmpty(value)){
-                  _bloc.add(ConfirmCustomerLimoEvent(item.idDatVe, 9,value));
+                  _bloc.add(ConfirmCustomerLimoEvent(item.idDatVe.toString(), 9,value));
                 }
               });
             }
@@ -467,17 +476,25 @@ class _DetailTripsLimoPageState extends State<DetailTripsLimoPage> {
                   ),
                 );
               }
-          ).then((value) {
+          ).then((value) async{
             if(value == 'CallCustomer'){
-              if(!Utils.isEmpty(item.soDienThoaiKhach)){
-                launch("tel://${item.soDienThoaiKhach}");
+              if(item.soDienThoaiKhach != null && item.soDienThoaiKhach != 'null'){
+                final Uri launchUri = Uri(
+                  scheme: 'tel',
+                  path: '${item.soDienThoaiKhach}',
+                );
+                await launchUrl(launchUri);
               }else{
                 Utils.showToast('Chưa có số điện thoại của Khách');
               }
             }
             else if(value == 'CallLaiXeTC'){
-              if(!Utils.isEmpty(item.dienThoaiTaiXeTrungChuyen)){
-                launch("tel://${item.dienThoaiTaiXeTrungChuyen}");
+              if(item.dienThoaiTaiXeTrungChuyen != null && item.dienThoaiTaiXeTrungChuyen != 'null'){
+                final Uri launchUri = Uri(
+                  scheme: 'tel',
+                  path: '${item.dienThoaiTaiXeTrungChuyen}',
+                );
+                await launchUrl(launchUri);
               }else{
                 Utils.showToast('Chưa có số điện thoại của LXTC');
               }
@@ -536,7 +553,17 @@ class _DetailTripsLimoPageState extends State<DetailTripsLimoPage> {
                          Visibility(
                            visible:item.khachTrungChuyen == 1 ,
                            child: GestureDetector(
-                             onTap: () => launch("tel://${item.dienThoaiTaiXeTrungChuyen}"),
+                             onTap: ()async{
+                               if(item.dienThoaiTaiXeTrungChuyen != null && item.dienThoaiTaiXeTrungChuyen != 'null'){
+                                 final Uri launchUri = Uri(
+                                   scheme: 'tel',
+                                   path: '${item.dienThoaiTaiXeTrungChuyen}',
+                                 );
+                                 await launchUrl(launchUri);
+                               }else{
+                                 Utils.showToast('Chưa có số điện thoại của TXTC');
+                               }
+                             },
                              child: Container(
                                child: Column(
                                  mainAxisAlignment: MainAxisAlignment.start,
@@ -561,7 +588,7 @@ class _DetailTripsLimoPageState extends State<DetailTripsLimoPage> {
                         child: Center(
                           child: Text(item.khachTrungChuyen == 1 ?
                             "Khách Trung chuyển" : "Khách thường",
-                            style: Theme.of(this.context).textTheme.caption.copyWith(
+                            style: TextStyle(
                               color: Colors.pink,
                               fontWeight: FontWeight.bold,
                             ),
@@ -585,7 +612,7 @@ class _DetailTripsLimoPageState extends State<DetailTripsLimoPage> {
                         children: [
                           Text(
                             'Thông tin khách',
-                            style: Theme.of(this.context).textTheme.caption.copyWith(
+                            style: TextStyle(
                               color: Theme.of(this.context).disabledColor,
                               fontWeight: FontWeight.normal,
                             ),
@@ -617,7 +644,7 @@ class _DetailTripsLimoPageState extends State<DetailTripsLimoPage> {
                                 (item.trangThaiTC == 5 && item.hoTenTaiXeTrungChuyen != null)?  'Tài xế TC đang xử lý' :
                                'Đợi ĐH TC xử lý')
                                 )}',
-                                style: Theme.of(this.context).textTheme.caption.copyWith(
+                                style: TextStyle(
                                   color: Colors.white,
                                   fontWeight: FontWeight.bold,
                                 ),
@@ -636,7 +663,7 @@ class _DetailTripsLimoPageState extends State<DetailTripsLimoPage> {
                                         :
                                     'Hoàn Thành')
                                 )}',
-                                style: Theme.of(this.context).textTheme.caption.copyWith(
+                                style: TextStyle(
                                   color: Colors.white,
                                   fontWeight: FontWeight.bold,
                                 ),
@@ -656,22 +683,22 @@ class _DetailTripsLimoPageState extends State<DetailTripsLimoPage> {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
-                                  '${Utils.isEmpty(item.hoTenKhachDatHo) ? item.tenKhachHang??'' : item.hoTenKhachDatHo??'' }',
+                                  '${Utils.isEmpty(item.hoTenKhachDatHo.toString()) ? item.tenKhachHang??'' : item.hoTenKhachDatHo??'' }',
                                   maxLines: 1,
                                   overflow: TextOverflow.ellipsis,
-                                  style: Theme.of(this.context).textTheme.subtitle.copyWith(
+                                  style: TextStyle(
                                     fontWeight: FontWeight.bold,
-                                    color: Theme.of(this.context).textTheme.title.color,
+                                    color: Colors.black,
                                   ),
                                 ),
                                 SizedBox(
                                   height: 5,
                                 ),
                                 Text(
-                                  '${Utils.isEmpty(item.soDienThoaiKhachDatHo) ? item.soDienThoaiKhach??'' : item.soDienThoaiKhachDatHo??''}',
+                                  '${Utils.isEmpty(item.soDienThoaiKhachDatHo.toString()) ? item.soDienThoaiKhach??'' : item.soDienThoaiKhachDatHo??''}',
                                   maxLines: 1,
                                   overflow: TextOverflow.ellipsis,
-                                  style: Theme.of(this.context).textTheme.subtitle.copyWith(
+                                  style: TextStyle(
                                       fontWeight: FontWeight.normal,
                                       color: Colors.grey,fontSize: 11
                                   ),
@@ -683,7 +710,7 @@ class _DetailTripsLimoPageState extends State<DetailTripsLimoPage> {
                                   'Số ghế: ${item.soGhe??''}' ,
                                   maxLines: 1,
                                   overflow: TextOverflow.ellipsis,
-                                  style: Theme.of(this.context).textTheme.subtitle.copyWith(
+                                  style: TextStyle(
                                     fontWeight: FontWeight.normal,
                                     color: Colors.red,
                                     fontStyle: FontStyle.italic
@@ -738,9 +765,9 @@ class _DetailTripsLimoPageState extends State<DetailTripsLimoPage> {
                                       '${item.diaChiKhachDi??''}',
                                       maxLines: 2,
                                       overflow: TextOverflow.ellipsis,
-                                      style: Theme.of(this.context).textTheme.subtitle.copyWith(
+                                      style: TextStyle(
                                         fontWeight: FontWeight.normal,
-                                        color: Theme.of(this.context).textTheme.title.color,
+                                        color: Colors.black,
                                         fontStyle: FontStyle.italic
                                       ),
                                     ),
@@ -753,9 +780,9 @@ class _DetailTripsLimoPageState extends State<DetailTripsLimoPage> {
                               'Đi',
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
-                              style: Theme.of(this.context).textTheme.subtitle.copyWith(
+                              style: TextStyle(
                                 fontWeight: FontWeight.normal,
-                                color: Theme.of(this.context).textTheme.title.color.withOpacity(0.6),
+                                color: Colors.black.withOpacity(0.6),
                               ),
                             ),
                           ],
@@ -791,9 +818,9 @@ class _DetailTripsLimoPageState extends State<DetailTripsLimoPage> {
                                       '${item.diaChiKhachDen??''}',
                                       maxLines: 2,
                                       overflow: TextOverflow.ellipsis,
-                                      style: Theme.of(this.context).textTheme.subtitle.copyWith(
+                                      style: TextStyle(
                                         fontWeight: FontWeight.normal,
-                                        color: Theme.of(this.context).textTheme.title.color,
+                                        color: Colors.black,
                                           fontStyle: FontStyle.italic
                                       ),
                                     ),
@@ -805,9 +832,9 @@ class _DetailTripsLimoPageState extends State<DetailTripsLimoPage> {
                               'Đến',
                               maxLines: 2,
                               overflow: TextOverflow.ellipsis,
-                              style: Theme.of(this.context).textTheme.subtitle.copyWith(
+                              style: TextStyle(
                                 fontWeight: FontWeight.normal,
-                                color: Theme.of(this.context).textTheme.title.color.withOpacity(0.6),
+                                color: Colors.black.withOpacity(0.6),
                               ),
                             ),
                           ],
@@ -820,7 +847,7 @@ class _DetailTripsLimoPageState extends State<DetailTripsLimoPage> {
                         'Note: ${item.ghiChu??''}',
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
-                        style: Theme.of(this.context).textTheme.subtitle.copyWith(
+                        style: TextStyle(
                           fontWeight: FontWeight.normal,
                           color: Colors.red,
                         ),

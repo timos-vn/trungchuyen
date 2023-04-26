@@ -1,20 +1,20 @@
 class LoginResponse {
-	LoginResponseData data;
-	int statusCode;
-	String message;
+	LoginResponseData? data;
+	int? statusCode;
+	String? message;
 
 	LoginResponse({this.data, this.statusCode, this.message});
 
-	LoginResponse.fromJson(Map<String, dynamic> json) {
+	LoginResponse.fromJson(Map<String?, dynamic> json) {
 		data = json['data'] != null ? new LoginResponseData.fromJson(json['data']) : null;
 		statusCode = json['statusCode'];
 		message = json['message'];
 	}
 
-	Map<String, dynamic> toJson() {
-		final Map<String, dynamic> data = new Map<String, dynamic>();
+	Map<String?, dynamic> toJson() {
+		final Map<String?, dynamic> data = new Map<String?, dynamic>();
 		if (this.data != null) {
-			data['data'] = this.data.toJson();
+			data['data'] = this.data?.toJson();
 		}
 		data['statusCode'] = this.statusCode;
 		data['message'] = this.message;
@@ -23,13 +23,13 @@ class LoginResponse {
 }
 
 class LoginResponseData {
-	String accessToken;
-	String refreshToken;
-	TaiKhoan taiKhoan;
+	String? accessToken;
+	String? refreshToken;
+	TaiKhoan? taiKhoan;
 
 	LoginResponseData({this.accessToken, this.refreshToken, this.taiKhoan});
 
-	LoginResponseData.fromJson(Map<String, dynamic> json) {
+	LoginResponseData.fromJson(Map<String?, dynamic> json) {
 		accessToken = json['accessToken'];
 		refreshToken = json['refreshToken'];
 		taiKhoan = json['taiKhoan'] != null
@@ -37,26 +37,26 @@ class LoginResponseData {
 				: null;
 	}
 
-	Map<String, dynamic> toJson() {
-		final Map<String, dynamic> data = new Map<String, dynamic>();
+	Map<String?, dynamic> toJson() {
+		final Map<String?, dynamic> data = new Map<String?, dynamic>();
 		data['accessToken'] = this.accessToken;
 		data['refreshToken'] = this.refreshToken;
 		if (this.taiKhoan != null) {
-			data['taiKhoan'] = this.taiKhoan.toJson();
+			data['taiKhoan'] = this.taiKhoan?.toJson();
 		}
 		return data;
 	}
 }
 
 class TaiKhoan {
-	String id;
-	String tenDangNhap;
-	String dienThoai;
-	String email;
-	String hoTen;
-	int chucVu;
-	int idNhaXe;
-	bool lienKetTrungChuyen;
+	String? id;
+	String? tenDangNhap;
+	String? dienThoai;
+	String? email;
+	String? hoTen;
+	int? chucVu;
+	int? idNhaXe;
+	bool? lienKetTrungChuyen;
 
 	TaiKhoan(
 			{this.id,
@@ -68,7 +68,7 @@ class TaiKhoan {
 				this.idNhaXe,
 				this.lienKetTrungChuyen});
 
-	TaiKhoan.fromJson(Map<String, dynamic> json) {
+	TaiKhoan.fromJson(Map<String?, dynamic> json) {
 		id = json['id'];
 		tenDangNhap = json['tenDangNhap'];
 		dienThoai = json['dienThoai'];
@@ -79,8 +79,8 @@ class TaiKhoan {
 		lienKetTrungChuyen = json['lienKetTrungChuyen'];
 	}
 
-	Map<String, dynamic> toJson() {
-		final Map<String, dynamic> data = new Map<String, dynamic>();
+	Map<String?, dynamic> toJson() {
+		final Map<String?, dynamic> data = new Map<String?, dynamic>();
 		data['id'] = this.id;
 		data['tenDangNhap'] = this.tenDangNhap;
 		data['dienThoai'] = this.dienThoai;

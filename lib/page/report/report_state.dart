@@ -16,7 +16,13 @@ class ReportInitial extends ReportState {
   @override
   String toString() => 'ReportInitial';
 }
+class GetPrefsSuccess extends ReportState{
 
+  @override
+  String toString() {
+    return 'GetPrefsSuccess{}';
+  }
+}
 class ReportFailure extends ReportState {
   final String error;
 

@@ -1,25 +1,21 @@
-import 'dart:typed_data';
 
-import 'package:circular_countdown_timer/circular_countdown_timer.dart';
-import 'package:flutter/cupertino.dart';
+// import 'package:circular_countdown_timer/circular_countdown_timer.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
+
 import 'package:fluttertoast/fluttertoast.dart';
-import 'package:google_maps_controller/google_maps_controller.dart';
+
 import 'package:intl/intl.dart';
+import 'package:oktoast/oktoast.dart';
 import 'package:overlay_support/overlay_support.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:get/get.dart' as libGetX;
+
 import 'package:trungchuyen/models/network/response/detail_trips_limo_reponse.dart';
 import 'package:trungchuyen/models/network/response/login_response.dart';
 import 'package:trungchuyen/themes/colors.dart';
 import 'package:trungchuyen/themes/font.dart';
-import 'package:trungchuyen/themes/images.dart';
+import '../widget/custom_toast.dart';
 import 'const.dart';
-import 'dart:convert';
-import 'dart:io';
-import 'dart:ui' as ui;
 
 class Utils {
 
@@ -40,19 +36,13 @@ class Utils {
     );
   }
 
-  static String base64Image(File file) {
-    if (file == null) return null;
-    List<int> imageBytes = file.readAsBytesSync();
-    return base64Encode(imageBytes);
-  }
+
 
   static divider(){
     return Divider(height: 1,color: blue.withOpacity(0.8),);
   }
 
-  static showNotification(String title, String content){
-    libGetX.Get.snackbar(title,content,snackPosition: libGetX.SnackPosition.BOTTOM, margin: EdgeInsets.symmetric(vertical: 5,horizontal: 5));
-  }
+
 
   static Future pushAndRemoveUtilPage(BuildContext context, Widget widget) {
     return Navigator.of(context).pushAndRemoveUntil(
@@ -83,8 +73,8 @@ class Utils {
   }
 
   static bool isEmpty(Object text) {
-    if (text is String) return text == null || text.isEmpty;
-    if (text is List) return text == null || text.isEmpty;
+    if (text is String) return text.isEmpty;
+    if (text is List) return text.isEmpty;
     return text == null;
   }
 
@@ -139,21 +129,15 @@ class Utils {
     return formatNumber(money) + "K";
   }
 
-  static bool isNumeric(String text) {
-    if(text == null) {
-      return false;
-    }
-    return int.parse(text, onError: (e) => null) != null;
-  }
+
 
   static DateTime parseStringToDate(String dateStr, String format) {
-    DateTime date;
-    if (dateStr != null)
-      try {
-        date = DateFormat(format).parse(dateStr);
-      } on FormatException catch (e) {
-        print(e);
-      }
+    DateTime date = DateTime.now();
+    try {
+      date = DateFormat(format).parse(dateStr);
+    } on FormatException catch (e) {
+      print(e);
+    }
     return date;
   }
 
@@ -168,48 +152,27 @@ class Utils {
 
   static String parseStringDateToString(String dateSv, String fromFormat, String toFormat) {
     String date = "";
-    if (dateSv != null)
-      try {
-        date = DateFormat(toFormat, "en_US")
-            .format(DateFormat(fromFormat).parse(dateSv));
-      } on FormatException catch (e) {
-        print(e);
-      }
+    try {
+      date = DateFormat(toFormat, "en_US")
+          .format(DateFormat(fromFormat).parse(dateSv));
+    } on FormatException catch (e) {
+      print(e);
+    }
     return date;
   }
   static String parseDateToString(DateTime dateTime, String format) {
     String date = "";
-    if (dateTime != null)
-      try {
-        date = DateFormat(format).format(dateTime);
-      } on FormatException catch (e) {
-        print(e);
-      }
+    try {
+      date = DateFormat(format).format(dateTime);
+    } on FormatException catch (e) {
+      print(e);
+    }
     return date;
   }
 
-  // static void selectDatePicker(
-  //     BuildContext context, ValueChanged<DateTime> chooseDate,
-  //     {DateTime initDate}) async {
-  //   DatePicker.showDatePicker(context,
-  //       currentTime: initDate,
-  //       showTitleActions: true,
-  //       minTime: DateTime.utc(1899, 12, 31),
-  //       maxTime: DateTime.now(),
-  //       locale: LocaleType.vi, onConfirm: (date) {
-  //         chooseDate(date);
-  //       });
-  // }
 
-  static Future<DateTime> selectDate(BuildContext context,
-      {DateTime initDate}) async {
-    DateTime picked = await showDatePicker(
-        context: context,
-        initialDate: initDate ?? DateTime.now(),
-        firstDate: DateTime.utc(1899, 12, 31),
-        lastDate: DateTime.now());
-    return picked;
-  }
+
+
 
   static Future navigatePage(BuildContext context, Widget widget) {
     return Navigator.of(context)
@@ -217,21 +180,15 @@ class Utils {
   }
 
   static void saveDataLogin(SharedPreferences _prefs, LoginResponseData data,String accessToken, String refreshToken,String username,String pass) {
-    String currentUsername = _prefs.getString(Const.USER_NAME);
-    if (!Utils.isEmpty(currentUsername) &&
-        currentUsername?.trim() != data.taiKhoan.hoTen?.trim()??"") {
-      // DatabaseHelper db = DatabaseHelper();
-      // db.deleteAllProduct();
-    }
-    _prefs.setString(Const.USER_ID, data.taiKhoan.id.toString()??"");
+    _prefs.setString(Const.USER_ID, data.taiKhoan!.id.toString());
     _prefs.setString(Const.ACCESS_TOKEN, accessToken);
     _prefs.setString(Const.REFRESH_TOKEN, refreshToken);
-    _prefs.setString(Const.CHUC_VU, data.taiKhoan.chucVu?.toString()??"");
-    _prefs.setString(Const.FULL_NAME, data.taiKhoan.hoTen?.toString()??"");
-    _prefs.setString(Const.PHONE_NUMBER, data.taiKhoan.dienThoai?.trim()??"");
-    _prefs.setString(Const.NHA_XE, data.taiKhoan.idNhaXe?.toString()??"");
+    _prefs.setString(Const.CHUC_VU, data.taiKhoan!.chucVu.toString());
+    _prefs.setString(Const.FULL_NAME, data.taiKhoan!.hoTen.toString());
+    _prefs.setString(Const.PHONE_NUMBER, data.taiKhoan!.dienThoai.toString().trim());
+    _prefs.setString(Const.NHA_XE, data.taiKhoan!.idNhaXe.toString());
 
-    _prefs.setString(Const.USER_NAME, data.taiKhoan.tenDangNhap?.trim());
+    _prefs.setString(Const.USER_NAME, username);
     _prefs.setString(Const.PASS_WORD, pass);
   }
 
@@ -256,11 +213,11 @@ class Utils {
   }
 
   static void showDialogTwoButton(
-      {@required BuildContext context,
-        String title,
-        @required Widget contentWidget,
-        @required List<Widget> actions,
-        bool dismissible: false}) =>
+      {required BuildContext context,
+        String? title,
+        required Widget contentWidget,
+        required List<Widget> actions,
+        bool dismissible = false}) =>
       showDialog(
           barrierDismissible: dismissible,
           context: context,
@@ -270,194 +227,206 @@ class Utils {
                 content: contentWidget,
                 actions: actions);
           });
-  static void showForegroundNotification(BuildContext context, String title, String text, {VoidCallback onTapNotification}) {
+
+  static void showForegroundNotification(BuildContext context, String title, String text, {VoidCallback? onTapNotification}) {
     showOverlayNotification((context) {
       return Padding(
-        padding: const EdgeInsets.only(top: 10),
-        child: Card(
-          margin: const EdgeInsets.symmetric(horizontal: 4),
-          child: SafeArea(
-            bottom: false,
-            child: InkWell(
-              onTap: () {
-                OverlaySupportEntry.of(context).dismiss();
-                onTapNotification();
-              },
-              child: ListTile(
-                leading: SizedBox.fromSize(
-                    size: const Size(40, 40),
-                    child: ClipOval(child: Image.asset(icLogo))),
-                title: Text(
-                  title ?? "",
-                  style: TextStyle(fontWeight: FontWeight.bold,color: Colors.black),
+        padding: const EdgeInsets.only(top: 38,left: 8,right: 8),
+        child: Material(
+          color: Colors.transparent,
+          child: Card(
+            shape: RoundedRectangleBorder(
+              side: const BorderSide(color: Colors.white70, width: 1),
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: Padding(
+              padding: const EdgeInsets.only(top: 6),
+              child: InkWell(
+                onTap: () {
+                  OverlaySupportEntry.of(context)!.dismiss();
+                  onTapNotification!();
+                },
+                child: ListTile(
+                  leading: Container(
+                    height: 50,
+                    width: 50,
+                    padding: const EdgeInsets.all(1.5),
+                    decoration: const BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.all(Radius.circular(60)),
+                    ),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(60.0),
+                      child: Image.asset("assets/icons/logo_dms.png",fit: BoxFit.contain,scale: 1,),
+                    ),
+                  ),
+                  title: Text(
+                    title,
+                    style: const TextStyle(fontWeight: FontWeight.bold,color: Colors.black),
+                  ),
+                  subtitle: Text(text,style:  const TextStyle(color: Colors.black),),
                 ),
-                subtitle: Text(text ?? "",style: TextStyle(color: Colors.black),),
-                trailing: IconButton(
-                    icon: Icon(Icons.close),
-                    onPressed: () {
-                      OverlaySupportEntry.of(context).dismiss();
-                    }),
               ),
             ),
           ),
         ),
       );
-    }, duration: Duration(milliseconds: 4000));
+    }, duration: const Duration(milliseconds: 4000));
   }
 
 
-  static void showDialogAssignReceiveCustomer(BuildContext context, String tripName,String date, String typeCustomer,  String title, String body, {VoidCallback onTapAcceptNotification,VoidCallback onTapCancelNotification}) =>
-      showOverlayNotification((context){
-        return Center(
-          child: Padding(
-            padding: EdgeInsets.only(left: 30, right: 30, top: 200),
-            child: Container(
-              decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.all(Radius.circular(16))),
-              height: 300,
-              width: double.infinity,
-              child: Material(
-                  animationDuration: Duration(seconds: 3),
-                  borderRadius: BorderRadius.all(Radius.circular(16)),
-                  child: Padding(
-                    padding: const EdgeInsets.all(20),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        CircularCountDownTimer(
-                          autoStart: true,
-                          duration: 180,
-                          initialDuration: 0,
-                          width: 80,
-                          height: 80,
-                          ringColor: Colors.grey[300],
-                          ringGradient: null,
-                          fillColor: Colors.purpleAccent[100],
-                          fillGradient: null,
-                          backgroundColor: Colors.white,
-                          backgroundGradient: null,
-                          strokeWidth: 5,
-                          strokeCap: StrokeCap.round,
-                          textStyle: TextStyle(fontSize: 24.0, color: Colors.amberAccent, fontWeight: FontWeight.bold),
-                          isReverse: true,
-                          isReverseAnimation: true,
-                          isTimerTextShown: true,
-                          onComplete: () {
-                            OverlaySupportEntry.of(context).dismiss();
-                            onTapCancelNotification();
-                          },
-                        ),
-                        Table(
-                          border: TableBorder.all(color: Colors.orange),
-                          columnWidths: const <int, TableColumnWidth>{
-                            0: FixedColumnWidth(120),
-                            1: FlexColumnWidth(),
-                          },
-                          defaultVerticalAlignment: TableCellVerticalAlignment.middle,
-                          children: [
-                            TableRow(
-                              children: [
-                                TableCell(
-                                  child: Padding(
-                                    padding: const EdgeInsets.all(8.0),
-                                    child: Text(
-                                      'Chuyến:',
-                                      style: TextStyle(fontWeight: FontWeight.bold),
-                                    ),
-                                  ),
-                                ),
-                                TableCell(
-                                  child: Padding(
-                                    padding: const EdgeInsets.all(8.0),
-                                    child: Text('$tripName'),
-                                  ),
-                                ),
-                              ],
-                            ),
-                            TableRow(
-                              children: [
-                                TableCell(
-                                  child: Padding(
-                                    padding: const EdgeInsets.all(8.0),
-                                    child: Text(
-                                      'Ngày',
-                                      style: TextStyle(fontWeight: FontWeight.bold),
-                                    ),
-                                  ),
-                                ),
-                                TableCell(
-                                  child: Padding(
-                                    padding: const EdgeInsets.all(8.0),
-                                    child: Text(date),
-                                  ),
-                                ),
-                              ],
-                            ),
-                            TableRow(children: [
-                              TableCell(
-                                child: Padding(
-                                  padding: const EdgeInsets.all(8.0),
-                                  child: Text(
-                                    'Thời gian:',
-                                    style: TextStyle(fontWeight: FontWeight.bold),
-                                  ),
-                                ),
-                              ),
-                              TableCell(
-                                child: Padding(
-                                  padding: const EdgeInsets.all(8.0),
-                                  child: Text(typeCustomer == '1' ? 'Khách đón' : 'Khách trả'),
-                                ),
-                              ),
-                            ]),
-                          ],
-                        ),
-                        Container(
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Expanded(
-                                child: SizedBox(
-                                    width: double.infinity,
-                                    child: ElevatedButton(
-                                      onPressed: () {
-                                        OverlaySupportEntry.of(context).dismiss();
-                                        onTapCancelNotification();
-                                      },
-                                      child: Text('Từ chối'),
-                                    )),
-                              ),
-                              SizedBox(
-                                width: 15,
-                              ),
-                              Expanded(
-                                child: SizedBox(
-                                  width: double.infinity,
-                                  child: ElevatedButton(
-                                    onPressed: () {
-                                      OverlaySupportEntry.of(context).dismiss();
-                                      onTapAcceptNotification();
-                                    },
-                                    child: Text(
-                                      'Nhận ${typeCustomer == '1' ? 'đón' : 'trả'}',
-                                      style: TextStyle(color: white),
-                                    ),
-                                    style: ButtonStyle(
-                                      backgroundColor: MaterialStateProperty.all(Colors.orange),
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                  )),
-            ),
-          ),
-        );
-      },duration: Duration(seconds: 180));
+  // static void showDialogAssignReceiveCustomer(BuildContext context, String tripName,String date, String typeCustomer,  String title, String body, {VoidCallback onTapAcceptNotification,VoidCallback onTapCancelNotification}) =>
+  //     showOverlayNotification((context){
+  //       return Center(
+  //         child: Padding(
+  //           padding: EdgeInsets.only(left: 30, right: 30, top: 200),
+  //           child: Container(
+  //             decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.all(Radius.circular(16))),
+  //             height: 300,
+  //             width: double.infinity,
+  //             child: Material(
+  //                 animationDuration: Duration(seconds: 3),
+  //                 borderRadius: BorderRadius.all(Radius.circular(16)),
+  //                 child: Padding(
+  //                   padding: const EdgeInsets.all(20),
+  //                   child: Column(
+  //                     crossAxisAlignment: CrossAxisAlignment.center,
+  //                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
+  //                     children: [
+  //                       CircularCountDownTimer(
+  //                         autoStart: true,
+  //                         duration: 180,
+  //                         initialDuration: 0,
+  //                         width: 80,
+  //                         height: 80,
+  //                         ringColor: Colors.grey[300],
+  //                         ringGradient: null,
+  //                         fillColor: Colors.purpleAccent[100],
+  //                         fillGradient: null,
+  //                         backgroundColor: Colors.white,
+  //                         backgroundGradient: null,
+  //                         strokeWidth: 5,
+  //                         strokeCap: StrokeCap.round,
+  //                         textStyle: TextStyle(fontSize: 24.0, color: Colors.amberAccent, fontWeight: FontWeight.bold),
+  //                         isReverse: true,
+  //                         isReverseAnimation: true,
+  //                         isTimerTextShown: true,
+  //                         onComplete: () {
+  //                           OverlaySupportEntry.of(context).dismiss();
+  //                           onTapCancelNotification();
+  //                         },
+  //                       ),
+  //                       Table(
+  //                         border: TableBorder.all(color: Colors.orange),
+  //                         columnWidths: const <int, TableColumnWidth>{
+  //                           0: FixedColumnWidth(120),
+  //                           1: FlexColumnWidth(),
+  //                         },
+  //                         defaultVerticalAlignment: TableCellVerticalAlignment.middle,
+  //                         children: [
+  //                           TableRow(
+  //                             children: [
+  //                               TableCell(
+  //                                 child: Padding(
+  //                                   padding: const EdgeInsets.all(8.0),
+  //                                   child: Text(
+  //                                     'Chuyến:',
+  //                                     style: TextStyle(fontWeight: FontWeight.bold),
+  //                                   ),
+  //                                 ),
+  //                               ),
+  //                               TableCell(
+  //                                 child: Padding(
+  //                                   padding: const EdgeInsets.all(8.0),
+  //                                   child: Text('$tripName'),
+  //                                 ),
+  //                               ),
+  //                             ],
+  //                           ),
+  //                           TableRow(
+  //                             children: [
+  //                               TableCell(
+  //                                 child: Padding(
+  //                                   padding: const EdgeInsets.all(8.0),
+  //                                   child: Text(
+  //                                     'Ngày',
+  //                                     style: TextStyle(fontWeight: FontWeight.bold),
+  //                                   ),
+  //                                 ),
+  //                               ),
+  //                               TableCell(
+  //                                 child: Padding(
+  //                                   padding: const EdgeInsets.all(8.0),
+  //                                   child: Text(date),
+  //                                 ),
+  //                               ),
+  //                             ],
+  //                           ),
+  //                           TableRow(children: [
+  //                             TableCell(
+  //                               child: Padding(
+  //                                 padding: const EdgeInsets.all(8.0),
+  //                                 child: Text(
+  //                                   'Thời gian:',
+  //                                   style: TextStyle(fontWeight: FontWeight.bold),
+  //                                 ),
+  //                               ),
+  //                             ),
+  //                             TableCell(
+  //                               child: Padding(
+  //                                 padding: const EdgeInsets.all(8.0),
+  //                                 child: Text(typeCustomer == '1' ? 'Khách đón' : 'Khách trả'),
+  //                               ),
+  //                             ),
+  //                           ]),
+  //                         ],
+  //                       ),
+  //                       Container(
+  //                         child: Row(
+  //                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
+  //                           children: [
+  //                             Expanded(
+  //                               child: SizedBox(
+  //                                   width: double.infinity,
+  //                                   child: ElevatedButton(
+  //                                     onPressed: () {
+  //                                       OverlaySupportEntry.of(context).dismiss();
+  //                                       onTapCancelNotification();
+  //                                     },
+  //                                     child: Text('Từ chối'),
+  //                                   )),
+  //                             ),
+  //                             SizedBox(
+  //                               width: 15,
+  //                             ),
+  //                             Expanded(
+  //                               child: SizedBox(
+  //                                 width: double.infinity,
+  //                                 child: ElevatedButton(
+  //                                   onPressed: () {
+  //                                     OverlaySupportEntry.of(context).dismiss();
+  //                                     onTapAcceptNotification();
+  //                                   },
+  //                                   child: Text(
+  //                                     'Nhận ${typeCustomer == '1' ? 'đón' : 'trả'}',
+  //                                     style: TextStyle(color: white),
+  //                                   ),
+  //                                   style: ButtonStyle(
+  //                                     backgroundColor: MaterialStateProperty.all(Colors.orange),
+  //                                   ),
+  //                                 ),
+  //                               ),
+  //                             ),
+  //                           ],
+  //                         ),
+  //                       ),
+  //                     ],
+  //                   ),
+  //                 )),
+  //           ),
+  //         ),
+  //       );
+  //     },duration: Duration(seconds: 180));
 
   static void onWidgetDidBuild(Function callback) {
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -479,262 +448,262 @@ class Utils {
     Scaffold.of(context).showSnackBar(snackBar);
   }
 
-  static Future<List<String>> showDialogAssign({@required BuildContext context, @required String titleHintText, Function accept, Function cancel, bool dismissible: false})
-  => showDialog(
-      barrierDismissible: dismissible,
-      context: context,
-      builder: (context) {
-        return Center(
-          child: Padding(
-            padding: EdgeInsets.only(left: 30, right: 30),
-            child: Container(
-              decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.all(Radius.circular(16))),
-              height: 250,
-              width: double.infinity,
-              child: Material(
-                  animationDuration: Duration(seconds: 3),
-                  borderRadius: BorderRadius.all(Radius.circular(16)),
-                  child: Column(
-                    children: [
-                      Expanded(
-                          flex: 3,
-                          child: Container(
-                            decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.only(topRight: Radius.circular(16), topLeft: Radius.circular(16))),
-                            child: Align(
-                              alignment: Alignment.centerLeft,
-                              child: Padding(
-                                padding: const EdgeInsets.only(left: 10, right: 10, top: 10),
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  mainAxisAlignment: MainAxisAlignment.start,
-                                  children: [
-                                    Align(
-                                        alignment: Alignment.centerLeft,
-                                        child: Text(
-                                          titleHintText,
-                                          style: TextStyle(color: Colors.black, fontSize: 20, fontWeight: FontWeight.bold),
-                                        )),
-                                    SizedBox(
-                                      height: 10,
-                                    ),
-                                    Divider(),
-                                    SizedBox(
-                                      height: 10,
-                                    ),
-                                    SizedBox(
-                                      height: 8,
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ),
-                          )),
-                      Expanded(
-                          child: Container(
-                            padding: const EdgeInsets.only(right: 20),
-                            decoration: BoxDecoration(color: Colors.orange, borderRadius: BorderRadius.only(bottomRight: Radius.circular(16), bottomLeft: Radius.circular(16))),
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.end,
-                              crossAxisAlignment: CrossAxisAlignment.center,
-                              mainAxisSize: MainAxisSize.max,
-                              children: [
-                                InkWell(
-                                  onTap: ()=>Navigator.pop(context),
-                                  child: Text(
-                                    'Huỷ',
-                                    style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 17),
-                                  ),
-                                ),
-                                SizedBox(
-                                  width: 60,
-                                ),
-                                InkWell(
-                                  onTap: ()=>Navigator.pop(context,['OK']),
-                                  child: Text(
-                                    'Nhận',
-                                    style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 17),
-                                  ),
-                                )
-                              ],
-                            ),
-                          )),
-                    ],
-                  )),
-            ),
-          ),
-        );
-      });
+  // static Future<List<String>> showDialogAssign({@required BuildContext context, @required String titleHintText, Function accept, Function cancel, bool dismissible: false})
+  // => showDialog(
+  //     barrierDismissible: dismissible,
+  //     context: context,
+  //     builder: (context) {
+  //       return Center(
+  //         child: Padding(
+  //           padding: EdgeInsets.only(left: 30, right: 30),
+  //           child: Container(
+  //             decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.all(Radius.circular(16))),
+  //             height: 250,
+  //             width: double.infinity,
+  //             child: Material(
+  //                 animationDuration: Duration(seconds: 3),
+  //                 borderRadius: BorderRadius.all(Radius.circular(16)),
+  //                 child: Column(
+  //                   children: [
+  //                     Expanded(
+  //                         flex: 3,
+  //                         child: Container(
+  //                           decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.only(topRight: Radius.circular(16), topLeft: Radius.circular(16))),
+  //                           child: Align(
+  //                             alignment: Alignment.centerLeft,
+  //                             child: Padding(
+  //                               padding: const EdgeInsets.only(left: 10, right: 10, top: 10),
+  //                               child: Column(
+  //                                 crossAxisAlignment: CrossAxisAlignment.start,
+  //                                 mainAxisAlignment: MainAxisAlignment.start,
+  //                                 children: [
+  //                                   Align(
+  //                                       alignment: Alignment.centerLeft,
+  //                                       child: Text(
+  //                                         titleHintText,
+  //                                         style: TextStyle(color: Colors.black, fontSize: 20, fontWeight: FontWeight.bold),
+  //                                       )),
+  //                                   SizedBox(
+  //                                     height: 10,
+  //                                   ),
+  //                                   Divider(),
+  //                                   SizedBox(
+  //                                     height: 10,
+  //                                   ),
+  //                                   SizedBox(
+  //                                     height: 8,
+  //                                   ),
+  //                                 ],
+  //                               ),
+  //                             ),
+  //                           ),
+  //                         )),
+  //                     Expanded(
+  //                         child: Container(
+  //                           padding: const EdgeInsets.only(right: 20),
+  //                           decoration: BoxDecoration(color: Colors.orange, borderRadius: BorderRadius.only(bottomRight: Radius.circular(16), bottomLeft: Radius.circular(16))),
+  //                           child: Row(
+  //                             mainAxisAlignment: MainAxisAlignment.end,
+  //                             crossAxisAlignment: CrossAxisAlignment.center,
+  //                             mainAxisSize: MainAxisSize.max,
+  //                             children: [
+  //                               InkWell(
+  //                                 onTap: ()=>Navigator.pop(context),
+  //                                 child: Text(
+  //                                   'Huỷ',
+  //                                   style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 17),
+  //                                 ),
+  //                               ),
+  //                               SizedBox(
+  //                                 width: 60,
+  //                               ),
+  //                               InkWell(
+  //                                 onTap: ()=>Navigator.pop(context,['OK']),
+  //                                 child: Text(
+  //                                   'Nhận',
+  //                                   style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 17),
+  //                                 ),
+  //                               )
+  //                             ],
+  //                           ),
+  //                         )),
+  //                   ],
+  //                 )),
+  //           ),
+  //         ),
+  //       );
+  //     });
 
-  Future<Uint8List> getBytesFromAsset(String path, int width) async {
-    ByteData data = await rootBundle.load(path);
-    ui.Codec codec = await ui.instantiateImageCodec(data.buffer.asUint8List(), targetWidth: width);
-    ui.FrameInfo fi = await codec.getNextFrame();
-    return (await fi.image.toByteData(format: ui.ImageByteFormat.png)).buffer.asUint8List();
-  }
+  // Future<Uint8List> getBytesFromAsset(String path, int width) async {
+  //   ByteData data = await rootBundle.load(path);
+  //   ui.Codec codec = await ui.instantiateImageCodec(data.buffer.asUint8List(), targetWidth: width);
+  //   ui.FrameInfo fi = await codec.getNextFrame();
+  //   return (await fi.image.toByteData(format: ui.ImageByteFormat.png)).buffer.asUint8List();
+  // }
 
-  Future<BitmapDescriptor> getBitmapDescriptorFromAssetBytes(String path, int width) async {
-    final Uint8List imageData = await getBytesFromAsset(path, width);
-    return BitmapDescriptor.fromBytes(imageData);
-  }
+  // Future<BitmapDescriptor> getBitmapDescriptorFromAssetBytes(String path, int width) async {
+  //   final Uint8List imageData = await getBytesFromAsset(path, width);
+  //   return BitmapDescriptor.fromBytes(imageData);
+  // }
 
-  static Future<bool> showDialogAssign2({@required BuildContext context, @required String tripName, @required String date, @required String typeCustomer, @required int type}) => showDialog(
-      barrierDismissible: false,
-      context: context,
-      builder: (context) {
-        return WillPopScope(
-          onWillPop: () async {
-            return false;
-          },
-          child: Center(
-            child: Padding(
-              padding: EdgeInsets.only(left: 30, right: 30),
-              child: Container(
-                decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.all(Radius.circular(16))),
-                height: 300,
-                width: double.infinity,
-                child: Material(
-                    animationDuration: Duration(seconds: 3),
-                    borderRadius: BorderRadius.all(Radius.circular(16)),
-                    child: Padding(
-                      padding: const EdgeInsets.all(20),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.center,
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          CircularCountDownTimer(
-                            autoStart: true,
-                            duration: 180,
-                            initialDuration: 0,
-                            width: 80,
-                            height: 80,
-                            ringColor: Colors.grey[300],
-                            ringGradient: null,
-                            fillColor: Colors.purpleAccent[100],
-                            fillGradient: null,
-                            backgroundColor: Colors.white,
-                            backgroundGradient: null,
-                            strokeWidth: 5,
-                            strokeCap: StrokeCap.round,
-                            textStyle: TextStyle(fontSize: 24.0, color: Colors.amberAccent, fontWeight: FontWeight.bold),
-                            isReverse: true,
-                            isReverseAnimation: true,
-                            isTimerTextShown: true,
-                            onComplete: () {
-                              Navigator.pop(context, false);
-                            },
-                          ),
-                          Table(
-                            border: TableBorder.all(color: Colors.orange),
-                            columnWidths: const <int, TableColumnWidth>{
-                              0: FixedColumnWidth(120),
-                              1: FlexColumnWidth(),
-                            },
-                            defaultVerticalAlignment: TableCellVerticalAlignment.middle,
-                            children: [
-                              TableRow(
-                                children: [
-                                  TableCell(
-                                    child: Padding(
-                                      padding: const EdgeInsets.all(8.0),
-                                      child: Text(
-                                        'Chuyến:',
-                                        style: TextStyle(fontWeight: FontWeight.bold),
-                                      ),
-                                    ),
-                                  ),
-                                  TableCell(
-                                    child: Padding(
-                                      padding: const EdgeInsets.all(8.0),
-                                      child: Text('$tripName'),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              TableRow(
-                                children: [
-                                  TableCell(
-                                    child: Padding(
-                                      padding: const EdgeInsets.all(8.0),
-                                      child: Text(
-                                        'Ngày',
-                                        style: TextStyle(fontWeight: FontWeight.bold),
-                                      ),
-                                    ),
-                                  ),
-                                  TableCell(
-                                    child: Padding(
-                                      padding: const EdgeInsets.all(8.0),
-                                      child: Text(date),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              TableRow(children: [
-                                TableCell(
-                                  child: Padding(
-                                    padding: const EdgeInsets.all(8.0),
-                                    child: Text(
-                                      'Thời gian:',
-                                      style: TextStyle(fontWeight: FontWeight.bold),
-                                    ),
-                                  ),
-                                ),
-                                TableCell(
-                                  child: Padding(
-                                    padding: const EdgeInsets.all(8.0),
-                                    child: Text(typeCustomer == '1' ? 'Khách đón' : 'Khách trả'),
-                                  ),
-                                ),
-                              ]),
-                            ],
-                          ),
-                          Container(
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Expanded(
-                                  child: SizedBox(
-                                      width: double.infinity,
-                                      child: ElevatedButton(
-                                        onPressed: () {
-                                          Navigator.pop(context, false);
-                                        },
-                                        child: Text('Từ chối'),
-                                      )),
-                                ),
-                                SizedBox(
-                                  width: 15,
-                                ),
-                                Expanded(
-                                  child: SizedBox(
-                                    width: double.infinity,
-                                    child: ElevatedButton(
-                                      onPressed: () {
-                                        Navigator.pop(context, true);
-                                      },
-                                      child: Text(
-                                        'Nhận ${typeCustomer == '1' ? 'đón' : 'trả'}',
-                                        style: TextStyle(color: white),
-                                      ),
-                                      style: ButtonStyle(
-                                        backgroundColor: MaterialStateProperty.all(Colors.orange),
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
-                    )),
-              ),
-            ),
-          ),
-        );
-      });
+  // static Future<bool> showDialogAssign2({@required BuildContext context, @required String tripName, @required String date, @required String typeCustomer, @required int type}) => showDialog(
+  //     barrierDismissible: false,
+  //     context: context,
+  //     builder: (context) {
+  //       return WillPopScope(
+  //         onWillPop: () async {
+  //           return false;
+  //         },
+  //         child: Center(
+  //           child: Padding(
+  //             padding: EdgeInsets.only(left: 30, right: 30),
+  //             child: Container(
+  //               decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.all(Radius.circular(16))),
+  //               height: 300,
+  //               width: double.infinity,
+  //               child: Material(
+  //                   animationDuration: Duration(seconds: 3),
+  //                   borderRadius: BorderRadius.all(Radius.circular(16)),
+  //                   child: Padding(
+  //                     padding: const EdgeInsets.all(20),
+  //                     child: Column(
+  //                       crossAxisAlignment: CrossAxisAlignment.center,
+  //                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
+  //                       children: [
+  //                         CircularCountDownTimer(
+  //                           autoStart: true,
+  //                           duration: 180,
+  //                           initialDuration: 0,
+  //                           width: 80,
+  //                           height: 80,
+  //                           ringColor: Colors.grey[300],
+  //                           ringGradient: null,
+  //                           fillColor: Colors.purpleAccent[100],
+  //                           fillGradient: null,
+  //                           backgroundColor: Colors.white,
+  //                           backgroundGradient: null,
+  //                           strokeWidth: 5,
+  //                           strokeCap: StrokeCap.round,
+  //                           textStyle: TextStyle(fontSize: 24.0, color: Colors.amberAccent, fontWeight: FontWeight.bold),
+  //                           isReverse: true,
+  //                           isReverseAnimation: true,
+  //                           isTimerTextShown: true,
+  //                           onComplete: () {
+  //                             Navigator.pop(context, false);
+  //                           },
+  //                         ),
+  //                         Table(
+  //                           border: TableBorder.all(color: Colors.orange),
+  //                           columnWidths: const <int, TableColumnWidth>{
+  //                             0: FixedColumnWidth(120),
+  //                             1: FlexColumnWidth(),
+  //                           },
+  //                           defaultVerticalAlignment: TableCellVerticalAlignment.middle,
+  //                           children: [
+  //                             TableRow(
+  //                               children: [
+  //                                 TableCell(
+  //                                   child: Padding(
+  //                                     padding: const EdgeInsets.all(8.0),
+  //                                     child: Text(
+  //                                       'Chuyến:',
+  //                                       style: TextStyle(fontWeight: FontWeight.bold),
+  //                                     ),
+  //                                   ),
+  //                                 ),
+  //                                 TableCell(
+  //                                   child: Padding(
+  //                                     padding: const EdgeInsets.all(8.0),
+  //                                     child: Text('$tripName'),
+  //                                   ),
+  //                                 ),
+  //                               ],
+  //                             ),
+  //                             TableRow(
+  //                               children: [
+  //                                 TableCell(
+  //                                   child: Padding(
+  //                                     padding: const EdgeInsets.all(8.0),
+  //                                     child: Text(
+  //                                       'Ngày',
+  //                                       style: TextStyle(fontWeight: FontWeight.bold),
+  //                                     ),
+  //                                   ),
+  //                                 ),
+  //                                 TableCell(
+  //                                   child: Padding(
+  //                                     padding: const EdgeInsets.all(8.0),
+  //                                     child: Text(date),
+  //                                   ),
+  //                                 ),
+  //                               ],
+  //                             ),
+  //                             TableRow(children: [
+  //                               TableCell(
+  //                                 child: Padding(
+  //                                   padding: const EdgeInsets.all(8.0),
+  //                                   child: Text(
+  //                                     'Thời gian:',
+  //                                     style: TextStyle(fontWeight: FontWeight.bold),
+  //                                   ),
+  //                                 ),
+  //                               ),
+  //                               TableCell(
+  //                                 child: Padding(
+  //                                   padding: const EdgeInsets.all(8.0),
+  //                                   child: Text(typeCustomer == '1' ? 'Khách đón' : 'Khách trả'),
+  //                                 ),
+  //                               ),
+  //                             ]),
+  //                           ],
+  //                         ),
+  //                         Container(
+  //                           child: Row(
+  //                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
+  //                             children: [
+  //                               Expanded(
+  //                                 child: SizedBox(
+  //                                     width: double.infinity,
+  //                                     child: ElevatedButton(
+  //                                       onPressed: () {
+  //                                         Navigator.pop(context, false);
+  //                                       },
+  //                                       child: Text('Từ chối'),
+  //                                     )),
+  //                               ),
+  //                               SizedBox(
+  //                                 width: 15,
+  //                               ),
+  //                               Expanded(
+  //                                 child: SizedBox(
+  //                                   width: double.infinity,
+  //                                   child: ElevatedButton(
+  //                                     onPressed: () {
+  //                                       Navigator.pop(context, true);
+  //                                     },
+  //                                     child: Text(
+  //                                       'Nhận ${typeCustomer == '1' ? 'đón' : 'trả'}',
+  //                                       style: TextStyle(color: white),
+  //                                     ),
+  //                                     style: ButtonStyle(
+  //                                       backgroundColor: MaterialStateProperty.all(Colors.orange),
+  //                                     ),
+  //                                   ),
+  //                                 ),
+  //                               ),
+  //                             ],
+  //                           ),
+  //                         ),
+  //                       ],
+  //                     ),
+  //                   )),
+  //             ),
+  //           ),
+  //         ),
+  //       );
+  //     });
 
-  static Future<bool> showDialogReceiveCustomerFormTC({@required BuildContext context, @required String laiXeTC,String sdtLaiXeTC,String soKhach, @required String date}) => showDialog(
+  static Future showDialogReceiveCustomerFormTC({required BuildContext context, required String laiXeTC,String? sdtLaiXeTC,String? soKhach, required String date}) => showDialog(
       barrierDismissible: false,
       context: context,
       builder: (context) {
@@ -759,7 +728,7 @@ class Utils {
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           Center(
-                            child: SpinKitPouringHourglass(
+                            child: SpinKitPouringHourGlass(
                               color: Colors.orange,
                               size: 40,
                             ),
@@ -808,7 +777,7 @@ class Utils {
                                   TableCell(
                                     child: Padding(
                                       padding: const EdgeInsets.all(8.0),
-                                      child: Text(sdtLaiXeTC),
+                                      child: Text(sdtLaiXeTC.toString()),
                                     ),
                                   ),
                                 ],
@@ -891,9 +860,17 @@ class Utils {
       });
 
 
+  static void showCustomToast(BuildContext context,IconData icon, String title){
+    showToastWidget(
+      customToast(context, icon, title),
+      duration: const Duration(seconds: 3),
+      onDismiss: () {},
+    );
+  }
 
 
-  static Future<bool> showDialogTransferCustomerLimo({@required BuildContext context, @required List<DsKhachs> listOfDetailTripsSuccessful, @required String content, Function accept, Function cancel, bool dismissible: false}) => showDialog(
+
+  static Future showDialogTransferCustomerLimo({required BuildContext context, required List<DsKhachs> listOfDetailTripsSuccessful, required String content, Function? accept, Function? cancel, bool dismissible: false}) => showDialog(
       barrierDismissible: dismissible,
       context: context,
       builder: (context) {
@@ -1022,7 +999,7 @@ class Utils {
                                             ),
                                           ),
                                           Center(
-                                            child: SpinKitPouringHourglass(
+                                            child: SpinKitPouringHourGlass(
                                               color: Colors.orange,
                                               size: 40,
                                             ),
