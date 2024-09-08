@@ -7,6 +7,7 @@ import 'package:fluttertoast/fluttertoast.dart';
 
 import 'package:intl/intl.dart';
 import 'package:oktoast/oktoast.dart';
+import 'package:omni_datetime_picker/omni_datetime_picker.dart';
 import 'package:overlay_support/overlay_support.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -18,6 +19,54 @@ import '../widget/custom_toast.dart';
 import 'const.dart';
 
 class Utils {
+
+  static Future<DateTime?> dateTimePickerCustom(BuildContext context) async {
+    DateTime? dateTime = DateTime.now();
+    dateTime = await showOmniDateTimePicker(
+      context: context,
+      initialDate: DateTime.now(),
+      firstDate: DateTime(1600).subtract(const Duration(days: 3652)),
+      lastDate: DateTime.now().add(
+        const Duration(days: 3652),
+      ),
+      is24HourMode: false,
+      isShowSeconds: false,
+      type: OmniDateTimePickerType.date,
+      minutesInterval: 1,
+      secondsInterval: 1,
+      borderRadius: const BorderRadius.all(Radius.circular(16)),
+      constraints: const BoxConstraints(
+        maxWidth: 350,
+        maxHeight: 650,
+      ),
+      theme: ThemeData(
+        useMaterial3: true,
+        colorSchemeSeed: Colors.orange,
+      ),
+      transitionBuilder: (context, anim1, anim2, child) {
+        return FadeTransition(
+          opacity: anim1.drive(
+            Tween(
+              begin: 0,
+              end: 1,
+            ),
+          ),
+          child: child,
+        );
+      },
+      transitionDuration: const Duration(milliseconds: 200),
+      barrierDismissible: false,
+      selectableDayPredicate: (dateTime) {
+        // Disable 25th Feb 2023
+        if (dateTime == DateTime(2023, 2, 25)) {
+          return false;
+        } else {
+          return true;
+        }
+      },
+    );
+    return dateTime;
+  }
 
   static paint(Canvas canvas) {
     final p1 = Offset(50, 50);
@@ -434,19 +483,19 @@ class Utils {
     });
   }
 
-  static void showNotifySnackBar(BuildContext context, String text) {
-    onWidgetDidBuild(() => showSnackBar(context, text));
-  }
+  // static void showNotifySnackBar(BuildContext context, String text) {
+  //   onWidgetDidBuild(() => showSnackBar(context, text));
+  // }
 
-  static void showSnackBar(BuildContext context, String text) {
-    if (Utils.isEmpty(text))
-      return;
-    final snackBar = SnackBar(
-      content: Text(text),
-      backgroundColor: primaryColor,
-    );
-    Scaffold.of(context).showSnackBar(snackBar);
-  }
+  // static void showSnackBar(BuildContext context, String text) {
+  //   if (Utils.isEmpty(text))
+  //     return;
+  //   final snackBar = SnackBar(
+  //     content: Text(text),
+  //     backgroundColor: primaryColor,
+  //   );
+  //   Scaffold.of(context).showSnackBar(snackBar);
+  // }
 
   // static Future<List<String>> showDialogAssign({@required BuildContext context, @required String titleHintText, Function accept, Function cancel, bool dismissible: false})
   // => showDialog(

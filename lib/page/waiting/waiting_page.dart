@@ -1,4 +1,4 @@
-import 'package:date_time_picker/date_time_picker.dart';
+// import 'package:date_time_picker/date_time_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:jiffy/jiffy.dart';
@@ -46,8 +46,6 @@ class WaitingPageState extends State<WaitingPage> {
     _bloc.add(GetPrefs());
   }
 
-
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -58,63 +56,56 @@ class WaitingPageState extends State<WaitingPage> {
           style: TextStyle(color: Colors.black),
         ),
         actions: [
-          SizedBox(
-            // height: 40,
-            width: 50,
-            child: DateTimePicker(
-              type: DateTimePickerType.date,
-              // dateMask: 'd MMM, yyyy',
-              initialValue: DateTime.now().toString(),
-              firstDate: DateTime(2000),
-              lastDate: DateTime(2100),
-              decoration:const InputDecoration(
-                suffixIcon: Icon(Icons.event,color: Colors.orange,size: 22,),
-                contentPadding: EdgeInsets.only(left: 12),
-                border: InputBorder.none,
-              ),
-              style:const TextStyle(fontSize: 13),
-              locale: const Locale("vi", "VN"),
-              // icon: Icon(Icons.event),
-              selectableDayPredicate: (date) {
-                return true;
-              },
-              onChanged: (result){
-                DateTime? dateOrder = result as DateTime?;
-                dateTime = Utils.parseStringToDate(dateOrder.toString(), Const.DATE_SV_FORMAT_2);
-                _bloc.add(GetListGroupAwaitingCustomer(dateTime));
-              },
-              validator: (result) {
-
-                return null;
-              },
-              onSaved: (val){
-                print('asd$val');
-              },
-            ),
-          ),
-          // InkWell(
-          //   onTap: ()async {
-          //     final DateTime result = await showDialog<dynamic>(
-          //         context: context,
-          //         builder: (BuildContext context) {
-          //           return DateRangePicker(
-          //             dateTime ?? DateTime.now(),
-          //             null,
-          //             minDate: DateTime.now(),
-          //             maxDate: DateTime.now().add(const Duration(days: 10000)),
-          //             displayDate: dateTime ?? DateTime.now(),
-          //           );
-          //         });
-          //     if (result != null) {
-          //       print(result);
-          //       dateTime = result;
+          // Container(
+          //   padding: EdgeInsets.only(top: 5),
+          //   // height: 40,
+          //   width: 50,
+          //   child: DateTimePicker(
+          //     type: DateTimePickerType.date,
+          //     // dateMask: 'd MMM, yyyy',
+          //     initialValue: DateTime.now().toString(),
+          //     firstDate: DateTime(2000),
+          //     lastDate: DateTime(2100),
+          //     decoration:const InputDecoration(
+          //       suffixIcon: Icon(Icons.event,color: Colors.orange),
+          //       contentPadding: EdgeInsets.only(left: 12),
+          //       border: InputBorder.none,
+          //     ),
+          //     style:const TextStyle(fontSize: 13),
+          //     locale: const Locale("vi", "VN"),
+          //     // icon: Icon(Icons.event),
+          //     selectableDayPredicate: (date) {
+          //       return true;
+          //     },
+          //     onChanged: (result){
+          //       DateTime? dateOrder = result as DateTime?;
+          //       dateTime = Utils.parseStringToDate(dateOrder.toString(), Const.DATE_SV_FORMAT_2);
           //       _bloc.add(GetListGroupAwaitingCustomer(dateTime));
-          //     }},
-          //   child: Icon(
-          //       Icons.event,
-          //     color: Colors.black,
+          //     },
+          //     validator: (result) {
+          //
+          //       return null;
+          //     },
+          //     onSaved: (val){
+          //       print('asd$val');
+          //     },
           //   ),
           // ),
+
+          InkWell(
+            onTap: ()async {
+              Utils.dateTimePickerCustom(context).then((value){
+                if(value != null){
+                  dateTime = value;
+                  _bloc.add(GetListGroupAwaitingCustomer(dateTime));
+                }
+              });
+              },
+            child: Icon(
+                Icons.event,
+              color: Colors.black,
+            ),
+          ),
           SizedBox(width: 20,),
           InkWell(
               onTap: (){

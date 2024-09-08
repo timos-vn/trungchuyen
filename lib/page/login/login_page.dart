@@ -110,48 +110,53 @@ class _LoginPageState extends State<LoginPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-        key: _scaffoldKey,
-        backgroundColor: white,
-        body: BlocProvider(
-          create: (context) => _loginBloc,
-          child: BlocListener<LoginBloc, LoginState>(
-            listener: (context, state) {
-              if(state is GetPrefsSuccess){
-                _loginBloc.add(SaveUserNamePassWordEvent());
-              }
-              if(state is LoginFailure){
-                Utils.showToast(state.error.toString());
-              }
-              if (state is LoginSuccess) {
-                // Get.put(SocketIOService());
-                ///0 : Offline
-                ///1 : Online
-                _loginBloc.add(UpdateTokenDiveEvent(state.tokenFCM));
-                print('Login OK');
+    return WillPopScope(
+      onWillPop: ()async{
+        return false;
+      },
+      child: Scaffold(
+          key: _scaffoldKey,
+          backgroundColor: white,
+          body: BlocProvider(
+            create: (context) => _loginBloc,
+            child: BlocListener<LoginBloc, LoginState>(
+              listener: (context, state) {
+                if(state is GetPrefsSuccess){
+                  _loginBloc.add(SaveUserNamePassWordEvent());
+                }
+                if(state is LoginFailure){
+                  Utils.showToast(state.error.toString());
+                }
+                if (state is LoginSuccess) {
+                  // Get.put(SocketIOService());
+                  ///0 : Offline
+                  ///1 : Online
+                  _loginBloc.add(UpdateTokenDiveEvent(state.tokenFCM));
+                  print('Login OK');
 
-              }
-              else if (state is UpdateTokenSuccessState) {
-                pushNewScreen(context, screen: MainPage(roleTC: _loginBloc.roleTC,roleAccount: _loginBloc.roleAccount,tokenFCM: state.tokenFCM,));
-              }
-              else if(state is ChangeLanguageSuccess){
-                _selectedLang = state.nameLng;
-              }
-              else if (state is SaveUserNamePasswordSuccessful){
-                usernameController.text = state.userName;
-                passwordController.text = state.passWord;
-              }
-            },
-            child: BlocBuilder<LoginBloc, LoginState>(builder: (BuildContext context, LoginState state,) {
-              if (state is ValidateErrorUsername) {
-                errorUsername = state.error;
-              } else if (state is ValidateErrorPassword) {
-                errorPass = state.error;
-              }
-              return buildPage(context, state);
-            }),
-          ),
-        ));
+                }
+                else if (state is UpdateTokenSuccessState) {
+                  pushNewScreen(context, screen: MainPage(roleTC: _loginBloc.roleTC,roleAccount: _loginBloc.roleAccount,tokenFCM: state.tokenFCM,));
+                }
+                else if(state is ChangeLanguageSuccess){
+                  _selectedLang = state.nameLng;
+                }
+                else if (state is SaveUserNamePasswordSuccessful){
+                  usernameController.text = state.userName;
+                  passwordController.text = state.passWord;
+                }
+              },
+              child: BlocBuilder<LoginBloc, LoginState>(builder: (BuildContext context, LoginState state,) {
+                if (state is ValidateErrorUsername) {
+                  errorUsername = state.error;
+                } else if (state is ValidateErrorPassword) {
+                  errorPass = state.error;
+                }
+                return buildPage(context, state);
+              }),
+            ),
+          )),
+    );
   }
 
 
@@ -195,8 +200,13 @@ class _LoginPageState extends State<LoginPage> {
                 Padding(
                   padding: const EdgeInsets.only(left: 40,right: 40,bottom:30,top: 0),
                   child: GestureDetector(
-                    onTap: (){
-                      launch("https://www.facebook.com/timos.vn");
+                    onTap: ()async{
+                      final Uri launchUri = Uri(
+                        scheme: 'tel',
+                        path: '0979910019',
+                      );
+                      await launchUrl(launchUri);
+                      // launch("https://www.facebook.com/timos.vn");
                     },
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.center,
@@ -295,6 +305,7 @@ class _LoginPageState extends State<LoginPage> {
         //labelText: S.of(context).phone_number,
         keyboardType: TextInputType.phone,
         prefixIcon: Icons.account_circle,
+        suffixIcon: Icons.cancel,
         onSubmitted: (text) => Utils.navigateNextFocusChange(context,  usernameFocus,  passwordFocus), readOnly: false,
       ),
     );

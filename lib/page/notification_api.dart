@@ -15,33 +15,33 @@ class NotificationApi{
         sound: RawResourceAndroidNotificationSound('a_long_cold_sting'),
         importance: Importance.max,
       ),
-      iOS: IOSNotificationDetails(
-          sound: 'a_long_cold_sting.aiff',
-          presentAlert: true,
-          presentBadge: true,
-          presentSound: true,
-      )
+      // iOS: IOSFlutterLocalNotificationsPlugin(
+      //     sound: 'a_long_cold_sting.aiff',
+      //     presentAlert: true,
+      //     presentBadge: true,
+      //     presentSound: true,
+      // )
 
     );
   }
 
   static Future init({bool initScheduled = false})async{
     var initializationSettingAndroid = AndroidInitializationSettings('ic_ok_noti');
-    var initializationSettingIOS = IOSInitializationSettings(
-        requestAlertPermission: true,
-        requestBadgePermission: true,
-        requestSoundPermission: true,
-        onDidReceiveLocalNotification: (
-            int id, String? title, String? body, String? payload,
-            ) async {}
-    );
-    var initializationSettings = InitializationSettings(android: initializationSettingAndroid,iOS: initializationSettingIOS);
-    await _notifications.initialize(
-        initializationSettings,
-        onSelectNotification: (payload) async {
-          onNotification.add(payload!);
-      }
-    );
+    // var initializationSettingIOS = IOSInitializationSettings(
+    //     requestAlertPermission: true,
+    //     requestBadgePermission: true,
+    //     requestSoundPermission: true,
+    //     onDidReceiveLocalNotification: (
+    //         int id, String? title, String? body, String? payload,
+    //         ) async {}
+    // );
+    // var initializationSettings = InitializationSettings(android: initializationSettingAndroid,iOS: initializationSettingIOS);
+    // await _notifications.initialize(
+    //     initializationSettings,
+    //     onSelectNotification: (payload) async {
+    //       onNotification.add(payload!);
+    //   }
+    // );
   }
 
   static Future showNotification({

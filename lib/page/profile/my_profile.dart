@@ -458,10 +458,12 @@ class _MyProfileState extends State<MyProfile> {
                                   child: new ButtonTheme(
                                     height: 45.0,
                                     minWidth: MediaQuery.of(context).size.width-50,
-                                    child: RaisedButton.icon(
-                                      shape: new RoundedRectangleBorder(borderRadius: new BorderRadius.circular(10.0)),
-                                      elevation: 0.0,
-                                      color: primaryColor,
+                                    child: ElevatedButton.icon(
+                                      // style: ButtonStyle(
+                                      //   backgroundColor: primaryColor,
+                                      // ),
+                                      // shape: new RoundedRectangleBorder(borderRadius: new BorderRadius.circular(10.0)),
+                                      // elevation: 0.0,
                                       icon: new Text(''),
                                       label: new Text('Lưu', style: TextStyle(
                                         color: Colors.black,

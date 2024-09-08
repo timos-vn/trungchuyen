@@ -1,4 +1,4 @@
-import 'package:date_time_picker/date_time_picker.dart';
+// import 'package:date_time_picker/date_time_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:get/get.dart';
@@ -136,40 +136,40 @@ class _OptionsInputPageState extends State<OptionsInputPage> {
                 SizedBox(
                   width: 20,
                 ),
-                SizedBox(
-                  // height: 40,
-                  width: 50,
-                  child: DateTimePicker(
-                    type: DateTimePickerType.date,
-                    // dateMask: 'd MMM, yyyy',
-                    initialValue: DateTime.now().toString(),
-                    firstDate: DateTime(2000),
-                    lastDate: DateTime(2100),
-                    decoration:const InputDecoration(
-                      suffixIcon: Icon(Icons.event,color: Colors.orange,size: 22,),
-                      contentPadding: EdgeInsets.only(left: 12),
-                      border: InputBorder.none,
-                    ),
-                    style:const TextStyle(fontSize: 13),
-                    locale: const Locale("vi", "VN"),
-                    // icon: Icon(Icons.event),
-                    selectableDayPredicate: (date) {
-                      return true;
-                    },
-                    onChanged: (result){
-                      DateTime? dateOrder = result as DateTime?;
-                      DateTime dateTime = Utils.parseStringToDate(dateOrder.toString(), Const.DATE_SV_FORMAT_2);
-                      _bloc.add(DateFrom(dateTime));
-                    },
-                    validator: (result) {
-
-                      return null;
-                    },
-                    onSaved: (val){
-                      print('asd$val');
-                    },
-                  ),
-                ),
+                // SizedBox(
+                //   // height: 40,
+                //   width: 50,
+                //   child: DateTimePicker(
+                //     type: DateTimePickerType.date,
+                //     // dateMask: 'd MMM, yyyy',
+                //     initialValue: DateTime.now().toString(),
+                //     firstDate: DateTime(2000),
+                //     lastDate: DateTime(2100),
+                //     decoration:const InputDecoration(
+                //       suffixIcon: Icon(Icons.event,color: Colors.orange,size: 22,),
+                //       contentPadding: EdgeInsets.only(left: 12),
+                //       border: InputBorder.none,
+                //     ),
+                //     style:const TextStyle(fontSize: 13),
+                //     locale: const Locale("vi", "VN"),
+                //     // icon: Icon(Icons.event),
+                //     selectableDayPredicate: (date) {
+                //       return true;
+                //     },
+                //     onChanged: (result){
+                //       DateTime? dateOrder = result as DateTime?;
+                //       DateTime dateTime = Utils.parseStringToDate(dateOrder.toString(), Const.DATE_SV_FORMAT_2);
+                //       _bloc.add(DateFrom(dateTime));
+                //     },
+                //     validator: (result) {
+                //
+                //       return null;
+                //     },
+                //     onSaved: (val){
+                //       print('asd$val');
+                //     },
+                //   ),
+                // ),
               ],
             ),
             SizedBox(
@@ -211,40 +211,40 @@ class _OptionsInputPageState extends State<OptionsInputPage> {
                 SizedBox(
                   width: 20,
                 ),
-                SizedBox(
-                  // height: 40,
-                  width: 50,
-                  child: DateTimePicker(
-                    type: DateTimePickerType.date,
-                    // dateMask: 'd MMM, yyyy',
-                    initialValue: DateTime.now().toString(),
-                    firstDate: DateTime(2000),
-                    lastDate: DateTime(2100),
-                    decoration:const InputDecoration(
-                      suffixIcon: Icon(Icons.event,color: Colors.orange,size: 22,),
-                      contentPadding: EdgeInsets.only(left: 12),
-                      border: InputBorder.none,
-                    ),
-                    style:const TextStyle(fontSize: 13),
-                    locale: const Locale("vi", "VN"),
-                    // icon: Icon(Icons.event),
-                    selectableDayPredicate: (date) {
-                      return true;
-                    },
-                    onChanged: (result){
-                      DateTime? dateOrder = result as DateTime?;
-                      DateTime dateTime = Utils.parseStringToDate(dateOrder.toString(), Const.DATE_SV_FORMAT_2);
-                      _bloc.add(DateTo(dateTime));
-                    },
-                    validator: (result) {
-
-                      return null;
-                    },
-                    onSaved: (val){
-                      print('asd$val');
-                    },
-                  ),
-                ),
+                // SizedBox(
+                //   // height: 40,
+                //   width: 50,
+                //   child: DateTimePicker(
+                //     type: DateTimePickerType.date,
+                //     // dateMask: 'd MMM, yyyy',
+                //     initialValue: DateTime.now().toString(),
+                //     firstDate: DateTime(2000),
+                //     lastDate: DateTime(2100),
+                //     decoration:const InputDecoration(
+                //       suffixIcon: Icon(Icons.event,color: Colors.orange,size: 22,),
+                //       contentPadding: EdgeInsets.only(left: 12),
+                //       border: InputBorder.none,
+                //     ),
+                //     style:const TextStyle(fontSize: 13),
+                //     locale: const Locale("vi", "VN"),
+                //     // icon: Icon(Icons.event),
+                //     selectableDayPredicate: (date) {
+                //       return true;
+                //     },
+                //     onChanged: (result){
+                //       DateTime? dateOrder = result as DateTime?;
+                //       DateTime dateTime = Utils.parseStringToDate(dateOrder.toString(), Const.DATE_SV_FORMAT_2);
+                //       _bloc.add(DateTo(dateTime));
+                //     },
+                //     validator: (result) {
+                //
+                //       return null;
+                //     },
+                //     onSaved: (val){
+                //       print('asd$val');
+                //     },
+                //   ),
+                // ),
               ],
             ),
 

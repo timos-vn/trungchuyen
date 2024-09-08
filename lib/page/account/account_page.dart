@@ -377,7 +377,7 @@ class AccountPageState extends State<AccountPage> with TickerProviderStateMixin 
   }
   void _showConfirm(BuildContext context) {
     List<Widget> actions = [
-      FlatButton(
+      ElevatedButton(
         onPressed: () => Navigator.of(context, rootNavigator: true).pop(true),
         child: Text('No'.tr,
             style: TextStyle(
@@ -385,7 +385,7 @@ class AccountPageState extends State<AccountPage> with TickerProviderStateMixin 
               fontSize: 14,
             )),
       ),
-      FlatButton(
+      ElevatedButton(
         onPressed: () {
           _accountBloc.add(LogOut());
           // if (Platform.isAndroid) {

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:google_fonts/google_fonts.dart';
+
 import 'package:intl/intl.dart';
 import 'package:table_calendar/table_calendar.dart';
 import 'package:trungchuyen/page/options_input/options_input_pages.dart';
@@ -176,10 +176,10 @@ class _ReportLimoPageState extends State<ReportLimoPage> {
                     },
                     locale: 'vi',
                     daysOfWeekStyle: DaysOfWeekStyle(
-                        weekendStyle: GoogleFonts.montserrat(
+                        weekendStyle: TextStyle(
                           color: Colors.red,
                         ),
-                        weekdayStyle: GoogleFonts.montserrat(
+                        weekdayStyle: TextStyle(
                           color: Colors.black,
                         )
                     ),
@@ -206,15 +206,15 @@ class _ReportLimoPageState extends State<ReportLimoPage> {
                       //   backgroundColor: Colors.white,
                       //   color: mainColor
                       // ),
-                        todayTextStyle: GoogleFonts.montserrat(
+                        todayTextStyle: TextStyle(
                             color: Colors.black,
                             fontSize: 16),
-                        weekendTextStyle: GoogleFonts.montserrat(
+                        weekendTextStyle: TextStyle(
                             color: Colors.red,
                             fontSize: 16),
                         outsideTextStyle: const TextStyle(color: Colors.blueGrey),
                         withinRangeTextStyle: const TextStyle(color: Colors.grey),
-                        defaultTextStyle: GoogleFonts.montserrat(
+                        defaultTextStyle: TextStyle(
                             color: Colors.black,
                             fontSize: 16),
                         canMarkersOverflow: true,

@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
+import 'package:persistent_bottom_nav_bar/persistent-tab-view.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:trungchuyen/models/network/request/change_password_request.dart';
 import 'package:trungchuyen/models/network/request/login_request.dart';
@@ -13,6 +14,7 @@ import 'package:trungchuyen/models/network/request/update_token_request.dart';
 import 'package:trungchuyen/utils/const.dart';
 import 'package:trungchuyen/utils/log.dart';
 import 'package:trungchuyen/utils/utils.dart';
+import '../../../page/login/login_page.dart';
 import 'host.dart';
 
 class NetWorkFactory {
@@ -105,8 +107,8 @@ class NetWorkFactory {
             }
           }
           if (error.response?.statusCode == 401) {
-            // Utils.showToast('Hết phiên làm việc');
-            // libGetX.Get.offAll(LoginPage());
+            Utils.showToast('Hết phiên làm việc');
+            pushNewScreen(context, screen: LoginPage(),withNavBar: false);
           }else if(error.response?.statusCode == 500){
             // ignore: use_build_context_synchronously
             Utils.showCustomToast(context, Icons.warning_amber_outlined, 'Lỗi kết nối tới server');
@@ -184,9 +186,8 @@ class NetWorkFactory {
           errorDescription = message ?? "ErrorCode" ': $code';
           if (code == 401) {
             try {
-              //libGetX.Get.offAll(LoginPage());
-              // MainBloc mainBloc = BlocProvider.of<MainBloc>(context);
-              // mainBloc.add(LogoutMainEvent());
+              Utils.showToast('Hết phiên làm việc');
+              pushNewScreen(context, screen: LoginPage(),withNavBar: false);
             } catch (e) {
               debugPrint(e.toString());
             }

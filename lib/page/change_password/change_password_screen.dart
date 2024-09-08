@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:trungchuyen/utils/utils.dart';
 import 'package:trungchuyen/widget/pending_action.dart';
 
@@ -132,8 +131,7 @@ class _ChangePassWordScreenState extends State<ChangePassWordScreen> with Single
       textAlign: TextAlign.center,
       text: TextSpan(
           text: 'Timo',
-          style: GoogleFonts.openSans(
-            textStyle: Theme.of(context).textTheme.titleMedium,
+          style: TextStyle(
             fontSize: 30,
             fontWeight: FontWeight.w700,
             color: Color(0xffe46b10),

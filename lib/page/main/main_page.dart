@@ -573,7 +573,7 @@ class _MainPageState extends State<MainPage> with WidgetsBindingObserver{
 
   void _exitApp(BuildContext context) {
     List<Widget> actions = [
-      FlatButton(
+      ElevatedButton(
         onPressed: () => Navigator.of(context, rootNavigator: true).pop(),
         child: Text('No'.tr,
             style: TextStyle(
@@ -581,7 +581,7 @@ class _MainPageState extends State<MainPage> with WidgetsBindingObserver{
               fontSize: 14,
             )),
       ),
-      FlatButton(
+      ElevatedButton(
         onPressed: () {
           Navigator.of(context, rootNavigator: true).pop();
           SystemChannels.platform.invokeMethod('SystemNavigator.pop');

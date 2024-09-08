@@ -7,19 +7,19 @@ import '../../themes/colors.dart';
 class TextFieldWidget extends StatefulWidget {
   const TextFieldWidget(
       {required this.controller,
-        this.textInputAction: TextInputAction.next,
+        this.textInputAction = TextInputAction.next,
         this.isEnable = true,
         this.onChanged,
-        this.isPassword: false,
+        this.isPassword = false,
         this.inputFormatters,
         this.errorText,
         this.labelText,
         this.hintText,
-        this.keyboardType: TextInputType.text,
+        this.keyboardType = TextInputType.text,
         this.focusNode,
         this.onSubmitted,
         this.prefixIcon,
-        this.suffix,
+        this.suffixIcon,
         required this.readOnly,
         this.color});
 
@@ -36,7 +36,7 @@ class TextFieldWidget extends StatefulWidget {
   final FocusNode? focusNode;
   final FormFieldSetter<String>? onSubmitted;
   final dynamic prefixIcon;
-  final dynamic suffix;
+  final dynamic suffixIcon;
   final bool readOnly;
   final Color? color;
 
@@ -107,20 +107,26 @@ class _TextFieldWidgetState extends State<TextFieldWidget> {
             size: 20,
           )),
           suffixIcon: !widget.isPassword
-              ? widget.suffix == null ? null : Icon(widget.suffix,color: grey,size: 20,)
+              ? widget.suffixIcon == null ? null : GestureDetector(
+              onTap: (){
+                setState(() {
+                  widget.controller.clear();
+                });
+              },
+              child: Icon(widget.suffixIcon,color: blue,size: 18,))
               : GestureDetector(
-            onTap: () {
-              setState(() {
-                _obscureText = !_obscureText;
-              });
-            },
-            child: Icon(
-              _obscureText ? MdiIcons.eye : MdiIcons.eyeOff,
-              semanticLabel:
-              _obscureText ? 'show password' : 'hide password',
-              color: blue,
-            ),
-          ),
+                onTap: () {
+                  setState(() {
+                    _obscureText = !_obscureText;
+                  });
+                },
+                child: Icon(
+                  _obscureText ? MdiIcons.eye : MdiIcons.eyeOff,
+                  semanticLabel:
+                  _obscureText ? 'show password' : 'hide password',
+                  color: blue,
+                ),
+              ),
           labelStyle:
           TextStyle(color: widget.isEnable ? grey : widget.color == null ? widget.color : grey, fontSize: 13),
           hintStyle: const TextStyle(

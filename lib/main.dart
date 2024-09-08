@@ -19,6 +19,7 @@ class MyHttpOverrides extends HttpOverrides {
 
 void main()async {
   HttpOverrides.global = new MyHttpOverrides();
+  // SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle(statusBarIconBrightness: Brightness.dark, statusBarColor: Colors.white));
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp();
   runApp(MyApp());
@@ -44,8 +45,6 @@ class _MyAppState extends State<MyApp> {
 
   @override
   Widget build(BuildContext context) {
-
-    SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle(statusBarIconBrightness: Brightness.dark, statusBarColor: Colors.white));
     return OverlaySupport.global(
       key: key,
       child: OKToast(

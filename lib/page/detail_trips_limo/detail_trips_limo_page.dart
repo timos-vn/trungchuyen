@@ -214,8 +214,8 @@ class _DetailTripsLimoPageState extends State<DetailTripsLimoPage> {
               builder: (BuildContext context){
                 return Padding(
                   padding: const EdgeInsets.only(left: 10,right: 10),
-                  child: Container(
-                    height:item.khachTrungChuyen == 1 ? 220 : 220,
+                  child: Container( color: Colors.red,
+                    height: item.khachTrungChuyen == 1? 230 : 350,
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.center,
                       mainAxisAlignment: MainAxisAlignment.center,
@@ -227,23 +227,25 @@ class _DetailTripsLimoPageState extends State<DetailTripsLimoPage> {
                             onTap: (){
                               Navigator.pop(context,'ConfirmKhachThuong');
                             },
-                            child: Container(
-                              height: 50,
-                              decoration: BoxDecoration(
-                                  borderRadius: BorderRadius.all(Radius.circular(16)),
-                                  color: Colors.white
-                              ),
-                              child: Align(
-                                alignment: Alignment.center,
-                                child: Text(
-                                  'Xác nhận đón',
-                                  style: TextStyle(color: Colors.black,fontWeight: FontWeight.bold),
+                            child: Padding(
+                              padding: const EdgeInsets.only(bottom: 15),
+                              child: Container(
+                                height: 50,
+                                decoration: BoxDecoration(
+                                    borderRadius: BorderRadius.all(Radius.circular(16)),
+                                    color: Colors.white
+                                ),
+                                child: Align(
+                                  alignment: Alignment.center,
+                                  child: Text(
+                                    'Xác nhận đón',
+                                    style: TextStyle(color: Colors.black,fontWeight: FontWeight.bold),
+                                  ),
                                 ),
                               ),
                             ),
                           ),
                         ),
-                        SizedBox(height: 15,),
                         ///Xác nhận khách trung chuyển
                         // Visibility(
                         //   visible: item.khachTrungChuyen == 1 && ( item.trangThaiVe != 4 && item.trangThaiVe != 6) && widget.typeHistory == 1, /// == 0 Khong TC
@@ -275,6 +277,32 @@ class _DetailTripsLimoPageState extends State<DetailTripsLimoPage> {
                             onTap: (){
                               Navigator.pop(context,'CancelCustomer');
                             },
+                            child: Padding(
+                              padding: const EdgeInsets.only(bottom: 15),
+                              child: Container(
+                                height: 50,
+                                decoration: BoxDecoration(
+                                    borderRadius: BorderRadius.all(Radius.circular(16)),
+                                    color: Colors.white
+                                ),
+                                child: Align(
+                                  alignment: Alignment.center,
+                                  child: Text(
+                                    'Khách huỷ',
+                                    style: TextStyle(color: Colors.black,fontWeight: FontWeight.bold),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                        /// Gọi điện cho Khách
+                        GestureDetector(
+                          onTap: (){
+                            Navigator.pop(context,'CallCustomer');
+                          },
+                          child: Padding(
+                            padding: const EdgeInsets.only(bottom: 15),
                             child: Container(
                               height: 50,
                               decoration: BoxDecoration(
@@ -284,35 +312,13 @@ class _DetailTripsLimoPageState extends State<DetailTripsLimoPage> {
                               child: Align(
                                 alignment: Alignment.center,
                                 child: Text(
-                                  'Khách huỷ',
+                                  'Gọi điện cho Khách',
                                   style: TextStyle(color: Colors.black,fontWeight: FontWeight.bold),
                                 ),
                               ),
                             ),
                           ),
                         ),
-                        SizedBox(height: 15,),
-                        /// Gọi điện cho Khách
-                        GestureDetector(
-                          onTap: (){
-                            Navigator.pop(context,'CallCustomer');
-                          },
-                          child: Container(
-                            height: 50,
-                            decoration: BoxDecoration(
-                                borderRadius: BorderRadius.all(Radius.circular(16)),
-                                color: Colors.white
-                            ),
-                            child: Align(
-                              alignment: Alignment.center,
-                              child: Text(
-                                'Gọi điện cho Khách',
-                                style: TextStyle(color: Colors.black,fontWeight: FontWeight.bold),
-                              ),
-                            ),
-                          ),
-                        ),
-                        SizedBox(height: 15,),
                         ///Gọi điện cho lái xe trung chuyển
                         Visibility(
                           visible: item.khachTrungChuyen == 1,
@@ -336,7 +342,7 @@ class _DetailTripsLimoPageState extends State<DetailTripsLimoPage> {
                             ),
                           ),
                         ),
-                        SizedBox(height: 10,),
+                        SizedBox(height: 50,),
                       ],
                     ),
                   ),
@@ -423,8 +429,10 @@ class _DetailTripsLimoPageState extends State<DetailTripsLimoPage> {
                 return Padding(
                   padding: const EdgeInsets.only(left: 10,right: 10),
                   child: Container(
-                    height:150,
+                    height:220,
                     child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         /// Gọi điện cho Khách
                         GestureDetector(
@@ -470,7 +478,7 @@ class _DetailTripsLimoPageState extends State<DetailTripsLimoPage> {
                             ),
                           ),
                         ),
-                        SizedBox(height: 10,),
+                        SizedBox(height: 50,),
                       ],
                     ),
                   ),

@@ -1,4 +1,4 @@
-import 'package:date_time_picker/date_time_picker.dart';
+// import 'package:date_time_picker/date_time_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
@@ -46,6 +46,7 @@ class ListHistoryTCPageState extends State<ListHistoryTCPage> {
     return Scaffold(
         backgroundColor: Colors.white,
         appBar: AppBar(
+          centerTitle: true,
           leading: InkWell(
             onTap: ()=> Navigator.pop(context),
             child: Container(
@@ -59,40 +60,42 @@ class ListHistoryTCPageState extends State<ListHistoryTCPage> {
             style: TextStyle(color: Colors.black),
           ),
           actions: [
-            SizedBox(
-              // height: 40,
-              width: 50,
-              child: DateTimePicker(
-                type: DateTimePickerType.date,
-                // dateMask: 'd MMM, yyyy',
-                initialValue: DateTime.now().toString(),
-                firstDate: DateTime(2000),
-                lastDate: DateTime(2100),
-                decoration:const InputDecoration(
-                  suffixIcon: Icon(Icons.event,color: Colors.orange,size: 22,),
-                  contentPadding: EdgeInsets.only(left: 12),
-                  border: InputBorder.none,
-                ),
-                style:const TextStyle(fontSize: 13),
-                locale: const Locale("vi", "VN"),
-                // icon: Icon(Icons.event),
-                selectableDayPredicate: (date) {
-                  return true;
-                },
-                onChanged: (result){
-                  DateTime? dateOrder = result as DateTime?;
-                  dateTime = Utils.parseStringToDate(dateOrder.toString(), Const.DATE_SV_FORMAT_2);
-                  _bloc.add(GetListHistoryTC(dateTime.toString()));
-                },
-                validator: (result) {
-
-                  return null;
-                },
-                onSaved: (val){
-                  print('asd$val');
-                },
-              ),
-            ),
+            // Container(
+            //   padding: EdgeInsets.only(top: 5),
+            //   // height: 40,
+            //   width: 50,
+            //   child: DateTimePicker(
+            //     type: DateTimePickerType.date,
+            //     // dateMask: 'd MMM, yyyy',
+            //     initialValue: DateTime.now().toString(),
+            //     firstDate: DateTime(2000),
+            //     lastDate: DateTime(2100),
+            //     decoration:const InputDecoration(
+            //       suffixIcon: Icon(Icons.event,color: Colors.orange,),
+            //       contentPadding: EdgeInsets.only(left: 12),
+            //       border: InputBorder.none,
+            //     ),
+            //     style:const TextStyle(fontSize: 13),
+            //     locale: const Locale("vi", "VN"),
+            //     // icon: Icon(Icons.event),
+            //     selectableDayPredicate: (date) {
+            //       return true;
+            //     },
+            //     onChanged: (result){
+            //       // String? dateOrder = result.toString();
+            //       dateTime = Utils.parseStringToDate(result.toString(), Const.DATE_SV_FORMAT_2);
+            //       _bloc.add(GetListHistoryTC(dateTime.toString()));
+            //     },
+            //     validator: (result) {
+            //
+            //       return null;
+            //     },
+            //     onSaved: (val){
+            //       print('asd$val');
+            //     },
+            //   ),
+            // ),
+            ///
             // InkWell(
             //   onTap: ()async {
             //     final DateTime result = await showDialog<dynamic>(
@@ -246,7 +249,7 @@ class ListHistoryTCPageState extends State<ListHistoryTCPage> {
               ),
             ),
           ],
-        ) : Container(),
+        ) : Container(child: Center(child: Text('Hiện chưa có dữ liệu nào',style: TextStyle(color: Colors.blueGrey,fontSize: 12.5),),),),
         Visibility(
           visible: state is ListHistoryTCLoading,
           child: Center(
@@ -262,7 +265,9 @@ class ListHistoryTCPageState extends State<ListHistoryTCPage> {
         onTap: () {
 
           DateTime parseDate = new DateFormat("yyyy-MM-dd").parse(Jiffy(item.ngayChay, "dd/MM/yyyy").format("yyyy-MM-dd"));
-          pushNewScreen(context, screen: DetailTripsPage(dateTime: parseDate,typeDetail: 2,idRoom: item.idVanPhong,idTime: item.idKhungGio,typeCustomer: item.loaiKhach,),withNavBar: false);
+          Navigator.push(context, MaterialPageRoute(builder: (context)=>DetailTripsPage(
+            dateTime: parseDate,typeDetail: 2,idRoom: item.idVanPhong,idTime: item.idKhungGio,typeCustomer: item.loaiKhach,)));
+          // pushNewScreen(context, screen: DetailTripsPage(dateTime: parseDate,typeDetail: 2,idRoom: item.idVanPhong,idTime: item.idKhungGio,typeCustomer: item.loaiKhach,),withNavBar: false);
         },
         child: Padding(
           padding: const EdgeInsets.only(left: 10, right: 16, top: 8, bottom: 8),

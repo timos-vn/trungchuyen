@@ -2,7 +2,7 @@ name: trungchuyen
 description: A new Flutter application.
 
 publish_to: 'none' # Remove this line if you wish to publish to pub.dev
-version: 1.0.19+24
+version: 1.0.21+28
 
 environment:
   sdk: ">=2.12.3 <3.0.0"
@@ -17,7 +17,7 @@ dependencies:
   cupertino_icons: ^1.0.2
   open_store: ^0.3.1
   dio: ^4.0.1
-  google_fonts: ^2.3.2
+#  google_fonts: ^2.3.2
   flutter_bloc: ^8.0.0
   cached_network_image: ^3.2.0
   font_awesome_flutter: ^10.0.0
@@ -28,12 +28,13 @@ dependencies:
 #  flutter_local_notifications: ^9.2.0
   logger: ^1.1.0
   overlay_support: ^2.0.1
-  firebase_auth: ^3.3.4
-  firebase_messaging: ^11.2.4
-  cloud_firestore: ^3.1.10
-  firebase_core_platform_interface: 4.4.0
+  firebase_auth: ^4.4.0
+  firebase_messaging: ^14.4.0
+  cloud_firestore: ^4.5.0
+  omni_datetime_picker: any
+#  firebase_core_platform_interface: 4.4.0
 #  image_picker: ^0.8.5+3
-  animator: ^1.0.0+3
+#  animator: ^1.0.0+3
   connectivity: ^3.0.3
   oktoast: ^3.1.3
 
@@ -44,7 +45,7 @@ dependencies:
 
 #  freezed: ^0.12.7
 #  freezed_annotation: ^0.12.0
-#  intl: any
+  intl: ^0.18.1
 #  overlay_support: ^1.2.0
 #  google_maps_flutter: ^1.1.1
 #  google_maps_controller: ^1.1.0
@@ -65,7 +66,7 @@ dependencies:
 #  liquid_pull_to_refresh: ^2.0.0
 #  pin_code_text_field: ^1.8.0
   get: ^4.5.1
-  date_time_picker: ^2.1.0
+#  date_time_picker: any
   flutter_local_notifications: any
 #  syncfusion_flutter_datepicker: ^18.4.30-beta
 #  firebase_auth: ^0.18.1

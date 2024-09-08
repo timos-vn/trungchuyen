@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:timelines/timelines.dart';
@@ -33,41 +34,53 @@ class DetailTripsPage extends StatefulWidget {
 
 class DetailTripsPageState extends State<DetailTripsPage> {
 
-  late MainBloc _mainBloc;
   late DetailTripsBloc _bloc;
   DateFormat format = DateFormat("dd/MM/yyyy");
   // List<DetailTripsResponseBody> _listOfDetailTrips = new List<DetailTripsResponseBody>();
   int tongKhach=0;
+  late MainBloc _mainBloc;
+
   @override
   void initState() {
     // TODO: implement initState
     super.initState();
-
+    // SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle(statusBarIconBrightness: Brightness.dark, statusBarColor: Colors.white));
+    _mainBloc = BlocProvider.of<MainBloc>(context);
     _bloc = DetailTripsBloc(context);
-
     _bloc.add(GetPrefs());
-
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+        backgroundColor: Colors.white,
         appBar: AppBar(
-          title: GestureDetector(
-            onTap: ()=>print(_bloc.listOfDetailTrips.length),
-            child: Text(widget.typeDetail == 1 ?
-              'Danh sách Khách Chờ' : 'Danh sách Khách',
-              style: TextStyle(color: Colors.black),
+          leading: InkWell(
+            onTap: ()=> Navigator.pop(context),
+            child: Container(
+              width: 40,
+              height: double.infinity,
+              child: Icon(Icons.arrow_back,color: Colors.black,),
             ),
           ),
-           centerTitle: true,
+          title: Text(
+            widget.typeDetail == 1 ?
+            'Danh sách Khách Chờ' : 'Danh sách Khách',
+            style: TextStyle(color: Colors.black),
+          ),
+          centerTitle: true,
+          backgroundColor: Colors.white,
+          actions: [
+            Icon(MdiIcons.reload,color: Colors.transparent,),
+            SizedBox(width: 20,)
+          ],
         ),
         body:BlocListener<DetailTripsBloc,DetailTripsState>(
           bloc: _bloc,
           listener:  (context, state){
             if(state is GetPrefsSuccess){
-              _bloc.getMainBloc(context);
-              _mainBloc = BlocProvider.of<MainBloc>(context);
+
+              // _mainBloc = BlocProvider.of<MainBloc>(context);
               // DateTime parseDate = new DateFormat("yyyy-MM-dd").parse(DateTime.now().toString());
               if(widget.typeDetail == 1){
                 // print('telete ${_mainBloc.tongKhach}');
@@ -548,7 +561,7 @@ class DetailTripsPageState extends State<DetailTripsPage> {
                   return Padding(
                     padding: const EdgeInsets.only(left: 10,right: 10),
                     child: Container(
-                      height: 150,
+                      height: 190,
                       child: Column(
                         children: [
                           GestureDetector(
@@ -590,7 +603,7 @@ class DetailTripsPageState extends State<DetailTripsPage> {
                               ),
                             ),
                           ),
-                          SizedBox(height: 10,),
+                          SizedBox(height: 50,),
                         ],
                       ),
                     ),

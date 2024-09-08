@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
+import 'package:persistent_bottom_nav_bar/persistent-tab-view.dart';
 import 'package:trungchuyen/page/account/account_bloc.dart';
 import 'package:trungchuyen/page/account/account_event.dart';
 import 'package:get/get.dart' as libGetX;
@@ -55,7 +56,8 @@ class AccountScreenState extends State<AccountScreen> {
               _accountBloc.add(GetInfoAccount());
             }
             if(state is LogOutSuccess){
-              libGetX.Get.offAll(LoginPage());
+              Utils.showToast('Bạn đã đăng xuất thành công');
+              pushNewScreen(context, screen: LoginPage(),withNavBar: false);
             }
           },
           child: BlocBuilder<AccountBloc,AccountState>(
@@ -298,7 +300,7 @@ class AccountScreenState extends State<AccountScreen> {
                               children: [
                                 Icon(Icons.exit_to_app,color: Colors.orange,),
                                 SizedBox(width: 10,),
-                                Text('LogOut'.tr,style: TextStyle(color: Colors.orange),),
+                                Text('Đăng xuất'.tr,style: TextStyle(color: Colors.orange),),
                               ],
                             ),
                           ),
@@ -376,15 +378,21 @@ class AccountScreenState extends State<AccountScreen> {
   }
   void _showConfirm(BuildContext context) {
     List<Widget> actions = [
-      FlatButton(
+      ElevatedButton(
+        style: ElevatedButton.styleFrom(
+          backgroundColor: orange
+        ),
         onPressed: () => Navigator.of(context, rootNavigator: true).pop(true),
-        child: Text('No'.tr,
+        child: Text('Huỷ',
             style: TextStyle(
-              color: Colors.orange,
+              color: Colors.white,
               fontSize: 14,
             )),
       ),
-      FlatButton(
+      ElevatedButton(
+        style: ElevatedButton.styleFrom(
+            backgroundColor: orange
+        ),
         onPressed: () {
           _accountBloc.add(LogOut());
           // if (Platform.isAndroid) {
@@ -393,9 +401,9 @@ class AccountScreenState extends State<AccountScreen> {
           //   exit(0);
           // }
         },
-        child: Text('Yes'.tr,
+        child: Text('Đăng xuất',
             style: TextStyle(
-              color: Colors.orange,
+              color: Colors.white,
               fontSize: 14,
             )),
       ),
@@ -403,9 +411,9 @@ class AccountScreenState extends State<AccountScreen> {
 
     Utils.showDialogTwoButton(
         context: context,
-        title: 'Notice'.tr,
+        title: 'Thông báo',
         contentWidget: Text(
-          'ExitApp'.tr,
+          'Bạn sẽ đăng xuất khỏi ứng dụng',
           style: TextStyle(fontSize: 14, color: black),
         ),
         actions: actions);
